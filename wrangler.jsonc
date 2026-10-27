@@ -1,0 +1,40 @@
+{
+  // Global AI Academy — Cloudflare Worker (API) + static assets (React SPA)
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "global-ai-academy",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2025-09-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": {
+    // SPA routing: unknown paths serve index.html; /api/* always hits the worker first.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "global_ai_academy",
+      // Replace with the id printed by `npx wrangler d1 create global_ai_academy`
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "APP_NAME": "Global AI Academy",
+    "APP_URL": "http://localhost:5173",
+    "OPENAI_MODEL": "gpt-4.1-mini",
+    // Comma-separated emails that are automatically promoted to admin on sign-up.
+    "ADMIN_EMAILS": "munyaradzimandiwanzira@gmail.com",
+    // Must be a sender verified in Brevo. munyaradzimandiwanzira@gmail.com is verified today; switch to an
+    // address on your own domain once it is authenticated in Brevo (better inbox delivery).
+    "EMAIL_FROM": "Global AI Academy <munyaradzimandiwanzira@gmail.com>",
+    "JUDGE0_URL": ""
+  }
+  // Secrets (set with `npx wrangler secret put NAME`, or in .dev.vars locally):
+  //   OPENAI_API_KEY        – required for AI features
+  //   BREVO_API_KEY         – optional, sends verification / reset emails
+  //   PAYNOW_INTEGRATION_ID – optional, Paynow Zimbabwe (EcoCash / OneMoney / cards)
+  //   PAYNOW_INTEGRATION_KEY
+  //   JUDGE0_API_KEY        – optional, server-side runner for Java/Kotlin/C++/PHP/Swift
+}

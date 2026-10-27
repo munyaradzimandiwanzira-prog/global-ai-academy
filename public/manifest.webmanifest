@@ -1,0 +1,10 @@
+{
+  "name": "Global AI Academy",
+  "short_name": "GAA",
+  "description": "Hands-on AI & software engineering school for Zimbabwe.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F0E6",
+  "theme_color": "#142B52",
+  "icons": [{ "src": "/logo-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
