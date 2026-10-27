@@ -22,7 +22,7 @@
   ],
   "vars": {
     "APP_NAME": "Global AI Academy",
-    "APP_URL": "http://localhost:5173",
+    "APP_URL": "https://global-ai-academy.munyaradzimandiwanzira.workers.dev",
     "OPENAI_MODEL": "gpt-4.1-mini",
     // Must be a sender verified in Brevo. munyaradzimandiwanzira@gmail.com is verified today; switch to an
     // address on your own domain once it is authenticated in Brevo (better inbox delivery).
