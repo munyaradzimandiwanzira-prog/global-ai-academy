@@ -12,6 +12,16 @@ const AVATAR_COLORS = ['#23807F', '#142B52', '#6B3A1E', '#B88A2E', '#5B8C3A', '#
 
 const auth = createRouter();
 
+/** Promotes a verified account whose email is listed in the ADMIN_EMAILS secret. Idempotent. */
+async function promoteIfAdmin(env: Env, user: Pick<UserRow, 'id' | 'email' | 'role'> & { email_verified_at: string | null }) {
+  if (!user.email_verified_at || user.role === 'admin') return false;
+  const admins = (env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  if (!admins.includes(user.email.toLowerCase())) return false;
+  await env.DB.prepare("UPDATE users SET role = 'admin', updated_at = ? WHERE id = ?").bind(nowIso(), user.id).run();
+  await audit(env.DB, user.id, 'user.promoted_admin', user.id, { via: 'ADMIN_EMAILS' });
+  return true;
+}
+
 async function issueEmailToken(c: Parameters<typeof requireUser>[0], user: Pick<UserRow, 'id' | 'name' | 'email'>, purpose: 'verify' | 'reset') {
   const token = randomToken(32);
   const ttlHours = purpose === 'verify' ? 72 : 1;
@@ -43,8 +53,9 @@ auth.post('/signup', async (c) => {
   const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(input.email).first();
   if (existing) throw conflict('An account with this email already exists. Sign in instead.');
 
-  const admins = c.env.ADMIN_EMAILS.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-  const role = admins.includes(input.email) ? 'admin' : 'student';
+  // Everyone starts as a student. Admin is granted only once the address is proven (see promoteIfAdmin),
+  // so nobody can claim admin by signing up first with an owner's email they do not control.
+  const role = 'student';
   const id = newId();
   const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
   await c.env.DB.prepare(
@@ -71,6 +82,7 @@ auth.post('/login', async (c) => {
   const ok = await verifyPassword(input.password, user?.password_hash ?? DUMMY_HASH);
   if (!user || !ok) throw unauthorized('That email and password do not match.');
   if (user.disabled_at) throw forbidden('This account has been disabled. Contact support.');
+  if (await promoteIfAdmin(c.env, user)) user.role = 'admin';
   await createSession(c, user.id);
   return c.json({ user: toPublicUser(user) });
 });
@@ -89,6 +101,8 @@ auth.post('/verify-email', async (c) => {
     c.env.DB.prepare('UPDATE email_tokens SET used_at = ? WHERE id = ?').bind(nowIso(), id),
     c.env.DB.prepare('UPDATE users SET email_verified_at = COALESCE(email_verified_at, ?) WHERE id = ?').bind(nowIso(), row.user_id),
   ]);
+  const verified = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(row.user_id).first<UserRow>();
+  if (verified) await promoteIfAdmin(c.env, verified);
   return c.json({ ok: true });
 });
 

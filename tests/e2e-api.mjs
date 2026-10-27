@@ -15,9 +15,16 @@ function client() {
 const id = Date.now();
 const admin = client(), learner = client(), teacher = client(), guest = client();
 // admin (ADMIN_EMAILS) signup
-let r = await admin('POST', '/api/auth/signup', { name: 'Munya Admin', email: 'munyaradzimandiwanzira@gmail.com', password: 'Passw0rd!x' });
-if (r.s === 409) r = await admin('POST', '/api/auth/login', { email: 'munyaradzimandiwanzira@gmail.com', password: 'Passw0rd!x' });
-ok(r.j?.user?.role === 'admin', 'admin email becomes admin');
+// Admin is granted only after the listed address is verified (ADMIN_EMAILS secret in .dev.vars locally).
+const ADMIN = process.env.ADMIN_EMAIL ?? 'munyaradzimandiwanzira@gmail.com';
+let r = await admin('POST', '/api/auth/signup', { name: 'Munya Admin', email: ADMIN, password: 'Passw0rd!x' });
+if (r.s === 201) {
+  ok(r.j.user.role === 'student', 'unverified sign-up with the admin email is NOT admin');
+  const token = new URL(r.j.devVerifyUrl).searchParams.get('token');
+  ok((await admin('POST', '/api/auth/verify-email', { token })).s === 200, 'admin email verified');
+}
+r = await admin('POST', '/api/auth/login', { email: ADMIN, password: 'Passw0rd!x' });
+ok(r.j?.user?.role === 'admin', 'verified admin email becomes admin');
 r = await learner('POST', '/api/auth/signup', { name: 'Tariro Moyo', email: `tariro${id}@example.com`, password: 'Passw0rd1', level: 'beginner' });
 ok(r.s === 201 && r.j.user.role === 'student' && r.j.user.trialAvailable === true, 'learner signs up, trial available');
 r = await teacher('POST', '/api/auth/signup', { name: 'Mr Dube', email: `dube${id}@example.com`, password: 'Passw0rd1', wantsToTeach: true });

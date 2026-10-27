@@ -15,8 +15,8 @@
     {
       "binding": "DB",
       "database_name": "global_ai_academy",
-      // Replace with the id printed by `npx wrangler d1 create global_ai_academy`
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Production database (Cloudflare D1, Western Europe — closest D1 region to Harare).
+      "database_id": "b30bb6a2-2131-427d-b8e8-8d2137c05b07",
       "migrations_dir": "migrations"
     }
   ],
@@ -24,14 +24,13 @@
     "APP_NAME": "Global AI Academy",
     "APP_URL": "http://localhost:5173",
     "OPENAI_MODEL": "gpt-4.1-mini",
-    // Comma-separated emails that are automatically promoted to admin on sign-up.
-    "ADMIN_EMAILS": "munyaradzimandiwanzira@gmail.com",
     // Must be a sender verified in Brevo. munyaradzimandiwanzira@gmail.com is verified today; switch to an
     // address on your own domain once it is authenticated in Brevo (better inbox delivery).
     "EMAIL_FROM": "Global AI Academy <munyaradzimandiwanzira@gmail.com>",
     "JUDGE0_URL": ""
   }
   // Secrets (set with `npx wrangler secret put NAME`, or in .dev.vars locally):
+  //   ADMIN_EMAILS          – comma-separated emails promoted to admin on sign-up (kept secret, never in Git)
   //   OPENAI_API_KEY        – required for AI features
   //   BREVO_API_KEY         – optional, sends verification / reset emails
   //   PAYNOW_INTEGRATION_ID – optional, Paynow Zimbabwe (EcoCash / OneMoney / cards)

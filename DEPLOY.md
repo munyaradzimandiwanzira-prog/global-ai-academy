@@ -25,6 +25,7 @@ npm run db:migrate:remote
 Secrets are encrypted by Cloudflare and never appear in code or Git. Each command asks you to paste the value.
 
 ```bash
+npx wrangler secret put ADMIN_EMAILS            # comma-separated emails that become admin on sign-up (kept out of Git)
 npx wrangler secret put OPENAI_API_KEY          # required for Coach Zuva, Professor Zuva and teacher AI tools
 npx wrangler secret put BREVO_API_KEY           # verification, password-reset and waitlist emails (Brevo → SMTP & API → API keys)
 npx wrangler secret put PAYNOW_INTEGRATION_ID   # optional: Paynow (EcoCash, OneMoney, cards)
@@ -40,7 +41,7 @@ Without a secret, its feature switches off gracefully. The app still works and t
 npm run deploy
 ```
 
-The site is live at `https://global-ai-academy.<your-subdomain>.workers.dev`. Sign up with an address listed in `ADMIN_EMAILS` (in `wrangler.jsonc`) to become the first admin automatically.
+The site is live at `https://global-ai-academy.<your-subdomain>.workers.dev`. Sign up with an address listed in the `ADMIN_EMAILS` secret to become the first admin automatically.
 
 ## 4. Set your public URL
 
@@ -50,7 +51,6 @@ Edit `vars` in `wrangler.jsonc`, then run `npm run deploy` again:
 |---|---|
 | `APP_URL` | Your public address, e.g. `https://globalaiacademy.co.zw`. Email links and Paynow redirects use it. Until it's set, the app uses the address it was reached on. |
 | `EMAIL_FROM` | A sender verified in Brevo. It is set to `munyaradzimandiwanzira@gmail.com`, which is verified on your Brevo account today. Move to an address on your own domain once the domain is authenticated (better inbox placement). |
-| `ADMIN_EMAILS` | Comma-separated emails that become admins when they sign up |
 | `OPENAI_MODEL` | Defaults to `gpt-4.1-mini` (good quality per dollar) |
 | `JUDGE0_URL` | Your Judge0 endpoint, if you use one |
 
