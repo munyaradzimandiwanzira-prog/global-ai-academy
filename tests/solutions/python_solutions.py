@@ -249,4 +249,37 @@ SOLUTIONS = {
         "    extra = {b for a, b in RELATED if a in ents} | {a for a, b in RELATED if b in ents}\n"
         "    return {'chunks': ranked, 'entities': sorted(ents | extra)}"
     ),
+    # --- AI Evaluations ------------------------------------------------------------------
+    "evals-regression-gate": (
+        "def gate(dataset, baseline, candidate, critical):\n"
+        "    def ok(out, facts):\n        return all(f.lower() in out.lower() for f in facts)\n"
+        "    b = {d['id']: ok(baseline[d['id']], d['facts']) for d in dataset}\n"
+        "    c = {d['id']: ok(candidate[d['id']], d['facts']) for d in dataset}\n"
+        "    rb, rc = round(sum(b.values()) / len(dataset), 3), round(sum(c.values()) / len(dataset), 3)\n"
+        "    regs = sorted(i for i in b if b[i] and not c[i])\n"
+        "    slice_of = {d['id']: d['slice'] for d in dataset}\n"
+        "    critical_reg = any(slice_of[i] in critical for i in regs)\n"
+        "    return {'baseline': rb, 'candidate': rc, 'regressions': regs, 'ship': rc >= rb and not critical_reg}"
+    ),
+    # --- Inference Engineering ------------------------------------------------------------
+    "inference-capacity": (
+        "def max_concurrent(gpu_gb, params_b, bytes_per_weight, layers, kv_heads, head_dim, ctx, kv_bytes=2, reserve=0.1):\n"
+        "    usable = gpu_gb * 1e9 * (1 - reserve)\n"
+        "    free = usable - params_b * 1e9 * bytes_per_weight\n"
+        "    if free <= 0:\n        return 0\n"
+        "    per_seq = 2 * layers * kv_heads * head_dim * kv_bytes * ctx\n"
+        "    return int(free // per_seq)"
+    ),
+    # --- OpenAI API for Developers ----------------------------------------------------------
+    "openai-parse-response": (
+        "import json\n"
+        "def summarise(resp):\n"
+        "    out = resp.get('output', [])\n"
+        "    text = ''.join(p['text'] for i in out if i.get('type') == 'message' for p in i.get('content', []) if p.get('type') == 'output_text')\n"
+        "    calls = [(i['name'], json.loads(i['arguments'])) for i in out if i.get('type') == 'function_call']\n"
+        "    u = resp.get('usage', {})\n"
+        "    return {'status': resp.get('status'), 'text': text, 'calls': calls,\n"
+        "            'cached': u.get('input_tokens_details', {}).get('cached_tokens', 0),\n"
+        "            'reasoning': u.get('output_tokens_details', {}).get('reasoning_tokens', 0)}"
+    ),
 }

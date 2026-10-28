@@ -196,7 +196,8 @@ export const Sketch = memo(function Sketch({ spec }: { spec: SketchSpec }) {
           {drawn.edges.map(({ paths }, i) => <PathList key={`e${i}`} paths={paths} />)}
           {drawn.nodes.map(({ n, paths }) => {
             const person = n.shape === 'person';
-            const ly = person ? n.box.y + n.box.h + 14 : n.sub ? n.cy - 8 : n.cy;
+            // People and dots carry their label outside the shape (below the figure, above the dot).
+            const ly = person ? n.box.y + n.box.h + 14 : n.shape === 'dot' ? n.cy - 18 : n.sub ? n.cy - 8 : n.cy;
             return (
               <g key={n.id}>
                 <PathList paths={paths} />
