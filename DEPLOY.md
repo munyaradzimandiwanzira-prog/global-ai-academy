@@ -41,7 +41,7 @@ Without a secret, its feature switches off gracefully. The app still works and t
 npm run deploy
 ```
 
-The site is live at `https://global-ai-academy.<your-subdomain>.workers.dev`. Sign up with an address listed in the `ADMIN_EMAILS` secret to become the first admin automatically.
+The site is live at **https://skurulearning.com** (custom domain on the Worker; `www` redirects to it, and the `workers.dev` address is switched off). Sign up with an address listed in the `ADMIN_EMAILS` secret to become the first admin automatically.
 
 ## 4. Set your public URL
 

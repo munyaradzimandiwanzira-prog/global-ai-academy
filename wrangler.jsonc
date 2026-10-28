@@ -6,6 +6,14 @@
   "compatibility_date": "2025-09-15",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Public address: skurulearning.com (www redirects to it). The *.workers.dev address and
+  // per-version preview URLs are switched off so the account's sub-name never appears publicly.
+  "routes": [
+    { "pattern": "skurulearning.com", "custom_domain": true },
+    { "pattern": "www.skurulearning.com", "custom_domain": true }
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     // SPA routing: unknown paths serve index.html; /api/* always hits the worker first.
     "not_found_handling": "single-page-application",
@@ -22,7 +30,7 @@
   ],
   "vars": {
     "APP_NAME": "Global AI Academy",
-    "APP_URL": "https://global-ai-academy.munyaradzimandiwanzira.workers.dev",
+    "APP_URL": "https://skurulearning.com",
     "OPENAI_MODEL": "gpt-4.1-mini",
     // Must be a sender verified in Brevo. munyaradzimandiwanzira@gmail.com is verified today; switch to an
     // address on your own domain once it is authenticated in Brevo (better inbox delivery).

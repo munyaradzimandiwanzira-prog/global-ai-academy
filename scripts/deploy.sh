@@ -43,4 +43,4 @@ for s in ADMIN_EMAILS OPENAI_API_KEY BREVO_API_KEY PAYNOW_INTEGRATION_ID PAYNOW_
 done
 
 say "Done"
-echo "Health check: open https://<your-worker-url>/api/health"
+echo "Live at https://skurulearning.com  ·  health: https://skurulearning.com/api/health"
