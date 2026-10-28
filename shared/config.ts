@@ -58,9 +58,11 @@ const FREE: Plan = {
   id: 'free',
   name: 'Free',
   priceUsdMonthly: 0,
-  blurb: 'Every tutorial, every editor, forever free.',
+  blurb: 'Every core tutorial and editor, forever free.',
   features: [
-    'All tutorials, references, examples and exercises',
+    'All core tutorials, references, examples and exercises',
+    'Free preview of every professional track',
+    'Graph Lab: a full work placement, plus the first tickets of every other',
     'Run Python, JavaScript, HTML, CSS and SQL in the browser',
     'Coding challenges with automatic tests',
     'Quizzes for every track',
@@ -78,6 +80,8 @@ const PLUS: Plan = {
   blurb: 'For self-driven learners who want structure and proof.',
   features: [
     'Everything in Free',
+    'Every professional track in full: agentic AI, MCP, GraphRAG, Neo4j, evals, inference, SageMaker',
+    'Every Graph Lab work placement',
     'Professor Zuva, the AI tutor, on every lesson',
     'Personal goals and weekly study plans',
     'Certification exams and verifiable certificates',

@@ -16,6 +16,8 @@ tags: [mlops, llmops, platform engineering, deployment, monitoring, mlflow, kube
 
 Most ML projects never reach users. **MLOps** is the set of practices that makes models **reproducible, deployable, observable and maintainable** — and **AI platform engineering** builds the shared systems that let every team do this easily.
 
+> **On AWS?** The **[AWS SageMaker AI](/learn/sagemaker)** track shows managed versions of these practices: training jobs, endpoints, Pipelines, Model Registry and Model Monitor. For serving large models efficiently, see **[Inference Engineering](/learn/inference-engineering)**.
+
 ```text
  Data ─▶ Train ─▶ Evaluate ─▶ Register ─▶ Deploy ─▶ Monitor ─┐
    ▲                                                         │

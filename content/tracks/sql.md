@@ -396,6 +396,8 @@ cursor.execute("SELECT * FROM Customers WHERE City = ?", (city,))
   answer: 1
 ```
 
+> **Next: graphs.** When your queries become chains of JOINs (friends of friends, supply chains, fraud rings, prerequisites), a graph database is often the better tool. Try **[Neo4j & Graph Databases](/learn/neo4j)** and the **[Graph Lab](/lab)** work placements.
+
 ```exam
 - q: "Which keyword removes duplicate values from results?"
   options: ["UNIQUE", "DISTINCT", "DIFFERENT", "ONLY"]

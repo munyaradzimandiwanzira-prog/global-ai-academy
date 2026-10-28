@@ -1,6 +1,6 @@
 import { CypherError, describeStats, fmtValue, resultGraph, runCypher, type GNode, type GRel } from '@/features/graph/engine';
 import { buildGraph, datasetFromCode, getDataset } from '@/features/graph/datasets';
-import type { ViewGraph } from '@/features/graph/GraphView';
+import type { ViewGraph } from '@/features/graph/types';
 import type { RunOptions, RunResult, OutputLine } from './types';
 
 const MAX_VIEW_NODES = 300;

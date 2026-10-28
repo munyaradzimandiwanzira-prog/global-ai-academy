@@ -16,6 +16,8 @@ tags: [openai, llm, api, python, embeddings, function calling, structured output
 
 Chat apps are built on **APIs** — web services your code calls over HTTPS. You send messages; the API returns the model's reply.
 
+> **Go deeper.** The **[OpenAI API for Developers](/learn/openai-platform)** track covers the Responses API, conversation state, structured outputs, built-in tools, reasoning models, embeddings and the Batch API in detail; **[Inference Engineering](/learn/inference-engineering)** explains latency and cost.
+
 Major providers include **OpenAI**, **Anthropic**, **Google**, **Mistral** and **Cohere**, and you can also run **open models** (Llama, Qwen, Gemma, Mistral) yourself with tools like **Ollama** or through Hugging Face. Their APIs look very similar, so what you learn here transfers.
 
 ```text
@@ -75,35 +77,33 @@ client = OpenAI()        # picks up OPENAI_API_KEY automatically
 from openai import OpenAI
 client = OpenAI()
 
-response = client.chat.completions.create(
-    model="gpt-4.1-mini",
-    temperature=0.3,
-    max_tokens=200,
-    messages=[
-        {"role": "system", "content": "You are a concise tutor for Zimbabwean high-school learners."},
-        {"role": "user", "content": "Explain photosynthesis in 3 sentences."},
-    ],
+response = client.responses.create(
+    model="gpt-6.1-terra",                      # check the models page for current names
+    instructions="You are a concise tutor for Zimbabwean high-school learners.",
+    input="Explain photosynthesis in 3 sentences.",
+    max_output_tokens=200,
 )
 
-print(response.choices[0].message.content)
-print(response.usage)   # prompt_tokens, completion_tokens, total_tokens
+print(response.output_text)
+print(response.usage)   # input_tokens, output_tokens (incl. reasoning), cached tokens…
 ```
 
-Model names change often — check your provider's model list and pick one by **quality, speed and price** for your task. Small, fast models are fine for classification and extraction; larger ones for complex reasoning.
+This uses OpenAI's **Responses API**, the recommended API for new projects. You'll still see the older **Chat Completions** style (`client.chat.completions.create(messages=[...])`) in many tutorials and in other providers' OpenAI-compatible APIs; the ideas are the same. Model names change often — check your provider's model list and pick one by **quality, speed and price** for your task. Small, fast models are fine for classification and extraction; larger ones for complex reasoning.
 
 ## Conversations are stateless
 
 The API doesn't remember previous calls. To continue a conversation you send the **history** each time:
 
 ```python
-history = [{"role": "system", "content": "You are a helpful tutor."}]
+history = []
 
 def chat(user_text):
     history.append({"role": "user", "content": user_text})
-    reply = client.chat.completions.create(model="gpt-4.1-mini", messages=history)
-    text = reply.choices[0].message.content
-    history.append({"role": "assistant", "content": text})
-    return text
+    reply = client.responses.create(model="gpt-6.1-terra", instructions="You are a helpful tutor.", input=history)
+    history.extend(reply.output)          # keep the model's output items (text, reasoning, tool calls)
+    return reply.output_text
+
+# Or let the platform keep the thread: previous_response_id=reply.id, or a Conversation object.
 ```
 
 Long histories cost more and eventually exceed the context window — trim or summarise old messages.
@@ -124,15 +124,14 @@ print(len(msgs), "→", len(trim_history(msgs)), "messages")
 Long answers feel slow if you wait for the whole thing. **Streaming** sends tokens as they're generated, so users see text appear immediately.
 
 ```python
-stream = client.chat.completions.create(
-    model="gpt-4.1-mini",
-    messages=[{"role": "user", "content": "Give me 5 tips for learning to code."}],
+stream = client.responses.create(
+    model="gpt-6.1-terra",
+    input="Give me 5 tips for learning to code.",
     stream=True,
 )
-for chunk in stream:
-    delta = chunk.choices[0].delta.content
-    if delta:
-        print(delta, end="", flush=True)
+for event in stream:
+    if event.type == "response.output_text.delta":
+        print(event.delta, end="", flush=True)
 ```
 
 On the web, your backend relays the stream to the browser (Server-Sent Events or a streamed HTTP response). Professor Zuva, the tutor on every lesson here, works this way.
@@ -155,19 +154,17 @@ class Order(BaseModel):
     lines: list[OrderLine]
 
 client = OpenAI()
-completion = client.beta.chat.completions.parse(
-    model="gpt-4.1-mini",
-    messages=[
-        {"role": "system", "content": "Extract the order. Use null when unknown."},
-        {"role": "user", "content": "Rumbi here, 0772123456 — 2 roller meal and 1 cooking oil please"},
-    ],
-    response_format=Order,
+response = client.responses.parse(
+    model="gpt-6.1-terra",
+    instructions="Extract the order. Use null when unknown.",
+    input="Rumbi here, 0772123456 — 2 roller meal and 1 cooking oil please",
+    text_format=Order,
 )
-order = completion.choices[0].message.parsed
+order = response.output_parsed
 print(order.customer, [(l.item, l.qty) for l in order.lines])
 ```
 
-SDK method names evolve — always check the current documentation for your provider.
+SDK method names evolve — always check the current documentation for your provider. The **[OpenAI API for Developers](/learn/openai-platform)** track goes deeper into every part of this.
 
 ```python run title="Validating JSON with Python dataclasses"
 import json
@@ -195,28 +192,27 @@ print(data["customer"], lines)
 ```python
 tools = [{
     "type": "function",
-    "function": {
-        "name": "get_price",
-        "description": "Get the current price of a product in USD",
-        "parameters": {
-            "type": "object",
-            "properties": {"product": {"type": "string"}},
-            "required": ["product"],
-        },
+    "name": "get_price",
+    "description": "Get the current price of a product in USD",
+    "parameters": {
+        "type": "object",
+        "properties": {"product": {"type": "string"}},
+        "required": ["product"],
+        "additionalProperties": False,
     },
+    "strict": True,
 }]
 
-messages = [{"role": "user", "content": "How much is cooking oil?"}]
-first = client.chat.completions.create(model="gpt-4.1-mini", messages=messages, tools=tools)
-call = first.choices[0].message.tool_calls[0]
+items = [{"role": "user", "content": "How much is cooking oil?"}]
+first = client.responses.create(model="gpt-6.1-terra", input=items, tools=tools)
+items += first.output                                    # keep the model's function_call item
+for call in (o for o in first.output if o.type == "function_call"):
+    args = json.loads(call.arguments)                    # {"product": "cooking oil"}
+    result = get_price(**args)                           # YOUR function
+    items.append({"type": "function_call_output", "call_id": call.call_id, "output": json.dumps(result)})
 
-args = json.loads(call.function.arguments)        # {"product": "cooking oil"}
-result = get_price(**args)                         # YOUR function
-
-messages += [first.choices[0].message,
-             {"role": "tool", "tool_call_id": call.id, "content": json.dumps(result)}]
-final = client.chat.completions.create(model="gpt-4.1-mini", messages=messages, tools=tools)
-print(final.choices[0].message.content)
+final = client.responses.create(model="gpt-6.1-terra", input=items, tools=tools)
+print(final.output_text)
 ```
 
 Here's the full loop simulated so you can run it:

@@ -8,8 +8,8 @@ language: python
 color: "#1C3C3C"
 icon: "🦜"
 order: 45
-summary: Build LLM applications with LangChain — models, prompt templates, output parsers, LCEL chains, retrievers, tools and memory — then stateful agent workflows with LangGraph.
-tags: [langchain, langgraph, llm, chains, agents, python]
+summary: Build LLM applications and agents with LangChain v1 and LangGraph. Models and prompts, structured output, retrievers and tools, agents with create_agent, middleware for guardrails, summarisation and human approval, memory with checkpointers and stores, Deep Agents for long tasks, MCP tools, and tracing with LangSmith.
+tags: [langchain, langgraph, deep agents, create_agent, middleware, llm, agents, python, langsmith]
 ---
 
 # Why a Framework? {#intro}
@@ -19,22 +19,30 @@ You *can* build LLM apps with raw API calls (and you should understand how — s
 - One interface for **many model providers** (OpenAI, Anthropic, Google, Ollama, Hugging Face…).
 - **Prompt templates**, **output parsers** and **retrievers**.
 - Integrations with hundreds of vector stores, document loaders and tools.
-- **LangGraph** for multi-step, stateful agents with loops and human approval.
-- **LangSmith** for tracing and evaluation.
+- **`create_agent`**: a production-ready agent loop with **middleware** hooks for guardrails, summarisation, retries and human approval.
+- **LangGraph**: the low-level runtime underneath, for custom stateful graphs with persistence, interrupts and streaming.
+- **Deep Agents**: a harness for long, multi-step tasks with planning, a virtual filesystem and subagents.
+- **LangSmith**: tracing, evaluation datasets and monitoring.
+
+| Layer | Use it when |
+|---|---|
+| LangChain `create_agent` | You want a reliable tool-calling agent quickly, customised with middleware |
+| LangGraph | You need a custom control flow: explicit steps, branches, loops, durable execution |
+| Deep Agents | Tasks run for many steps and need planning, files and subagents (research, coding) |
 
 > Frameworks change quickly. Learn the **concepts** — they transfer to LlamaIndex, Haystack, Semantic Kernel or your own code — and check current docs for exact imports.
 
 ```bash
-pip install langchain langchain-openai langchain-community langgraph
+pip install -U langchain langchain-openai langgraph
 ```
 
 # Models and Prompt Templates {#templates}
 
 ```python
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0.2)
+llm = init_chat_model("openai:gpt-6.1-terra", temperature=0.2)   # or ChatOpenAI(model=...) from langchain_openai
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful tutor for {level} learners in Zimbabwe. Answer in under {words} words."),
@@ -169,6 +177,127 @@ print(msg.tool_calls)   # [{'name': 'check_stock', 'args': {'product': 'cooking 
 
 The **docstring and type hints** become the tool's description and schema — write them carefully; the model reads them to decide when to call the tool.
 
+# Agents with create_agent {#create-agent}
+
+`create_agent` is LangChain's standard agent: give it a model, tools and a system prompt, and it runs the tool-calling loop for you (model → tools → model … → answer), built on LangGraph.
+
+```python
+from langchain.agents import create_agent
+from langchain.tools import tool
+
+@tool
+def get_course(code: str) -> str:
+    """Look up a Skuru course by its code, e.g. PY101."""
+    return {"PY101": "Python Basics, 20 hours", "DB220": "Graph Databases, 25 hours"}.get(code, "unknown course")
+
+agent = create_agent(
+    model="openai:gpt-6.1-terra",
+    tools=[get_course],
+    system_prompt="You are a course advisor for Skuru Learning. Use tools for facts. Be brief.",
+)
+result = agent.invoke({"messages": [{"role": "user", "content": "How long is DB220?"}]})
+print(result["messages"][-1].content)
+```
+
+## Structured responses
+
+```python
+from pydantic import BaseModel
+
+class Recommendation(BaseModel):
+    course_code: str
+    reason: str
+
+advisor = create_agent(model="openai:gpt-6.1-terra", tools=[get_course], response_format=Recommendation)
+out = advisor.invoke({"messages": [{"role": "user", "content": "I want to learn graphs. What should I take?"}]})
+print(out["structured_response"])        # a validated Recommendation
+```
+
+## Streaming progress
+
+```python
+for chunk in agent.stream({"messages": [{"role": "user", "content": "Compare PY101 and DB220"}]}, stream_mode="updates"):
+    print(chunk)                          # each step: model output, tool calls, tool results
+```
+
+```quiz
+- q: What does create_agent run for you?
+  options: ["Only one model call", "The tool-calling loop: model, tools, model … until a final answer", "A vector database", "Model training"]
+  answer: 1
+- q: How do you get a validated object back from an agent?
+  options: ["Parse the text yourself", "Pass response_format with a Pydantic model and read structured_response", "Use temperature 0", "It's impossible"]
+  answer: 1
+```
+
+# Middleware: Guardrails, Summaries and Approval {#middleware}
+
+**Middleware** wraps the agent loop with hooks that run **before and after model calls** and **around tool calls**. It's where production concerns live, without rewriting the agent.
+
+| Prebuilt middleware | Purpose |
+|---|---|
+| `SummarizationMiddleware` | Summarise older messages when the context gets long (compaction) |
+| `HumanInTheLoopMiddleware` | Pause before chosen tool calls so a person can approve, edit or reject |
+| `PIIMiddleware` | Detect and redact or block personal data |
+| `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` | Budgets that stop runaway loops |
+| `ModelFallbackMiddleware` | Switch to a backup model when one fails |
+| `ToolRetryMiddleware` | Retry failing tools with backoff |
+| `LLMToolSelectorMiddleware` | Pick the relevant tools when there are many |
+| `ContextEditingMiddleware` | Clear old tool outputs from the context |
+| `TodoListMiddleware` | Give the agent a planning/todo tool |
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    HumanInTheLoopMiddleware, SummarizationMiddleware, ModelCallLimitMiddleware,
+)
+from langgraph.checkpoint.memory import InMemorySaver
+
+agent = create_agent(
+    model="openai:gpt-6.1-terra",
+    tools=[get_course, enrol_learner],
+    checkpointer=InMemorySaver(),          # required: approvals pause and resume the run
+    middleware=[
+        SummarizationMiddleware(model="openai:gpt-6-luna", trigger=("tokens", 6000), keep=("messages", 20)),
+        HumanInTheLoopMiddleware(interrupt_on={
+            "enrol_learner": {"allowed_decisions": ["approve", "edit", "reject"]},
+            "get_course": False,
+        }),
+        ModelCallLimitMiddleware(run_limit=15),
+    ],
+)
+```
+
+You can write **custom middleware** too (for example, to log every tool call, block certain arguments, or inject user memories into the prompt). The **Agentic AI Engineering** track explains the engineering behind each of these concerns.
+
+```python run title="The middleware idea in plain Python"
+def with_middleware(call_model, middlewares):
+    def run(state):
+        for m in middlewares:
+            state = m.get("before", lambda s: s)(state)
+        out = call_model(state)
+        for m in reversed(middlewares):
+            out = m.get("after", lambda s, o: o)(state, out)
+        return out
+    return run
+
+redact = {"before": lambda s: {**s, "input": s["input"].replace("0771234567", "[PHONE]")}}
+limit = {"before": lambda s: s if s["calls"] < 3 else (_ for _ in ()).throw(RuntimeError("call limit reached"))}
+audit = {"after": lambda s, o: (print("audit:", s["input"], "->", o) or o)}
+
+model = lambda s: f"Answering: {s['input']}"
+agent_call = with_middleware(model, [limit, redact, audit])
+print(agent_call({"input": "Call me on 0771234567 about PY101", "calls": 0}))
+```
+
+```quiz
+- q: Which middleware compacts long conversations?
+  options: ["PIIMiddleware", "SummarizationMiddleware", "ToolRetryMiddleware", "ModelFallbackMiddleware"]
+  answer: 1
+- q: What must you configure for human-in-the-loop approvals to pause and resume?
+  options: ["A vector store", "A checkpointer", "A bigger model", "Streaming"]
+  answer: 1
+```
+
 # Memory and Conversation State {#memory}
 
 Chat apps must remember earlier turns. Options:
@@ -198,7 +327,21 @@ for i, text in enumerate(["I live in Gweru", "I study Python", "I like football"
 print(m.context())
 ```
 
-In LangGraph, a **checkpointer** saves state per conversation thread automatically.
+In LangChain and LangGraph:
+
+- **Short-term memory** = the thread's state, saved by a **checkpointer** after every step. Pass a `thread_id` to continue a conversation.
+- **Long-term memory** = a **store** with namespaces (for example per user), readable and writable from tools and middleware, optionally with semantic search.
+
+```python
+from langgraph.checkpoint.memory import InMemorySaver      # use a database-backed saver in production
+from langgraph.store.memory import InMemoryStore
+
+agent = create_agent(model="openai:gpt-6.1-terra", tools=[get_course],
+                     checkpointer=InMemorySaver(), store=InMemoryStore())
+config = {"configurable": {"thread_id": "rudo-session-1"}}
+agent.invoke({"messages": [{"role": "user", "content": "I'm Rudo and I like graphs."}]}, config)
+agent.invoke({"messages": [{"role": "user", "content": "What's my name?"}]}, config)   # remembers within the thread
+```
 
 # LangGraph: Stateful Agents {#langgraph}
 
@@ -206,7 +349,7 @@ In LangGraph, a **checkpointer** saves state per conversation thread automatical
 
 ```python
 from typing import TypedDict
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, START, END
 
 class State(TypedDict):
     question: str
@@ -223,7 +366,7 @@ def review(state: State):
 graph = StateGraph(State)
 graph.add_node("write", write_draft)
 graph.add_node("review", review)
-graph.set_entry_point("write")
+graph.add_edge(START, "write")
 graph.add_edge("write", "review")
 graph.add_conditional_edges("review", lambda s: END if s["approved"] else "write")
 app = graph.compile()
@@ -251,13 +394,54 @@ edges = {"draft": lambda s: "review", "review": lambda s: "END" if s["approved"]
 run_graph(nodes, edges, {}, "draft")
 ```
 
-LangGraph adds **checkpointing**, **human-in-the-loop interrupts**, **streaming** of intermediate steps and **multi-agent** patterns. Continue with the [AI Agents](/learn/ai-agents) track.
+LangGraph adds **checkpointing** (durable, resumable runs and time travel), **human-in-the-loop interrupts**, **streaming** of intermediate steps and **subgraphs** for multi-agent designs. Continue with the [Agentic AI Engineering](/learn/agentic-engineering) track.
+
+# Deep Agents and MCP Tools {#deep-agents}
+
+## Deep Agents
+
+Simple agents struggle with long tasks: they lose track, overflow their context, and don't plan. **Deep Agents** is a harness (built on LangGraph) that adds what long-running agents need:
+
+| Capability | How it helps |
+|---|---|
+| **Planning tool** (a todo list) | The agent writes and updates a plan, so it stays on track |
+| **Virtual filesystem** (ls, read, write, edit) | Offload notes and large results out of the context window |
+| **Subagents** | Delegate focused work to fresh contexts (context isolation) |
+| **Detailed system prompt** | Tuned instructions for using the tools above |
+
+```python
+# pip install deepagents
+from deepagents import create_deep_agent
+
+research_agent = create_deep_agent(
+    tools=[web_search],
+    system_prompt="You are a careful researcher. Plan first, save notes to files, cite sources.",
+)
+result = research_agent.invoke({"messages": [{"role": "user", "content": "Compare graph databases for a fraud-detection startup in Zimbabwe."}]})
+```
+
+## Using MCP servers as tools
+
+Any **MCP server** can supply tools to a LangChain agent: LangChain's MCP integration connects to servers (local stdio or remote HTTP), converts their tools into LangChain tools, and handles authentication. See the **MCP & Agent Protocols** track for how MCP works, and the LangChain MCP docs for the current connection API.
+
+## Multi-agent patterns
+
+LangChain documents several patterns: **subagents** (a supervisor calls specialist agents as tools), **handoffs** (control passes between agents), **skills** (load specialised instructions on demand), a **router**, and **custom workflows** in LangGraph. The **Agentic AI Engineering** track compares them and when each is worth its cost.
+
+```quiz
+- q: Which Deep Agents feature keeps large intermediate results out of the context window?
+  options: ["The planning tool", "The virtual filesystem", "Temperature", "Streaming"]
+  answer: 1
+- q: What gives a subagent its main advantage?
+  options: ["It's free", "A fresh, focused context for one job", "It needs no model", "It removes tools"]
+  answer: 1
+```
 
 # Tracing and Evaluation {#tracing}
 
 LLM apps are hard to debug without seeing each step. **Tracing** records every prompt, model call, tool call, latency and token count.
 
-- **LangSmith** (from the LangChain team): set `LANGSMITH_TRACING=true` and an API key, and runs appear in a dashboard.
+- **LangSmith** (from the LangChain team): set `LANGSMITH_TRACING=true` and an API key, and runs appear in a dashboard. It also stores **datasets**, runs **offline experiments** and attaches **online evaluators** to production traces (see the [AI Evaluations](/learn/ai-evaluations) track).
 - Open-source alternatives: **Langfuse**, **Arize Phoenix**, **OpenTelemetry**-based tools.
 
 Use traces to find slow steps, expensive prompts and the exact input that caused a bad answer — then add it to your evaluation set.

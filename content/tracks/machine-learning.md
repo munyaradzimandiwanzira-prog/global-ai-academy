@@ -16,6 +16,8 @@ tags: [machine learning, scikit-learn, python, regression, classification, ml]
 
 Every ML project follows the same steps:
 
+> **Foundations.** Want to know *why* these algorithms work? **[Statistics for AI](/learn/statistics)** and **[Mathematics & First Principles of ML](/learn/ml-math)** build the maths (probability, distributions, hypothesis tests, linear algebra, calculus, gradient descent, backpropagation) from scratch in code.
+
 1. **Define the problem** — what will you predict, and how will you know it's good?
 2. **Collect data** — and understand where it came from.
 3. **Explore and clean** — fix missing values, outliers, wrong types.

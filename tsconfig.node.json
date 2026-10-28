@@ -11,7 +11,7 @@
     "allowImportingTsExtensions": true,
     "types": ["node"],
     "baseUrl": ".",
-    "paths": { "@shared/*": ["./shared/*"] }
+    "paths": { "@shared/*": ["./shared/*"], "@/*": ["./src/*"] }
   },
   "include": ["vite.config.ts", "plugins/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
 }

@@ -16,6 +16,8 @@ tags: [rag, retrieval, embeddings, vector database, llm, search, pgvector]
 
 LLMs only know what was in their training data. They don't know your school's policies, your company's price list or last week's news — and when they don't know, they may **hallucinate**.
 
+> **Go deeper.** When questions need connected facts (multi-hop, relationships, whole-corpus themes) or an agent that decides what to retrieve, continue with **[GraphRAG & Agentic RAG](/learn/graphrag)**, built on **[Neo4j & Graph Databases](/learn/neo4j)**.
+
 **Retrieval-Augmented Generation (RAG)** fixes this: before asking the LLM, **retrieve** the most relevant pieces of your own documents and put them in the prompt. The model then answers **from those sources**, and can cite them.
 
 ```text

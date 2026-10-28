@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 
-/** Serializable graph snapshot (safe to pass through RunResult and React state). */
-export interface ViewNode { id: number; labels: string[]; props: Record<string, unknown> }
-export interface ViewRel { id: number; type: string; start: number; end: number; props: Record<string, unknown> }
-export interface ViewGraph { nodes: ViewNode[]; rels: ViewRel[] }
+import type { ViewGraph, ViewNode, ViewRel } from './types';
+export type { ViewGraph, ViewNode, ViewRel };
 
 const PALETTE = ['#23807F', '#C08A1E', '#5B3FA0', '#C2554D', '#3577B8', '#3E7D3A', '#B4472A', '#6B6A64'];
 const CAPTION_KEYS = ['name', 'title', 'code', 'number', 'sku', 'id', 'text', 'key', 'imei'];

@@ -16,6 +16,8 @@ tags: [ai agents, agentic ai, tools, mcp, multi-agent, planning, llm]
 
 A chatbot **answers**. An **agent** **acts**: it decides what to do next, uses **tools** (search, databases, code, APIs), looks at the results and keeps going until the goal is reached.
 
+> **Go deeper.** This track introduces agents. For production engineering (API resilience, tool design, loop and context engineering, caching, memory architecture, guardrails, multi-agent systems and harness engineering) continue with **[Agentic AI Engineering](/learn/agentic-engineering)**, then **[MCP & Agent Protocols](/learn/mcp)** and **[AI Evaluations](/learn/ai-evaluations)**.
+
 ```text
             ┌───────────────────────────────┐
  Goal ───▶  │  THINK: what should I do next? │

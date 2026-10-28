@@ -869,6 +869,8 @@ expectedOutput: |
 
 A **function** is a named block of code you can run whenever you need it. Define it with `def`.
 
+> **Go deeper.** The **[Functions in Depth](/learn/python-functions)** track covers every parameter kind, closures, decorators, generators, recursion, type hints and async; **[Pydantic in Depth](/learn/pydantic)** shows how to validate data at the boundaries of your programs.
+
 ```python run
 def greet(name):
     print(f"Mhoro, {name}!")

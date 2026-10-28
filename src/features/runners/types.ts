@@ -17,7 +17,7 @@ export interface RunResult {
   images?: string[]; // data URLs (matplotlib figures)
   table?: { columns: string[]; rows: unknown[][] }[];
   html?: string; // rendered document for html/css
-  graph?: import('@/features/graph/GraphView').ViewGraph; // nodes and relationships returned by a Cypher query
+  graph?: import('@/features/graph/types').ViewGraph; // nodes and relationships returned by a Cypher query
   /** stdout is kept for output checks but not displayed (the table shows the same data). */
   hideStdout?: boolean;
   durationMs: number;

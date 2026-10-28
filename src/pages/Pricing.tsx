@@ -16,8 +16,10 @@ interface Quote { listCents: number; amountCents: number; percentOff: number; pr
 
 /** Rows for the comparison table: which plan includes what. Content, not decoration. */
 const COMPARE: { label: string; plans: Partial<Record<Plan['id'], string | true>> }[] = [
-  { label: 'Tutorials, references and examples', plans: { free: true, plus: true, academy: true, premium: true } },
-  { label: 'Run code in the browser (Python, JS, HTML, CSS, SQL)', plans: { free: true, plus: true, academy: true, premium: true } },
+  { label: 'Core tutorials, references and examples', plans: { free: true, plus: true, academy: true, premium: true } },
+  { label: 'Professional tracks: agentic AI, MCP, GraphRAG, Neo4j, evals, inference, SageMaker…', plans: { free: 'Free preview', plus: true, academy: true, premium: true } },
+  { label: 'Graph Lab simulated work placements', plans: { free: '1 full + previews', plus: 'All', academy: 'All', premium: 'All' } },
+  { label: 'Run code in the browser (Python, JS, HTML, CSS, SQL, Cypher)', plans: { free: true, plus: true, academy: true, premium: true } },
   { label: 'Exercises, quizzes and coding challenges', plans: { free: true, plus: true, academy: true, premium: true } },
   { label: 'Kids Zone games', plans: { free: true, plus: true, academy: true, premium: true } },
   { label: 'AI requests a day', plans: { free: '15', plus: '150', academy: '400', premium: 'Unlimited' } },
@@ -33,7 +35,7 @@ const COMPARE: { label: string; plans: Partial<Record<Plan['id'], string | true>
 ];
 
 const FAQ: { q: string; a: string }[] = [
-  { q: 'Is the free plan really free?', a: 'Yes. Every tutorial, reference, exercise, quiz, challenge and code editor is free for everyone, with or without an account. Paid plans add support around the content: an AI tutor, certificates, classrooms and mentoring.' },
+  { q: 'Is the free plan really free?', a: 'Yes. Every core tutorial, reference, exercise, quiz, challenge and code editor is free for everyone, with or without an account, and every professional track has a free preview. Plus unlocks the professional tracks and Graph Lab placements in full, and paid plans add support around the content: an AI tutor, certificates, classrooms and mentoring.' },
   { q: 'How do I pay from Zimbabwe?', a: 'With EcoCash, OneMoney, or a Visa/Mastercard through Paynow Zimbabwe. Prices are in US dollars. Schools can also pay by bank transfer — contact us for an invoice.' },
   { q: 'How does yearly billing work?', a: `You pay for 10 months and get 12: that is ${yearlyDiscountPercent}% off. Plus is ${usd(priceFor(PLANS.plus, 'yearly'))} a year instead of ${usd(PLANS.plus.priceUsdMonthly * 12)}; Academy is ${usd(priceFor(PLANS.academy, 'yearly'))} instead of ${usd(PLANS.academy.priceUsdMonthly * 12)}.` },
   { q: 'Can I try Plus before paying?', a: `Yes. Every learner on the Free plan can start one ${TRIAL.days}-day Plus trial from this page or their dashboard. No payment details are needed, and it simply ends after ${TRIAL.days} days.` },
@@ -121,7 +123,7 @@ export default function Pricing() {
           <div>
             <h1 className="display-lg">Free to learn. Pay for a mentor.</h1>
             <p className="lede mt-6 max-w-xl text-white/80">
-              Every tutorial and editor is free, forever. Plans add an AI tutor, certificates, teacher-led classes and, soon, one-to-one mentoring. Pay with EcoCash, OneMoney or card.
+              Core tutorials and every editor are free, forever. Plus unlocks the professional tracks and Graph Lab, an AI tutor and certificates; Academy adds teacher-led classes; Premium, soon, one-to-one mentoring. Pay with EcoCash, OneMoney or card.
             </p>
           </div>
           <div className="flex flex-col items-start gap-4 lg:items-end">

@@ -19,7 +19,7 @@ export default function Tutorials() {
 
   return (
     <div className="container py-10">
-      <PageHeader title="All tutorials" description="Every track is free. Each lesson has examples you can run, exercises and challenges with automatic checking." />
+      <PageHeader title="All tutorials" description="Core tracks are free; professional tracks start with a free preview. Each lesson has examples you can run, exercises and challenges with automatic checking." />
       <div className="mb-8 flex flex-wrap gap-2" role="tablist" aria-label="Filter by level">
         {LEVELS.map((l) => (
           <button key={l} role="tab" aria-selected={level === l} onClick={() => setLevel(l)} className={cn('rounded-full border px-4 py-1.5 text-sm font-medium', level === l ? 'border-ink bg-ink text-white dark:border-gold dark:bg-gold dark:text-ink' : 'border-border hover:bg-muted')}>

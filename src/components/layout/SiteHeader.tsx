@@ -18,12 +18,13 @@ const PRACTICE_LINKS: [string, string][] = [
   ['/exercises', 'Exercises'],
   ['/quiz', 'Quizzes'],
   ['/challenges', 'Code challenges'],
+  ['/lab', 'Graph Lab: work placements'],
   ['/compiler/python', 'Online editors'],
   ['/projects', 'My projects'],
   ['/certificates', 'Get certified'],
 ];
 
-const TAB_IDS = ['html', 'css', 'javascript', 'python', 'sql', 'ai-fundamentals', 'machine-learning', 'rag', 'ai-agents', 'java', 'kotlin', 'php', 'typescript', 'cpp', 'git', 'vscode', 'data-science', 'langchain', 'android', 'ios-swift'];
+const TAB_IDS = ['html', 'css', 'javascript', 'python', 'sql', 'neo4j', 'ai-fundamentals', 'machine-learning', 'rag', 'ai-agents', 'agentic-engineering', 'mcp', 'graphrag', 'java', 'kotlin', 'php', 'typescript', 'cpp', 'git', 'vscode', 'data-science', 'langchain', 'android', 'ios-swift'];
 
 function TutorialsMenu({ onClose }: { onClose: () => void }) {
   const groups = tracksByCategory();
@@ -135,7 +136,8 @@ export function SiteHeader() {
               Tutorials <ChevronDown className={cn('h-4 w-4 transition-transform', menu && 'rotate-180')} />
             </button>
             <NavLink to="/reference" className={navLink}>References</NavLink>
-            <NavLink to="/exercises" className={navLink}>Exercises</NavLink>
+            <NavLink to="/exercises" className={(a) => cn(navLink(a), "hidden 2xl:block")}>Exercises</NavLink>
+            <NavLink to="/lab" className={navLink}>Graph Lab</NavLink>
             <NavLink to="/playground" className={(a) => cn(navLink(a), "hidden xl:block")}>Playground</NavLink>
             <NavLink to="/careers" className={navLink}>Careers</NavLink>
             <NavLink to="/kids" className={navLink}>Kids Zone</NavLink>
@@ -169,7 +171,7 @@ export function SiteHeader() {
         {mobile && (
           <nav className="border-t border-border bg-card lg:hidden" aria-label="Mobile">
             <div className="container grid gap-1 py-3 text-sm">
-              {[['/tutorials', 'All tutorials'], ['/reference', 'References'], ['/exercises', 'Exercises'], ['/quiz', 'Quizzes'], ['/challenges', 'Code challenges'], ['/playground', 'Playground'], ['/careers', 'Career paths'], ['/kids', 'Kids Zone'], ['/pricing', 'Plans'], ['/leaderboard', 'Leaderboard'], ['/contact', 'Contact']].map(([to, label]) => (
+              {[['/tutorials', 'All tutorials'], ['/reference', 'References'], ['/exercises', 'Exercises'], ['/quiz', 'Quizzes'], ['/challenges', 'Code challenges'], ['/lab', 'Graph Lab'], ['/playground', 'Playground'], ['/careers', 'Career paths'], ['/kids', 'Kids Zone'], ['/pricing', 'Plans'], ['/leaderboard', 'Leaderboard'], ['/contact', 'Contact']].map(([to, label]) => (
                 <Link key={to} to={to!} className="rounded-md px-3 py-2.5 hover:bg-muted">{label}</Link>
               ))}
               {!user && <Link to="/login" className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted">Sign in</Link>}

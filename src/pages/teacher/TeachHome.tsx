@@ -62,7 +62,7 @@ export default function TeachHome() {
             <li className="flex gap-3"><ClipboardCheck className="h-5 w-5 shrink-0 text-teal" /><span><strong>AI pre-marking.</strong> Every submission arrives with a suggested score and feedback. You decide the final grade.</span></li>
             <li className="flex gap-3"><Brain className="h-5 w-5 shrink-0 text-ink dark:text-sand" /><span><strong>Class insights.</strong> See who is stuck and what to teach next.</span></li>
             <li className="flex gap-3"><MessageSquare className="h-5 w-5 shrink-0 text-stone" /><span><strong>Discussion & announcements.</strong> Keep the class talking between lessons.</span></li>
-            <li className="flex gap-3"><BookOpen className="h-5 w-5 shrink-0 text-teal" /><span><strong>{'All tutorials free.'}</strong> Point learners at any lesson — progress shows up in your class table.</span></li>
+            <li className="flex gap-3"><BookOpen className="h-5 w-5 shrink-0 text-teal" /><span><strong>{'Core tutorials free.'}</strong> Point learners at any lesson — progress shows up in your class table.</span></li>
           </ul>
         </aside>
       </div>

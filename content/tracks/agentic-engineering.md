@@ -190,7 +190,8 @@ Retrying instantly makes an overload worse. Wait longer after each failure (**ex
 ```sketch
 title: Exponential backoff with jitter
 caption: Each retry waits roughly twice as long, with randomness. Give up after a cap and surface a clear error.
-cellW: 165
+cellW: 215
+cellH: 125
 nodes:
   - id: call
     label: Call API
@@ -203,6 +204,8 @@ nodes:
     col: 1
     row: 0
     shape: diamond
+    w: 0.6
+    h: 0.75
   - id: done
     label: Return result
     col: 2
@@ -210,21 +213,23 @@ nodes:
     shape: pill
     tone: teal
   - id: retry
-    label: "Retryable?\n429 / 5xx / timeout"
+    label: Retryable?
+    sub: "429 · 5xx · timeout"
     col: 1
-    row: 1.3
+    row: 1.35
     shape: diamond
-    w: 1
-    h: 1
+    w: 0.95
+    h: 0.95
   - id: wait
-    label: "Wait base·2ⁿ\n+ random jitter"
+    label: "Wait base × 2ⁿ"
+    sub: "+ random jitter"
     col: 0
-    row: 1.3
+    row: 1.35
     shape: note
   - id: fail
     label: Raise clear error
     col: 2
-    row: 1.3
+    row: 1.35
     shape: pill
     tone: rose
 edges:
@@ -238,12 +243,12 @@ edges:
     label: "no"
   - from: retry
     to: wait
-    label: "yes, n < max"
+    label: retry
   - from: wait
     to: call
   - from: retry
     to: fail
-    label: no / out of tries
+    label: give up
 ```
 
 ```python run title="A retrying client against a flaky API"
@@ -2215,14 +2220,17 @@ h.tracer.report()
 # LangChain v1 agent with middleware (illustrative)
 from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware, SummarizationMiddleware
+from langgraph.checkpoint.memory import InMemorySaver
 
 agent = create_agent(
     model="openai:gpt-6.1-terra",
     tools=[lookup_course, enrol],
     system_prompt="You help learners choose and join courses.",
+    checkpointer=InMemorySaver(),                      # required so runs can pause for a human
     middleware=[
-        SummarizationMiddleware(model="openai:gpt-6-luna", trigger=("tokens", 8000)),   # compaction
-        HumanInTheLoopMiddleware(interrupt_on={"enrol": True}),                           # approval
+        SummarizationMiddleware(model="openai:gpt-6-luna", trigger=("tokens", 8000), keep=("messages", 20)),  # compaction
+        HumanInTheLoopMiddleware(interrupt_on={"enrol": {"allowed_decisions": ["approve", "edit", "reject"]},
+                                               "lookup_course": False}),                                     # approval
     ],
 )
 ```

@@ -268,7 +268,7 @@ LIMIT 4;`}</pre>
           <div className="container grid [&>*]:min-w-0 gap-12 lg:grid-cols-[1.1fr_1fr]">
             <div data-reveal>
               <h2 className="display-lg">Build with AI</h2>
-              <p className="lede mt-5 max-w-xl text-white/85">From what a model is to shipping agents with guardrails: prompts, LLM APIs, Hugging Face, LangChain, RAG, workflows and MLOps, each with code that runs.</p>
+              <p className="lede mt-5 max-w-xl text-white/85">From what a model is to production agents: the maths and statistics underneath, LLM APIs, RAG and GraphRAG, MCP and A2A, agentic engineering, evaluations and inference, each with code that runs and pencil-sketch diagrams of every deeper idea.</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <ButtonLink to={lessonPath('ai-fundamentals')} color="accent" size="lg">Start AI fundamentals</ButtonLink>
                 <ButtonLink to="/careers/agentic-ai-engineer" variant="outlined" color="light" size="lg">Agentic AI engineer path</ButtonLink>
@@ -287,6 +287,32 @@ LIMIT 4;`}</pre>
           </div>
         </section>
       )}
+
+      {/* ── Graph Lab: simulated work placements ─────────────────────────── */}
+      <section className="bg-granite-100 py-20 dark:bg-night-800 md:py-28">
+        <div className="container grid [&>*]:min-w-0 gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+          <div data-reveal>
+            <h2 className="display-lg">Work like it's your job</h2>
+            <p className="lede mt-5 max-w-xl text-fg/85">The Graph Lab drops you into a company with a manager and a queue of tickets. Trace a supply-chain stock-out, uncover a mobile-money fraud ring, or build an AI tutor's memory, with Cypher on a live graph database in your browser. Every ticket is checked against the real data.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <ButtonLink to="/lab" color="primary" size="lg">Open the Graph Lab</ButtonLink>
+              <ButtonLink to={lessonPath('neo4j')} variant="text" size="lg" endIcon={<ArrowRight />}>Learn Neo4j first</ButtonLink>
+            </div>
+          </div>
+          <ol className="space-y-3" data-reveal style={{ ['--i' as string]: 1 }}>
+            {[
+              ['MON-103', 'MoneyLink · Fraud analyst', 'Money is moving in a circle between three new accounts. Find every account on the loop.'],
+              ['ZIM-102', 'ZimFresh · Supply-chain analyst', 'Mutare is out of cooking oil. Which suppliers can restock it, and who sells cheapest?'],
+              ['AGE-102', 'AI team · Memory engineer', "Rebuild Rudo's last conversation so the tutor remembers where she left off."],
+            ].map(([code, who, ticket]) => (
+              <li key={code} className="rounded-2xl border border-border bg-card p-5">
+                <p className="flex items-center gap-2 text-xs text-muted-fg"><span className="font-mono">{code}</span> · {who}</p>
+                <p className="mt-1.5 font-medium">{ticket}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
       {/* ── The wall: every track, laid by level ─────────────────────────── */}
       <section className="py-20 md:py-28">
