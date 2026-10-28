@@ -167,4 +167,86 @@ SOLUTIONS = {
     ),
     "kids-variables": "money = 4\nmoney = money + 3\nprint(money)",
     "kids-loop-stars": "for row in range(1, 6):\n    print('*' * row)",
+
+    # --- Agentic AI Engineering ---------------------------------------------------------
+    "agentic-retry-policy": (
+        "def should_retry(status, attempt, max_tries):\n"
+        "    return status in {408, 429, 500, 502, 503, 504} and attempt < max_tries"
+    ),
+    "agentic-safe-dispatch": (
+        "import json\n"
+        "def dispatch(call, tools):\n"
+        "    fn = tools.get(call['name'])\n"
+        "    if fn is None:\n        return {'ok': False, 'error': f\"unknown tool: {call['name']}\"}\n"
+        "    try:\n        args = json.loads(call['arguments'])\n"
+        "    except json.JSONDecodeError:\n        return {'ok': False, 'error': 'invalid JSON'}\n"
+        "    try:\n        return {'ok': True, 'result': fn(**args)}\n"
+        "    except Exception as e:\n        return {'ok': False, 'error': f'{type(e).__name__}: {e}'}"
+    ),
+    "agentic-loop-guard": (
+        "def first_repeat(calls, limit):\n"
+        "    counts = {}\n"
+        "    for i, c in enumerate(calls):\n"
+        "        counts[c] = counts.get(c, 0) + 1\n"
+        "        if counts[c] > limit:\n            return i\n"
+        "    return -1"
+    ),
+    "agentic-capstone-harness": (
+        "import json\n"
+        "def run_agent(model, tools, max_steps=5, approved=False):\n"
+        "    history, trace, seen = [], [], set()\n"
+        "    for _ in range(max_steps):\n"
+        "        items = model(history)\n"
+        "        history += items\n"
+        "        calls = [i for i in items if i['type'] == 'function_call']\n"
+        "        if not calls:\n            return {'answer': items[0]['text'], 'trace': trace}\n"
+        "        for c in calls:\n"
+        "            key = (c['name'], c['arguments'])\n"
+        "            if key in seen:\n                status, out = 'duplicate', {'error': 'duplicate call'}\n"
+        "            elif c['name'] == 'freeze_account' and not approved:\n                status, out = 'blocked', {'error': 'needs approval'}\n"
+        "            else:\n"
+        "                try:\n                    out, status = tools[c['name']](**json.loads(c['arguments'])), 'ok'\n"
+        "                except Exception as e:\n                    out, status = {'error': str(e)}, 'error'\n"
+        "            seen.add(key)\n"
+        "            trace.append((c['name'], status))\n"
+        "            history.append({'type': 'function_call_output', 'call_id': c['call_id'], 'output': json.dumps(out)})\n"
+        "    return {'answer': 'stopped: max steps', 'trace': trace}"
+    ),
+    # --- MCP & Agent Protocols ----------------------------------------------------------
+    "mcp-capstone-server": (
+        'COURSES = {"PY101": {"title": "Python Basics", "hours": 20}, "DB220": {"title": "Graph Databases", "hours": 25}}\n'
+        "def handle(request):\n"
+        "    rid, method, params = request.get('id'), request.get('method'), request.get('params', {})\n"
+        "    def ok(result): return {'jsonrpc': '2.0', 'id': rid, 'result': {'resultType': 'complete', **result}}\n"
+        "    def err(code, msg, data=None):\n"
+        "        e = {'code': code, 'message': msg}\n"
+        "        if data is not None: e['data'] = data\n"
+        "        return {'jsonrpc': '2.0', 'id': rid, 'error': e}\n"
+        "    v = params.get('_meta', {}).get('io.modelcontextprotocol/protocolVersion')\n"
+        "    if v is None: return err(-32602, 'missing protocolVersion')\n"
+        "    if v != '2026-07-28': return err(-32022, 'Unsupported protocol version', {'supported': ['2026-07-28']})\n"
+        "    if method == 'tools/list':\n"
+        "        return ok({'tools': [{'name': 'get_course', 'description': 'Get a course', 'inputSchema': {'type': 'object'}}]})\n"
+        "    if method == 'tools/call':\n"
+        "        if params.get('name') != 'get_course': return err(-32602, 'Unknown tool')\n"
+        "        code = params.get('arguments', {}).get('code')\n"
+        "        if code not in COURSES:\n"
+        "            return ok({'content': [{'type': 'text', 'text': f'Unknown course {code}'}], 'isError': True})\n"
+        "        return ok({'content': [{'type': 'text', 'text': str(COURSES[code])}], 'structuredContent': COURSES[code], 'isError': False})\n"
+        "    return err(-32601, 'Method not found')"
+    ),
+    # --- GraphRAG ------------------------------------------------------------------------
+    "graphrag-expand": (
+        "import math\n"
+        "CHUNKS = {'c1': {'vec': [0.9, 0.1, 0.0]}, 'c2': {'vec': [0.6, 0.7, 0.1]}, 'c3': {'vec': [0.0, 0.2, 0.9]}}\n"
+        "MENTIONS = {'c1': ['Tuition loan'], 'c2': ['Zuva Scholarship', 'Tuition loan'], 'c3': ['Campus Wi-Fi']}\n"
+        "RELATED = [('Bursar', 'Tuition loan'), ('Zuva Scholarship', 'STEM tracks'), ('IT Helpdesk', 'Campus Wi-Fi')]\n"
+        "def cos(a, b):\n"
+        "    return sum(x * y for x, y in zip(a, b)) / (math.hypot(*a) * math.hypot(*b))\n"
+        "def retrieve(query_vec, k):\n"
+        "    ranked = sorted(CHUNKS, key=lambda c: (-cos(query_vec, CHUNKS[c]['vec']), c))[:k]\n"
+        "    ents = {e for c in ranked for e in MENTIONS.get(c, [])}\n"
+        "    extra = {b for a, b in RELATED if a in ents} | {a for a, b in RELATED if b in ents}\n"
+        "    return {'chunks': ranked, 'entities': sorted(ents | extra)}"
+    ),
 }

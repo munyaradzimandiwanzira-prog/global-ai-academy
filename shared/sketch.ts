@@ -243,13 +243,15 @@ export function layoutSketch(spec: SketchSpec): SketchLayout {
 
   const maxX = Math.max(...nodes.map((n) => n.box.x + n.box.w), ...groups.map((g) => g.box.x + g.box.w));
   const maxY = Math.max(...nodes.map((n) => n.box.y + n.box.h + (n.shape === 'person' ? 26 : 0)), ...groups.map((g) => g.box.y + g.box.h));
-  const minY = Math.min(top, ...edges.filter((e) => e.loop).map((e) => e.loop!.c1.y - 10));
-  // Self-loops can reach above the first row; shift everything if they do.
+  // Self-loops and negative rows/cols can reach past the top-left margin; shift everything if so.
+  const minY = Math.min(top, ...nodes.map((n) => n.box.y), ...groups.map((g) => g.box.y), ...edges.filter((e) => e.loop).map((e) => e.loop!.c1.y - 10));
+  const minX = Math.min(PAD, ...nodes.map((n) => n.box.x), ...groups.map((g) => g.box.x));
   const shift = minY < PAD ? PAD - minY : 0;
-  if (shift) {
-    const s = (p: Point) => ({ x: p.x, y: p.y + shift });
-    for (const n of nodes) { n.box.y += shift; n.cy += shift; }
-    for (const g of groups) g.box.y += shift;
+  const shiftX = minX < PAD ? PAD - minX : 0;
+  if (shift || shiftX) {
+    const s = (p: Point) => ({ x: p.x + shiftX, y: p.y + shift });
+    for (const n of nodes) { n.box.y += shift; n.cy += shift; n.box.x += shiftX; n.cx += shiftX; }
+    for (const g of groups) { g.box.y += shift; g.box.x += shiftX; }
     for (const e of edges) {
       e.start = s(e.start); e.end = s(e.end);
       if (e.control) e.control = s(e.control);
@@ -257,7 +259,7 @@ export function layoutSketch(spec: SketchSpec): SketchLayout {
       if (e.loop) e.loop = { c1: s(e.loop.c1), c2: s(e.loop.c2) };
     }
   }
-  return { width: Math.ceil(maxX + PAD), height: Math.ceil(maxY + PAD + shift), nodes, edges, groups };
+  return { width: Math.ceil(maxX + PAD + shiftX), height: Math.ceil(maxY + PAD + shift), nodes, edges, groups };
 }
 
 /** Arrows stop a few pixels short of the shape so the head never overlaps the outline. */
