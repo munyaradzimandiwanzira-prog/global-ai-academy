@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Menu, X, MessageCircle, Clock, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Menu, X, MessageCircle, Clock, Check, Lock } from 'lucide-react';
+import type { Block } from '@shared/content';
+import { describeSketch } from '@shared/sketch';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { Markdown } from '@/components/Markdown';
+import { UpgradeCard } from '@/components/UpgradeCard';
 import { loadTrack, getCatalogTrack, lessonPath } from '@/lib/catalog';
 import { useProgress } from '@/lib/progress';
 import { BlockRenderer } from '@/features/lesson/blocks';
@@ -18,12 +24,25 @@ export default function LessonPage() {
   const { completed, markLesson, trackProgress } = useProgress();
   const [sidebar, setSidebar] = useState(false);
   const [tutor, setTutor] = useState(false);
+  const { can } = useAuth();
+  const pro = can('content.pro');
 
   const index = track?.lessons.findIndex((l) => l.slug === lessonSlug) ?? -1;
   const lesson = index >= 0 ? track!.lessons[index] : undefined;
   const prev = index > 0 ? track!.lessons[index - 1] : undefined;
   const next = track && index >= 0 && index < track.lessons.length - 1 ? track.lessons[index + 1] : undefined;
   const isDone = completed.has(`${trackId}/${lessonSlug}`);
+  // Paywalled lessons arrive from the API for entitled learners; everyone else sees the teaser.
+  const locked = !!lesson?.locked;
+  const proBlocks = useQuery({
+    queryKey: ['pro-lesson', trackId, lessonSlug],
+    queryFn: () => api.get<{ blocks: Block[] }>(`/api/content/${trackId}/${lessonSlug}`),
+    enabled: locked && pro,
+    staleTime: Infinity,
+    retry: false,
+  });
+  const blocks: Block[] | null = !lesson ? null : !locked ? lesson.blocks : proBlocks.data?.blocks ?? null;
+  const paywalled = locked && (!pro || proBlocks.isError);
 
   useEffect(() => {
     if (lesson) {
@@ -41,7 +60,10 @@ export default function LessonPage() {
     return () => window.clearTimeout(t);
   }, [lesson?.slug]);
 
-  const excerpt = useMemo(() => lesson?.blocks.map((b) => (b.type === 'md' ? b.md : b.type === 'run' || b.type === 'code' ? b.code : '')).join('\n\n') ?? '', [lesson]);
+  const excerpt = useMemo(
+    () => (blocks ?? []).map((b) => (b.type === 'md' ? b.md : b.type === 'run' || b.type === 'code' ? b.code : b.type === 'sketch' ? `[Diagram] ${describeSketch(b.sketch)}` : '')).join('\n\n'),
+    [blocks],
+  );
 
   if (!meta) return <NotFound />;
   if (isLoading) return <PageLoader />;
@@ -51,7 +73,7 @@ export default function LessonPage() {
   const progress = trackProgress(trackId, track.lessons.length);
 
   const goNext = () => {
-    markLesson(trackId, lesson.slug, 'completed');
+    if (!paywalled) markLesson(trackId, lesson.slug, 'completed');
     navigate(next ? lessonPath(trackId, next.slug) : lessonPath(trackId));
   };
 
@@ -60,7 +82,7 @@ export default function LessonPage() {
       {prev ? (
         <Link to={lessonPath(trackId, prev.slug)} className="btn-primary btn-sm"><ChevronLeft className="h-4 w-4" /> Previous</Link>
       ) : <span />}
-      {bottom && !isDone && <button onClick={() => markLesson(trackId, lesson.slug, 'completed')} className="btn-outline btn-sm"><Check className="h-4 w-4" /> Mark complete</button>}
+      {bottom && !isDone && !paywalled && <button onClick={() => markLesson(trackId, lesson.slug, 'completed')} className="btn-outline btn-sm"><Check className="h-4 w-4" /> Mark complete</button>}
       <button onClick={goNext} className="btn-primary btn-sm">{next ? 'Next' : 'Finish track'} <ChevronRight className="h-4 w-4" /></button>
     </div>
   );
@@ -81,9 +103,10 @@ export default function LessonPage() {
             {track.lessons.map((l) => {
               const active = l.slug === lesson.slug;
               const done = completed.has(`${trackId}/${l.slug}`);
+              const lockedHere = !!l.locked && !pro;
               return (
                 <Link key={l.slug} to={lessonPath(trackId, l.slug)} aria-current={active ? 'page' : undefined} className={cn('flex items-center gap-2.5 border-l-4 px-4 py-2 text-sm', active ? 'border-gold bg-gold-100/60 font-semibold dark:bg-night-700' : 'border-transparent hover:bg-muted')}>
-                  {done ? <CheckCircle2 className="h-4 w-4 shrink-0 text-teal" /> : <Circle className="h-4 w-4 shrink-0 text-border" />}
+                  {done ? <CheckCircle2 className="h-4 w-4 shrink-0 text-teal" /> : lockedHere ? <Lock className="h-4 w-4 shrink-0 text-muted-fg" aria-label="Plus" /> : <Circle className="h-4 w-4 shrink-0 text-border" />}
                   <span className="truncate">{l.title}</span>
                 </Link>
               );
@@ -106,8 +129,30 @@ export default function LessonPage() {
               {isDone && <span className="chip bg-teal-100 text-teal-600"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</span>}
             </p>
           </header>
-          <BlockRenderer blocks={lesson.blocks} trackId={trackId} lessonTitle={lesson.title} />
-          <NavButtons bottom />
+          {paywalled ? (
+            <>
+              {lesson.teaser && <Markdown>{lesson.teaser}</Markdown>}
+              <UpgradeCard
+                className="mt-6"
+                title={`Unlock the rest of ${meta.title}`}
+                done={`You've finished the free preview: ${meta.preview ?? 3} lessons. The next ${track.lessons.length - (meta.preview ?? 3)} lessons go deeper, with hands-on labs, diagrams, exercises and a capstone challenge.`}
+                unlocks={[
+                  `${track.lessons.length - (meta.preview ?? 3)} more lessons in ${meta.title}, and every other professional track`,
+                  'All Graph Lab work placements (Neo4j, GraphRAG, agent memory)',
+                  'Professor Zuva, your AI tutor, on every lesson',
+                  'Certificates you can share with employers',
+                ]}
+              />
+              <NavButtons bottom />
+            </>
+          ) : !blocks ? (
+            <PageLoader />
+          ) : (
+            <>
+              <BlockRenderer blocks={blocks} trackId={trackId} lessonTitle={lesson.title} />
+              <NavButtons bottom />
+            </>
+          )}
         </div>
       </article>
 

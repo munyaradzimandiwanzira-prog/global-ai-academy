@@ -15,3 +15,9 @@ declare module '*.md?track' {
   const track: Track;
   export default track;
 }
+
+declare module 'virtual:pro-lessons' {
+  import type { Block } from '../shared/content';
+  const lessons: Record<string, Block[]>;
+  export default lessons;
+}

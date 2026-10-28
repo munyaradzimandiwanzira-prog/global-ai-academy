@@ -14,6 +14,16 @@
     --ease-out: cubic-bezier(.22,1,.36,1);
     --ease-expo: cubic-bezier(.16,1,.3,1);
     --ease-in-out: cubic-bezier(.76,0,.24,1);
+    /* Pencil-sketch diagrams: graphite on paper, coloured-pencil hatching. */
+    --sk-paper: #fbfaf6;
+    --sk-ink: #34322f;
+    --sk-soft: #6d6a64;
+    --sk-teal: #23807f;
+    --sk-gold: #c08a1e;
+    --sk-rose: #c2554d;
+    --sk-sky: #3577b8;
+    --sk-grape: #7a55b0;
+    --sk-inkfill: #1f2b45;
     color-scheme: light;
   }
   .dark {
@@ -23,6 +33,15 @@
     --muted: 219 38% 16%;
     --muted-fg: 220 16% 72%;
     --border: 219 32% 22%;
+    --sk-paper: #121b2c;
+    --sk-ink: #e6e1d6;
+    --sk-soft: #a9b0bd;
+    --sk-teal: #5cc4c1;
+    --sk-gold: #e6bd62;
+    --sk-rose: #ec8a80;
+    --sk-sky: #7db3e8;
+    --sk-grape: #b49be0;
+    --sk-inkfill: #c9d3e6;
     color-scheme: dark;
   }
 

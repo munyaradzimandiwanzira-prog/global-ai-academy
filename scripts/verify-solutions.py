@@ -31,7 +31,7 @@ def attempt(code, block):
             return False, f"assertion: {e}"
         except Exception as e:  # noqa: BLE001
             return False, f"tests raised {type(e).__name__}: {e}"
-    expected = "\n".join(l.rstrip() for l in (block.get("output") or "").strip().split("\n"))
+    expected = "\n".join(l.rstrip() for l in (block.get("expected") or block.get("output") or "").strip().split("\n"))
     actual = "\n".join(l.rstrip() for l in buf.getvalue().strip().split("\n"))
     return actual == expected, f"output {actual!r} != {expected!r}"
 

@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle, Terminal, Clock } from 'lucide-react';
 import type { RunResult, OutputLine } from '@/features/runners';
 import { cn } from '@/lib/utils';
+
+const GraphView = lazy(() => import('@/features/graph/GraphView'));
 
 export function HtmlPreview({ html, onTest, onConsole, className }: { html: string; onTest?: (passed: boolean, message?: string) => void; onConsole?: (line: OutputLine) => void; className?: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
@@ -28,7 +30,7 @@ export function HtmlPreview({ html, onTest, onConsole, className }: { html: stri
 export function OutputPanel({ result, live, status, running, className }: { result: RunResult | null; live: OutputLine[]; status?: string; running: boolean; className?: string }) {
   const [consoleLines, setConsoleLines] = useState<OutputLine[]>([]);
   useEffect(() => { setConsoleLines([]); }, [result]);
-  const lines = running ? live : result?.lines ?? [];
+  const lines = running ? live : (result?.lines ?? []).filter((l) => !(result?.hideStdout && l.kind === 'stdout'));
 
   if (result?.html !== undefined) {
     return (
@@ -60,6 +62,11 @@ export function OutputPanel({ result, live, status, running, className }: { resu
           </div>
         ))}
         {!running && result?.images?.map((src, i) => <img key={i} src={src} alt={`Plot ${i + 1}`} className="my-2 max-w-full rounded bg-white" />)}
+        {!running && result?.graph && (
+          <Suspense fallback={null}>
+            <GraphView graph={result.graph} className="my-2" />
+          </Suspense>
+        )}
         {!running && result?.table?.map((t, ti) => (
           <div key={ti} className="my-2 overflow-x-auto rounded border border-night-700">
             <table className="w-full text-left text-xs">

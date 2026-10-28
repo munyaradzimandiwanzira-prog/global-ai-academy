@@ -1,3 +1,5 @@
+import type { SketchSpec } from './sketch';
+
 /**
  * Content model shared by the build-time parser, the React app and the Worker.
  * Tracks are authored as Markdown in /content/tracks and compiled by plugins/content.ts.
@@ -18,6 +20,7 @@ export type RunLanguage =
   | 'swift'
   | 'bash'
   | 'go'
+  | 'cypher'
   | 'text';
 
 export type TrackCategory =
@@ -45,8 +48,16 @@ export interface TrackMeta {
   summary: string;
   tags: string[];
   order: number;
+  /** Professional track: only the first `preview` lessons are free; the rest need `content.pro`. */
   premium?: boolean;
+  preview?: number;
 }
+
+export const DEFAULT_PREVIEW_LESSONS = 3;
+
+/** Whether lesson number `index` (0-based) of a track is behind the paywall. */
+export const isLockedLesson = (meta: Pick<TrackMeta, 'premium' | 'preview'>, index: number) =>
+  !!meta.premium && index >= (meta.preview ?? DEFAULT_PREVIEW_LESSONS);
 
 export interface QuizQuestion {
   q: string;
@@ -73,7 +84,8 @@ export type Block =
   | { type: 'code'; lang: string; code: string }
   | { type: 'exercise'; id: string; prompt: string; lang: RunLanguage; code: string; answers: string[]; hint?: string }
   | { type: 'challenge'; challenge: Challenge }
-  | { type: 'quiz'; id: string; questions: QuizQuestion[]; /** exam-only questions are not shown in the lesson */ examOnly?: boolean };
+  | { type: 'quiz'; id: string; questions: QuizQuestion[]; /** exam-only questions are not shown in the lesson */ examOnly?: boolean }
+  | { type: 'sketch'; sketch: SketchSpec };
 
 /** Separator between alternative accepted exercise answers. */
 export const ANSWER_ALT = '\u0001';
@@ -83,6 +95,10 @@ export interface Lesson {
   title: string;
   blocks: Block[];
   minutes: number;
+  /** Set in the public bundle for paywalled lessons: blocks are empty and come from /api/content. */
+  locked?: boolean;
+  /** Opening paragraph shown above the paywall. */
+  teaser?: string;
 }
 
 export interface Track {
@@ -94,6 +110,7 @@ export interface CatalogTrack extends TrackMeta {
   lessons: {
     slug: string; title: string; minutes: number; hasChallenge: boolean; hasExercise: boolean;
     challengeId?: string; challengeTitle?: string; difficulty?: Challenge['difficulty'];
+    locked?: boolean;
   }[];
   totalMinutes: number;
   challengeCount: number;

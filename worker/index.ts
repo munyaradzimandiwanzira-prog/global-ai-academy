@@ -15,6 +15,7 @@ import payments from './routes/payments';
 import pub from './routes/public';
 import projects from './routes/projects';
 import capstones from './routes/capstones';
+import content from './routes/content';
 
 const app = new Hono<AppEnv>();
 
@@ -38,6 +39,7 @@ app.route('/api/admin', admin);
 app.route('/api/payments', payments);
 app.route('/api/projects', projects);
 app.route('/api/capstones', capstones);
+app.route('/api/content', content);
 app.route('/api', pub);
 
 app.notFound((c) => {

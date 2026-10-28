@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui';
 
 const CodeEditor = lazy(() => import('@/features/editor/CodeEditor'));
+const Sketch = lazy(() => import('@/components/Sketch'));
 
 const playgroundLink = (lang: string, code: string) => `/playground?lang=${lang}#code=${compressToEncodedURIComponent(code)}`;
 
@@ -341,6 +342,11 @@ export function BlockRenderer({ blocks, trackId, lessonTitle }: { blocks: Block[
           case 'exercise': return <Exercise key={b.id} block={b} trackId={trackId} />;
           case 'challenge': return <ChallengeBlock key={b.challenge.id} challenge={b.challenge} trackId={trackId} lessonTitle={lessonTitle} />;
           case 'quiz': return b.examOnly ? null : <Quiz key={b.id} block={b} trackId={trackId} />;
+          case 'sketch': return (
+            <Suspense key={i} fallback={<div className="my-7 h-56 animate-pulse rounded-xl border border-border bg-muted/40" aria-label={b.sketch.title ?? 'Loading diagram'} />}>
+              <Sketch spec={b.sketch} />
+            </Suspense>
+          );
           default: return null;
         }
       })}

@@ -1,11 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
-import { parseTrack, toCatalogEntry } from './content-parser';
+import { parseTrack, proLessons, publicTrack, toCatalogEntry } from './content-parser';
 import type { QuizQuestion, Track } from '../shared/content';
 
 const VIRTUAL_CATALOG = 'virtual:catalog';
 const VIRTUAL_QUIZ_BANK = 'virtual:quiz-bank';
+const VIRTUAL_PRO = 'virtual:pro-lessons';
 const RESOLVED = (id: string) => '\0' + id;
 
 /**
@@ -36,7 +37,7 @@ export function contentPlugin(): Plugin {
     name: 'gaa-content',
     enforce: 'pre',
     resolveId(id) {
-      if (id === VIRTUAL_CATALOG || id === VIRTUAL_QUIZ_BANK) return RESOLVED(id);
+      if (id === VIRTUAL_CATALOG || id === VIRTUAL_QUIZ_BANK || id === VIRTUAL_PRO) return RESOLVED(id);
       return null;
     },
     load(id) {
@@ -54,16 +55,16 @@ export function contentPlugin(): Plugin {
         }
         return `export default ${JSON.stringify(bank)};`;
       }
+      if (id === RESOLVED(VIRTUAL_PRO)) {
+        // Server-only: imported by the Worker, never by browser code.
+        return `export default ${JSON.stringify(proLessons(loadAll()))};`;
+      }
       if (id.endsWith('.md?track')) {
         const file = id.slice(0, -'?track'.length);
         this.addWatchFile(file);
         const track = parseTrack(readFileSync(file, 'utf8'), file.split('/').pop());
-        // Exam-only questions (and their answers) stay on the server — never ship them to the browser.
-        const publicTrack = {
-          ...track,
-          lessons: track.lessons.map((l) => ({ ...l, blocks: l.blocks.filter((b) => !(b.type === 'quiz' && b.examOnly)) })),
-        };
-        return `export default ${JSON.stringify(publicTrack)};`;
+        // Exam-only questions and paywalled lessons stay on the server — never ship them to the browser.
+        return `export default ${JSON.stringify(publicTrack(track))};`;
       }
       return null;
     },
@@ -73,7 +74,7 @@ export function contentPlugin(): Plugin {
         if (!file.startsWith(dir)) return;
         cache = null;
         for (const env of Object.values(server.environments)) {
-          for (const v of [VIRTUAL_CATALOG, VIRTUAL_QUIZ_BANK]) {
+          for (const v of [VIRTUAL_CATALOG, VIRTUAL_QUIZ_BANK, VIRTUAL_PRO]) {
             const mod = env.moduleGraph.getModuleById(RESOLVED(v));
             if (mod) env.moduleGraph.invalidateModule(mod);
           }

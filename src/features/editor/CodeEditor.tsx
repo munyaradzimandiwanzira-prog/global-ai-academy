@@ -75,6 +75,7 @@ function loadLanguage(lang: RunLanguage | string): Promise<Extension[]> {
       case 'swift': return [StreamLanguage.define((await import('@codemirror/legacy-modes/mode/swift')).swift)];
       case 'go': return [StreamLanguage.define((await import('@codemirror/legacy-modes/mode/go')).go)];
       case 'bash': return [StreamLanguage.define((await import('@codemirror/legacy-modes/mode/shell')).shell)];
+      case 'cypher': return [StreamLanguage.define((await import('@codemirror/legacy-modes/mode/cypher')).cypher)];
       default: return [];
     }
   };

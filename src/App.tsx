@@ -47,6 +47,8 @@ const ChallengesPage = lazy(() => import('@/pages/practice/ChallengesPage'));
 const ProjectsPage = lazy(() => import('@/pages/ProjectsPage'));
 const SharedProjectPage = lazy(() => import('@/pages/ProjectsPage').then((m) => ({ default: m.SharedProjectPage })));
 const CapstonePage = lazy(() => import('@/pages/student/CapstonePage'));
+const GraphLabIndex = lazy(() => import('@/pages/lab/GraphLab').then((m) => ({ default: m.GraphLabIndex })));
+const GraphLabScenario = lazy(() => import('@/pages/lab/GraphLab'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -96,6 +98,7 @@ export default function App() {
           <Route path="quiz" element={<QuizIndex />} />
           <Route path="quiz/:trackId" element={<QuizPage />} />
           <Route path="challenges" element={<ChallengesPage />} />
+          <Route path="lab" element={<GraphLabIndex />} />
           <Route path="p/:slug" element={<SharedProjectPage />} />
           <Route path="careers" element={<Careers />} />
           <Route path="careers/:careerId" element={<CareerDetail />} />
@@ -138,6 +141,7 @@ export default function App() {
           <Route path="learn/:trackId/:lessonSlug" element={<LessonPage />} />
           <Route path="playground" element={<PlaygroundPage />} />
           <Route path="compiler/:lang" element={<PlaygroundPage />} />
+          <Route path="lab/:scenarioId" element={<GraphLabScenario />} />
         </Route>
 
         <Route element={<BareLayout />}>

@@ -24,7 +24,9 @@ const challengeLessons = catalog
 
 function WeeklyChallenge() {
   const { year, week } = isoWeek();
-  const pick = challengeLessons[(year * 53 + week) % challengeLessons.length]!;
+  // Only free lessons ship their challenge code to the browser, so the weekly pick comes from those.
+  const open = challengeLessons.filter((c) => !c.lesson.locked);
+  const pick = open[(year * 53 + week) % open.length]!;
   const track = useQuery({ queryKey: ['track', pick.track.id], queryFn: () => loadTrack(pick.track.id), staleTime: Infinity });
   const challenge = useMemo(() => {
     const lesson = track.data?.lessons.find((l) => l.slug === pick.lesson.slug);

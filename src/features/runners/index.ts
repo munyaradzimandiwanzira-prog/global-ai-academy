@@ -4,7 +4,7 @@ import { compareOutput, type OutputLine, type RunOptions, type RunResult } from 
 
 export * from './types';
 
-export const isBrowserRunnable = (lang: RunLanguage) => ['python', 'javascript', 'typescript', 'html', 'css', 'sql'].includes(lang);
+export const isBrowserRunnable = (lang: RunLanguage) => ['python', 'javascript', 'typescript', 'html', 'css', 'sql', 'cypher'].includes(lang);
 
 async function runRemote(lang: RunLanguage, code: string, opts: RunOptions): Promise<RunResult> {
   const started = performance.now();
@@ -35,6 +35,11 @@ export async function runCode(lang: RunLanguage, code: string, opts: RunOptions 
     case 'sql': {
       const { runSql } = await import('./sql');
       result = await runSql(code, opts);
+      break;
+    }
+    case 'cypher': {
+      const { runCypherCode } = await import('./cypher');
+      result = await runCypherCode(code, opts);
       break;
     }
     case 'html':

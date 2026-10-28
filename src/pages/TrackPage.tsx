@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Circle, Clock, Trophy, Award, Code2, PlayCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Trophy, Award, Code2, PlayCircle, Lock } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { DEFAULT_PREVIEW_LESSONS } from '@shared/content';
 import { getCatalogTrack, lessonPath } from '@/lib/catalog';
 import { CAREERS } from '@/data/careers';
 import { useProgress } from '@/lib/progress';
@@ -11,7 +13,10 @@ export default function TrackPage() {
   const { trackId = '' } = useParams();
   const track = getCatalogTrack(trackId);
   const { completed, trackProgress } = useProgress();
+  const { can } = useAuth();
   if (!track) return <NotFound />;
+  const pro = can('content.pro');
+  const preview = track.preview ?? DEFAULT_PREVIEW_LESSONS;
   const p = trackProgress(track.id, track.lessons.length);
   const next = track.lessons.find((l) => !completed.has(`${track.id}/${l.slug}`)) ?? track.lessons[0]!;
   const careers = CAREERS.filter((c) => c.trackIds.includes(track.id));
@@ -32,6 +37,7 @@ export default function TrackPage() {
               <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> about {Math.max(1, Math.round(track.totalMinutes / 60))} h</span>
               <span className="flex items-center gap-1"><Code2 className="h-4 w-4" /> {track.exerciseCount} exercises</span>
               <span className="flex items-center gap-1"><Trophy className="h-4 w-4" /> {track.challengeCount} challenges</span>
+              {track.premium && <span className="chip bg-gold-100 text-gold-600">{pro ? 'Professional track · unlocked' : `Professional track · first ${preview} lessons free`}</span>}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to={lessonPath(track.id, next.slug)} className="btn-run btn-lg"><PlayCircle className="h-5 w-5" /> {p.done ? 'Continue' : 'Start'}: {next.title}</Link>
@@ -53,11 +59,15 @@ export default function TrackPage() {
           <ol className="card divide-y divide-border overflow-hidden">
             {track.lessons.map((l, i) => {
               const done = completed.has(`${track.id}/${l.slug}`);
+              const lockedHere = !!l.locked && !pro;
               return (
                 <li key={l.slug}>
+                  {i === preview && track.premium && !pro && (
+                    <div className="flex items-center gap-2 bg-gold-100/70 px-5 py-2 text-sm font-semibold text-gold-600 dark:bg-night-700"><Lock className="h-4 w-4" aria-hidden="true" /> Included with Plus · <Link to="/pricing?plan=plus" className="underline underline-offset-4">see plans</Link></div>
+                  )}
                   <Link to={lessonPath(track.id, l.slug)} className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted">
                     <span className="w-6 text-right text-sm tabular-nums text-muted-fg">{i + 1}</span>
-                    {done ? <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" aria-label="Completed" /> : <Circle className="h-5 w-5 shrink-0 text-border" aria-hidden="true" />}
+                    {done ? <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" aria-label="Completed" /> : lockedHere ? <Lock className="h-5 w-5 shrink-0 text-muted-fg" aria-label="Plus" /> : <Circle className="h-5 w-5 shrink-0 text-border" aria-hidden="true" />}
                     <span className="flex-1 font-medium">{l.title}</span>
                     {l.hasChallenge && <Trophy className="h-4 w-4 text-gold-600" aria-label="Has a coding challenge" />}
                     <span className="text-xs text-muted-fg">{l.minutes} min</span>

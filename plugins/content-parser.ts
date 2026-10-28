@@ -1,4 +1,6 @@
 import { parse as parseYaml } from 'yaml';
+import { parseSketch } from '../shared/sketch';
+import { isLockedLesson } from '../shared/content';
 import type { Block, CatalogTrack, Challenge, Lesson, QuizQuestion, RunLanguage, Track, TrackMeta } from '../shared/content';
 
 /**
@@ -11,6 +13,7 @@ import type { Block, CatalogTrack, Challenge, Lesson, QuizQuestion, RunLanguage,
  *   ```exercise        → YAML: prompt, lang, code (with ___ blanks), answers[], hint
  *   ```challenge       → YAML: id, title, prompt, lang, starter, tests, expectedOutput, difficulty
  *   ```quiz            → YAML list: q, options[], answer (index), explain
+ *   ```sketch          → YAML pencil-sketch diagram (see shared/sketch.ts)
  *   ```lang            → static code sample (no run button)
  */
 
@@ -83,6 +86,7 @@ function parseMeta(raw: Record<string, unknown>, file: string): TrackMeta {
     tags: Array.isArray(raw.tags) ? (raw.tags as string[]) : [],
     order: typeof raw.order === 'number' ? raw.order : 100,
     premium: raw.premium === true,
+    ...(typeof raw.preview === 'number' ? { preview: raw.preview } : {}),
   };
 }
 
@@ -125,6 +129,8 @@ function parseBlocks(body: string, ctx: { file: string; trackId: string; lessonS
         const prev = blocks[blocks.length - 1];
         if (prev?.type !== 'run') throw new Error('an output block must directly follow a runnable example');
         prev.output = content.replace(/\n$/, '');
+      } else if (kind === 'sketch') {
+        blocks.push({ type: 'sketch', sketch: parseSketch(parseYaml(content)) });
       } else if (kind === 'exercise') {
         const y = parseYaml(quoteProse(content)) as Record<string, unknown>;
         const answers = (y.answers as unknown[] | undefined)?.map((a) => (Array.isArray(a) ? a.map(String).join(ALT) : String(a))) ?? [];
@@ -217,7 +223,7 @@ export function toCatalogEntry(track: Track): CatalogTrack {
   let challengeCount = 0;
   let exerciseCount = 0;
   let quizCount = 0;
-  const lessons = track.lessons.map((l) => {
+  const lessons = track.lessons.map((l, index) => {
     const hasChallenge = l.blocks.some((b) => b.type === 'challenge');
     const hasExercise = l.blocks.some((b) => b.type === 'exercise');
     challengeCount += l.blocks.filter((b) => b.type === 'challenge').length;
@@ -226,6 +232,7 @@ export function toCatalogEntry(track: Track): CatalogTrack {
     const challenge = l.blocks.find((b) => b.type === 'challenge');
     return {
       slug: l.slug, title: l.title, minutes: l.minutes, hasChallenge, hasExercise,
+      ...(isLockedLesson(track.meta, index) ? { locked: true } : {}),
       ...(challenge && challenge.type === 'challenge' ? { challengeId: challenge.challenge.id, challengeTitle: challenge.challenge.title, difficulty: challenge.challenge.difficulty } : {}),
     };
   });
@@ -237,4 +244,34 @@ export function toCatalogEntry(track: Track): CatalogTrack {
     exerciseCount,
     quizCount,
   };
+}
+
+/** First prose paragraph of a lesson, for the teaser above a paywall. */
+export function teaserOf(blocks: Block[]): string {
+  const md = blocks.find((b) => b.type === 'md');
+  if (!md || md.type !== 'md') return '';
+  const para = md.md.split(/\n\s*\n/).find((p) => !p.trim().startsWith('#') && !p.trim().startsWith('|') && !p.trim().startsWith('>')) ?? '';
+  return para.length > 420 ? `${para.slice(0, 417).replace(/\s+\S*$/, '')}…` : para;
+}
+
+/** The browser copy of a track: exam answers removed, paywalled lessons reduced to a teaser. */
+export function publicTrack(track: Track): Track {
+  return {
+    ...track,
+    lessons: track.lessons.map((l, i) => {
+      if (isLockedLesson(track.meta, i)) return { slug: l.slug, title: l.title, minutes: l.minutes, blocks: [], locked: true, teaser: teaserOf(l.blocks) };
+      return { ...l, blocks: l.blocks.filter((b) => !(b.type === 'quiz' && b.examOnly)) };
+    }),
+  };
+}
+
+/** Paywalled lesson bodies, keyed "trackId/slug", for the Worker to serve to entitled users. */
+export function proLessons(tracks: Track[]): Record<string, Block[]> {
+  const out: Record<string, Block[]> = {};
+  for (const t of tracks) {
+    t.lessons.forEach((l, i) => {
+      if (isLockedLesson(t.meta, i)) out[`${t.meta.id}/${l.slug}`] = l.blocks.filter((b) => !(b.type === 'quiz' && b.examOnly));
+    });
+  }
+  return out;
 }
