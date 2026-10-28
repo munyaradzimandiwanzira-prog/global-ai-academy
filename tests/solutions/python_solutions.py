@@ -344,4 +344,45 @@ SOLUTIONS = {
         "        w, b = w - lr * dw, b - lr * db\n"
         "    return round(w, 2), round(b, 2)"
     ),
+    # --- Web Crawling & Scraping ----------------------------------------------------------
+    "scraping-parse-jobs": (
+        "import re\n"
+        "from bs4 import BeautifulSoup\n"
+        "def parse_jobs(html):\n"
+        "    soup = BeautifulSoup(html, 'html.parser')\n"
+        "    out = []\n"
+        "    for li in soup.select('li.job'):\n"
+        "        t = li.select_one('.title')\n"
+        "        if not t:\n            continue\n"
+        "        def txt(sel):\n"
+        "            el = li.select_one(sel)\n"
+        "            return el.get_text(strip=True) if el else None\n"
+        "        sal = txt('.salary')\n"
+        "        digits = re.sub(r'[^0-9]', '', sal) if sal else ''\n"
+        "        out.append({'title': t.get_text(strip=True), 'company': txt('.company'), 'city': txt('.city'),\n"
+        "                    'salary': int(digits) if digits else None, 'remote': 'remote' in li.get('class', [])})\n"
+        "    return out"
+    ),
+    "scraping-polite-crawler": (
+        "from collections import deque\n"
+        "def crawl(site, start, disallow, max_depth):\n"
+        "    blocked = lambda p: any(p.startswith(d) for d in disallow)\n"
+        "    if blocked(start):\n        return []\n"
+        "    order, seen, q = [], {start}, deque([(start, 0)])\n"
+        "    while q:\n"
+        "        path, depth = q.popleft()\n"
+        "        order.append(path)\n"
+        "        if depth == max_depth:\n            continue\n"
+        "        for nxt in site.get(path, []):\n"
+        "            if nxt not in seen and not blocked(nxt):\n"
+        "                seen.add(nxt)\n                q.append((nxt, depth + 1))\n"
+        "    return order"
+    ),
+    # --- AWS SageMaker AI ------------------------------------------------------------------
+    "sagemaker-choose-deployment": (
+        "def recommend(realtime_needed, max_seconds, payload_mb, steady_traffic):\n"
+        "    if not realtime_needed:\n        return 'batch'\n"
+        "    if max_seconds > 60 or payload_mb > 4:\n        return 'async'\n"
+        "    return 'realtime' if steady_traffic else 'serverless'"
+    ),
 }
