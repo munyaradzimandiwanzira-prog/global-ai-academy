@@ -282,4 +282,66 @@ SOLUTIONS = {
         "            'cached': u.get('input_tokens_details', {}).get('cached_tokens', 0),\n"
         "            'reasoning': u.get('output_tokens_details', {}).get('reasoning_tokens', 0)}"
     ),
+    # --- Pydantic in Depth -----------------------------------------------------------------
+    "pydantic-mobile-payment": (
+        "from typing import Literal\n"
+        "from pydantic import BaseModel, ConfigDict, Field, field_validator\n"
+        "class Webhook(BaseModel):\n"
+        "    model_config = ConfigDict(extra='forbid')\n"
+        "    reference: str = Field(pattern=r'^SKU-\\d{4}-\\d{5}$')\n"
+        "    amount: float = Field(gt=0)\n"
+        "    currency: Literal['USD', 'ZWG']\n"
+        "    status: Literal['paid', 'failed', 'pending']\n"
+        "    phone: str\n"
+        "    @field_validator('currency', mode='before')\n"
+        "    @classmethod\n"
+        "    def up(cls, v):\n        return v.upper() if isinstance(v, str) else v\n"
+        "    @field_validator('status', mode='before')\n"
+        "    @classmethod\n"
+        "    def low(cls, v):\n        return v.lower() if isinstance(v, str) else v\n"
+        "    @field_validator('phone')\n"
+        "    @classmethod\n"
+        "    def phone_ok(cls, v):\n"
+        "        d = ''.join(c for c in v if c.isdigit())\n"
+        "        if d.startswith('0'):\n            d = '263' + d[1:]\n"
+        "        if not (d.startswith('2637') and len(d) == 12):\n            raise ValueError('not a Zimbabwe mobile')\n"
+        "        return '+' + d"
+    ),
+    # --- Functions in Depth ----------------------------------------------------------------
+    "functions-retry-decorator": (
+        "import functools\n"
+        "def retry(times):\n"
+        "    def decorator(func):\n"
+        "        @functools.wraps(func)\n"
+        "        def wrapper(*args, **kwargs):\n"
+        "            for attempt in range(1, times + 1):\n"
+        "                wrapper.attempts = attempt\n"
+        "                try:\n                    return func(*args, **kwargs)\n"
+        "                except Exception:\n"
+        "                    if attempt == times:\n                        raise\n"
+        "        wrapper.attempts = 0\n"
+        "        return wrapper\n"
+        "    return decorator"
+    ),
+    # --- Statistics for AI -----------------------------------------------------------------
+    "stats-zscore-outliers": (
+        "import math\n"
+        "def flag_outliers(amounts, threshold=2.0):\n"
+        "    n = len(amounts)\n"
+        "    if n < 2:\n        return []\n"
+        "    m = sum(amounts) / n\n"
+        "    sd = math.sqrt(sum((x - m) ** 2 for x in amounts) / (n - 1))\n"
+        "    if sd == 0:\n        return []\n"
+        "    return [(i, x, round((x - m) / sd, 2)) for i, x in enumerate(amounts) if abs((x - m) / sd) > threshold]"
+    ),
+    # --- Mathematics & First Principles of ML ---------------------------------------------
+    "mlmath-gradient-descent": (
+        "def fit_line(xs, ys, lr=0.01, steps=2000):\n"
+        "    w, b, n = 0.0, 0.0, len(xs)\n"
+        "    for _ in range(steps):\n"
+        "        dw = sum(2 * (w * x + b - y) * x for x, y in zip(xs, ys)) / n\n"
+        "        db = sum(2 * (w * x + b - y) for x, y in zip(xs, ys)) / n\n"
+        "        w, b = w - lr * dw, b - lr * db\n"
+        "    return round(w, 2), round(b, 2)"
+    ),
 }
