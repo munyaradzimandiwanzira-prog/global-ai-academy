@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Trophy } from 'lucide-react';
+import { Trophy } from '@/components/icons';
 import { api } from '@/lib/api';
 import { Avatar, Empty, PageHeader, PageLoader } from '@/components/ui';
 import { rankForXp } from '@shared/config';

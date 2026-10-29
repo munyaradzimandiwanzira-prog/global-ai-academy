@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { CheckCircle2, XCircle, Terminal, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Terminal, Clock } from '@/components/icons';
 import type { RunResult, OutputLine } from '@/features/runners';
 import { cn } from '@/lib/utils';
 

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { toast } from 'sonner';
-import { Save } from 'lucide-react';
+import { Save } from '@/components/icons';
 import type { RunLanguage } from '@shared/content';
 import type { Project } from '@shared/api-types';
 import { Playground } from '@/features/editor/Playground';

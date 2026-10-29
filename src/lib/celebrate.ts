@@ -1,4 +1,4 @@
-const BRAND = ['#D4A64A', '#23807F', '#142B52', '#6B3A1E', '#F5F0E6'];
+const BRAND = ['#D4A64A', '#23807F', '#142B52', '#2E4A62', '#F5F0E6'];
 
 export async function celebrate(size: 'small' | 'big' = 'small') {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

@@ -141,7 +141,7 @@ export function GraphView({ graph, className, height = 380 }: { graph: ViewGraph
           return (
             <g key={r.id} className="cursor-pointer" onClick={() => setSelected({ kind: 'rel', v: r })}>
               <path d={`M${s.x},${s.y} Q${cx},${cy} ${e.x},${e.y}`} fill="none" stroke={active ? '#D4A64A' : '#5d667a'} strokeWidth={active ? 2.2 : 1.4} markerEnd="url(#gv-arrow)" />
-              <text x={lx} y={ly - 3} textAnchor="middle" fontSize="9" fill="#a9b0bd" style={{ fontFamily: 'JetBrains Mono Variable, monospace' }}>{r.type}</text>
+              <text x={lx} y={ly - 3} textAnchor="middle" fontSize="9" fill="#a9b0bd" style={{ fontFamily: '"IBM Plex Mono", monospace' }}>{r.type}</text>
             </g>
           );
         })}
@@ -151,7 +151,7 @@ export function GraphView({ graph, className, height = 380 }: { graph: ViewGraph
           return (
             <g key={n.id} className="cursor-pointer" onClick={() => setSelected({ kind: 'node', v: n })}>
               <circle cx={p.x} cy={p.y} r={R} fill={colours.get(n.labels[0] ?? '') ?? '#6B6A64'} stroke={active ? '#D4A64A' : '#0d1424'} strokeWidth={active ? 3 : 2} />
-              <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="8.5" fill="#fff" style={{ fontFamily: 'Inter Variable, sans-serif', fontWeight: 600, pointerEvents: 'none' }}>
+              <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="8.5" fill="#fff" style={{ fontFamily: '"Source Sans 3 Variable", sans-serif', fontWeight: 600, pointerEvents: 'none' }}>
                 {(() => {
                   const [a, b] = wrap(caption(n));
                   return b ? <><tspan x={p.x} dy="-0.5em">{a}</tspan><tspan x={p.x} dy="1.1em">{b}</tspan></> : a;

@@ -1,5 +1,5 @@
 import * as RDialog from '@radix-ui/react-dialog';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2 } from '@/components/icons';
 import type { ReactNode, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
 import { forwardRef } from 'react';
 import { cn, initials } from '@/lib/utils';
@@ -161,7 +161,7 @@ export function Stat({ label, value, sub, icon }: { label: string; value: ReactN
 
 export function LevelBadge({ level }: { level: string }) {
   const styles: Record<string, string> = {
-    kids: 'bg-[#FDE7C8] text-[#8A4B00]',
+    kids: 'bg-[#DCEFEE] text-[#1C6B6A]',
     beginner: 'bg-teal-100 text-teal-600',
     intermediate: 'bg-gold-100 text-gold-600',
     advanced: 'bg-stone-100 text-stone',

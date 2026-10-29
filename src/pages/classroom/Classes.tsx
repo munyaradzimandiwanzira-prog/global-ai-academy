@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, Users, KeyRound, GraduationCap, Lock } from 'lucide-react';
+import { Plus, Users, KeyRound, GraduationCap, Lock } from '@/components/icons';
 import type { Classroom } from '@shared/api-types';
 import type { Level } from '@shared/content';
 import { api, ApiError, errorMessage } from '@/lib/api';

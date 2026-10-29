@@ -49,7 +49,7 @@ const sandHighlight = HighlightStyle.define([
   { tag: [t.number, t.bool, t.null], color: '#B4472A' },
   { tag: t.comment, color: '#8C8270', fontStyle: 'italic' },
   { tag: [t.function(t.variableName), t.function(t.propertyName)], color: '#1C6B6A' },
-  { tag: [t.className, t.typeName], color: '#6B3A1E' },
+  { tag: [t.className, t.typeName], color: '#2E4A62' },
   { tag: [t.tagName], color: '#B4472A' },
   { tag: [t.attributeName, t.propertyName], color: '#5B3FA0' },
 ]);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Phone, MapPin, MessageCircle, Clock } from 'lucide-react';
+import { Mail, Phone, MapPin, MessageCircle, Clock } from '@/components/icons';
 import { SITE } from '@shared/config';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';

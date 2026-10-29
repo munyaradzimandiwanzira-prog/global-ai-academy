@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Eraser, ArrowRight, RotateCcw, Rows3 } from 'lucide-react';
+import { Star, Eraser, ArrowRight, RotateCcw, Rows3 } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
 import { play } from '../sfx';

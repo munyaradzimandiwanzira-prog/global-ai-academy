@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldCheck, ShieldX } from 'lucide-react';
+import { ShieldCheck, ShieldX } from '@/components/icons';
 import type { Certificate } from '@shared/api-types';
 import { api, errorMessage } from '@/lib/api';
 import { Input, PageHeader, Spinner } from '@/components/ui';

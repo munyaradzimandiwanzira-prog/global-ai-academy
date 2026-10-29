@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Flame, Zap, Award, BookOpen, Target, Plus, Trash2, CheckCircle2, Megaphone, Users, PlayCircle, Lock, MailWarning, Video, Sparkles } from 'lucide-react';
+import { Flame, Zap, Award, BookOpen, Target, Plus, Trash2, CheckCircle2, Megaphone, Users, PlayCircle, Lock, MailWarning, Video, Sparkles } from '@/components/icons';
 import type { Goal, PublicUser } from '@shared/api-types';
 import { levelForXp, rankForXp, TRIAL } from '@shared/config';
 import { api, errorMessage } from '@/lib/api';
@@ -134,7 +134,7 @@ function Goals() {
               <li key={g.id}>
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span className="font-medium">{pct >= 100 && <CheckCircle2 className="mr-1 inline h-4 w-4 text-teal" />}{g.title}</span>
-                  <button onClick={() => remove.mutate(g.id)} className="rounded p-1 text-muted-fg hover:text-red-600" aria-label={`Delete goal ${g.title}`}><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={() => remove.mutate(g.id)} className="grid min-h-11 min-w-11 place-items-center rounded-full text-muted-fg hover:bg-muted hover:text-red-600" aria-label={`Delete goal ${g.title}`}><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
                 <ProgressBar value={pct} className="mt-1.5" tone="gold" />
                 <p className="mt-1 text-xs text-muted-fg">{g.current ?? 0} of {g.target} {g.kind === 'minutes_per_day' ? 'minutes today' : g.kind === 'lessons_per_week' ? 'lessons this week' : 'lessons'}</p>
@@ -213,7 +213,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Day streak" value={<span className="flex items-center gap-2">{user.streak} <Flame className="h-6 w-6 text-[#E07A2F]" /></span>} sub={user.streak > 1 ? 'Keep it going tomorrow!' : 'Learn something tomorrow to build a streak'} />
+        <Stat label="Day streak" value={<span className="flex items-center gap-2">{user.streak} <Flame className="h-6 w-6 text-gold-600" /></span>} sub={user.streak > 1 ? 'Keep it going tomorrow!' : 'Learn something tomorrow to build a streak'} />
         <Stat label="Total XP" value={user.xp.toLocaleString()} sub={`+${data?.weekXp ?? 0} this week`} icon={<Zap className="h-4 w-4 text-gold-600" />} />
         <div className="card flex items-center gap-4 p-4">
           <ProgressRing value={lvl.progress * 100} label={<span className="font-display text-base">{lvl.level}</span>} />

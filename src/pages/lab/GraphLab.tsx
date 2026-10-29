@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Lightbulb, Lock, Play, Send, Eye, Database, Briefcase, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Lightbulb, Lock, Play, Send, Eye, Database, Briefcase, RotateCcw } from '@/components/icons';
 import { SCENARIOS, getScenario, checkTask, type Scenario, type CheckOutcome } from '@/features/graph/scenarios';
 import { getDataset } from '@/features/graph/datasets';
 import { OutputPanel, TestBanner } from '@/features/editor/OutputPanel';

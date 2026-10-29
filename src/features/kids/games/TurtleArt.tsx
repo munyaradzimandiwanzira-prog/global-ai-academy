@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Eraser, Star, Wand2 } from 'lucide-react';
+import { Play, Eraser, Star, Wand2 } from '@/components/icons';
 import { CHALLENGES, run, sameDrawing, TurtleError, type Segment } from './turtle-engine';
 import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';

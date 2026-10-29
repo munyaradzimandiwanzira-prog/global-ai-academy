@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, ExternalLink, CheckCircle2, Lightbulb, Sparkles, RotateCcw, Eye, Trophy, ChevronDown } from 'lucide-react';
+import { Play, ExternalLink, CheckCircle2, Lightbulb, Sparkles, RotateCcw, Eye, Trophy, ChevronDown } from '@/components/icons';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { ANSWER_ALT, type Block, type Challenge, type QuizQuestion } from '@shared/content';
 import { Playground, EditorFallback } from '@/features/editor/Playground';
@@ -184,7 +184,7 @@ export function ChallengeBlock({ challenge, trackId, lessonTitle }: { challenge:
         <div className="mt-4 overflow-hidden rounded-xl border border-night-700">
           <div className="flex items-center gap-2 border-b border-night-700 bg-night-800 px-3 py-2">
             <button onClick={check} disabled={running} className="btn-run btn-sm"><Play className="h-3.5 w-3.5 fill-current" /> {running ? 'Checking…' : 'Run & check'}</button>
-            <button onClick={() => { setCode(challenge.starter); reset(); setHtmlTest(null); }} className="ml-auto rounded p-1.5 text-sand/60 hover:bg-night-700 hover:text-sand" title="Reset to starter code"><RotateCcw className="h-4 w-4" /></button>
+            <button onClick={() => { setCode(challenge.starter); reset(); setHtmlTest(null); }} className="ml-auto grid min-h-11 min-w-11 place-items-center rounded-lg text-sand/70 hover:bg-night-700 hover:text-sand" title="Reset to starter code" aria-label="Reset to starter code"><RotateCcw className="h-4 w-4" /></button>
           </div>
           <div className="grid md:grid-cols-2">
             <div className="min-w-0 md:border-r md:border-night-700">

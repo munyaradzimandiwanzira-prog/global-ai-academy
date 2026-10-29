@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check } from '@/components/icons';
 import { PLAN_CATALOG, priceFor, usd, yearlyDiscountPercent, yearlyPrice, yearlySaving, type BillingPeriod, type Plan } from '@shared/config';
 import { cn } from '@/lib/utils';
 

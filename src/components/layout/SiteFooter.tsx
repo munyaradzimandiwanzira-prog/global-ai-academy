@@ -51,9 +51,8 @@ export function SiteFooter() {
           ))}
         </nav>
       </div>
-      <div className="container overflow-hidden pb-6">
-        <p className="select-none font-display font-bold leading-[0.85] tracking-display text-white/[.12]" style={{ fontSize: 'clamp(2.4rem, 9.6vw, 9.5rem)', whiteSpace: 'nowrap' }} aria-hidden="true">Global AI Academy</p>
-        <p className="mt-6 flex flex-wrap justify-between gap-3 text-sm text-white/65">
+      <div className="container border-t border-white/10 py-6">
+        <p className="flex flex-wrap justify-between gap-3 text-sm text-white/70">
           <span>© {new Date().getFullYear()} {SITE.name}. Made in Harare for the world.</span>
           <span>Mhoroi · Salibonani · Welcome</span>
         </p>

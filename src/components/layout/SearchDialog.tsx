@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as RDialog from '@radix-ui/react-dialog';
-import { Search, CornerDownLeft } from 'lucide-react';
+import { Search, CornerDownLeft } from '@/components/icons';
 import { search, lessonPath, catalog } from '@/lib/catalog';
 import { cn } from '@/lib/utils';
 import { TrackMark } from '@/components/ui';

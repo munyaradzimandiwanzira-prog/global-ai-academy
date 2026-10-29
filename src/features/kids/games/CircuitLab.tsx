@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, ArrowRight, Sun, Cloud } from 'lucide-react';
+import { Star, ArrowRight, Sun, Cloud } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
 import { play } from '../sfx';
@@ -31,7 +31,7 @@ function Circuit({ closed, glow, gapItem, solar, sun }: { closed: boolean; glow:
         </g>
       ) : (
         <g>
-          <rect x="40" y="96" width="60" height="48" rx="8" fill="#FFF6E5" stroke={INK} strokeWidth="5" />
+          <rect x="40" y="96" width="60" height="48" rx="8" fill="#EEF4F3" stroke={INK} strokeWidth="5" />
           <rect x="46" y="102" width="26" height="36" rx="4" fill="#3A8F4B" />
           <text x="86" y="126" textAnchor="middle" fontSize="18" fontWeight="800" fill={INK}>+</text>
           <text x="70" y="166" textAnchor="middle" fontSize="13" fontWeight="700" fill={INK}>Battery</text>
@@ -44,7 +44,7 @@ function Circuit({ closed, glow, gapItem, solar, sun }: { closed: boolean; glow:
         <path d="M-9 6 L-4 -6 L0 4 L4 -6 L9 6" fill="none" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
       </g>
       {/* gap or switch on the top wire */}
-      <rect x="150" y="44" width="60" height="32" fill="#FFF6E5" />
+      <rect x="150" y="44" width="60" height="32" fill="#EEF4F3" />
       {gapItem !== undefined ? (
         gapItem ? (
           <g><rect x="146" y="50" width="68" height="20" rx="8" fill={gapItem.colour} stroke={INK} strokeWidth="3" /><text x="180" y="92" textAnchor="middle" fontSize="13" fontWeight="700" fill={INK}>{gapItem.name}</text></g>
@@ -147,11 +147,11 @@ export default function CircuitLab() {
             <ul className="space-y-2">
               {MATERIALS.map((m) => (
                 <li key={m.name} className={cn('flex flex-wrap items-center gap-2 rounded-2xl border-[3px] bg-white p-2', gap?.name === m.name ? 'border-ink' : 'border-ink/15')}>
-                  <button onClick={() => test(m)} className="flex min-h-12 flex-1 items-center gap-3 rounded-xl px-2 text-left font-bold hover:bg-[#FFF6E5]">
+                  <button onClick={() => test(m)} className="flex min-h-12 flex-1 items-center gap-3 rounded-xl px-2 text-left font-bold hover:bg-[#EEF4F3]">
                     <span className="h-5 w-10 rounded-md border-2 border-ink" style={{ background: m.colour }} /> {m.name}
                   </button>
-                  <button onClick={() => classify(m, true)} className={cn('h-12 rounded-xl px-3 text-sm font-bold', answers[m.name] === true ? (m.conducts ? 'bg-[#3A8F4B] text-white' : 'bg-[#B4472A] text-white') : 'bg-[#FFE2A8]')}>Conductor</button>
-                  <button onClick={() => classify(m, false)} className={cn('h-12 rounded-xl px-3 text-sm font-bold', answers[m.name] === false ? (!m.conducts ? 'bg-[#3A8F4B] text-white' : 'bg-[#B4472A] text-white') : 'bg-[#FFE2A8]')}>Insulator</button>
+                  <button onClick={() => classify(m, true)} className={cn('h-12 rounded-xl px-3 text-sm font-bold', answers[m.name] === true ? (m.conducts ? 'bg-[#3A8F4B] text-white' : 'bg-[#B4472A] text-white') : 'bg-[#D6EBE8]')}>Conductor</button>
+                  <button onClick={() => classify(m, false)} className={cn('h-12 rounded-xl px-3 text-sm font-bold', answers[m.name] === false ? (!m.conducts ? 'bg-[#3A8F4B] text-white' : 'bg-[#B4472A] text-white') : 'bg-[#D6EBE8]')}>Insulator</button>
                 </li>
               ))}
               <li className="pt-1 text-center font-bold tabular">{MATERIALS.filter((m) => answers[m.name] === m.conducts).length} of {MATERIALS.length} sorted correctly</li>

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Trophy, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Trophy, Sparkles, CheckCircle2 } from '@/components/icons';
 import { catalog, lessonPath } from '@/lib/catalog';
 import type { CatalogTrack } from '@shared/content';
 import { useProgress } from '@/lib/progress';

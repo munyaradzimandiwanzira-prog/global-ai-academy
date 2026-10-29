@@ -42,11 +42,11 @@ export function TurtleArt({ size = 96, ...rest }: ArtProps) {
 export function StopwatchArt({ size = 96, ...rest }: ArtProps) {
   return (
     <svg {...base(size, rest)}>
-      <rect x="40" y="8" width="16" height="9" rx="3" fill="#E07A2F" {...line} strokeWidth={3} />
-      <circle cx="48" cy="54" r="32" fill="#FFF6E5" {...line} />
-      <circle cx="48" cy="54" r="24" fill="#FFE2A8" />
+      <rect x="40" y="8" width="16" height="9" rx="3" fill="#3577B8" {...line} strokeWidth={3} />
+      <circle cx="48" cy="54" r="32" fill="#EEF4F3" {...line} />
+      <circle cx="48" cy="54" r="24" fill="#D6EBE8" />
       <path d="M48 54 L48 34" {...line} />
-      <path d="M48 54 L62 62" {...line} stroke="#E07A2F" />
+      <path d="M48 54 L62 62" {...line} stroke="#3577B8" />
       <circle cx="48" cy="54" r="4" fill={INK} />
       <path d="M74 24 l6 -6" {...line} />
     </svg>
@@ -113,10 +113,10 @@ export function PixelArt({ size = 96, ...rest }: ArtProps) {
   const cells = [
     '..GG..', '.GGGG.', 'YYYYYY', 'RRRRRR', 'KKKKKK', 'RRRRRR',
   ];
-  const fill: Record<string, string> = { G: '#3A8F4B', Y: '#F2B544', R: '#C8302B', K: INK, '.': '#FFF6E5' };
+  const fill: Record<string, string> = { G: '#3A8F4B', Y: '#F2B544', R: '#C8302B', K: INK, '.': '#EEF4F3' };
   return (
     <svg {...base(size, rest)}>
-      <rect x="10" y="10" width="76" height="76" rx="8" fill="#FFF6E5" {...line} />
+      <rect x="10" y="10" width="76" height="76" rx="8" fill="#EEF4F3" {...line} />
       {cells.map((row, y) => [...row].map((c, x) => <rect key={`${x}-${y}`} x={18 + x * 10} y={18 + y * 10} width="9" height="9" rx="1.5" fill={fill[c]} />))}
     </svg>
   );
@@ -125,7 +125,7 @@ export function PixelArt({ size = 96, ...rest }: ArtProps) {
 export function BatteryArt({ size = 96, ...rest }: ArtProps) {
   return (
     <svg {...base(size, rest)}>
-      <rect x="14" y="30" width="60" height="36" rx="8" fill="#FFF6E5" {...line} />
+      <rect x="14" y="30" width="60" height="36" rx="8" fill="#EEF4F3" {...line} />
       <rect x="74" y="40" width="8" height="16" rx="2" fill={INK} />
       <rect x="20" y="36" width="26" height="24" rx="4" fill="#3A8F4B" />
       <path d="M58 36 L50 50 H58 L52 62" fill="none" stroke="#F2B544" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
@@ -162,7 +162,7 @@ export function ElephantArt({ size = 96, ...rest }: ArtProps) {
       <path d="M48 52 C48 70 40 80 32 82" fill="none" stroke={INK} strokeWidth="14" strokeLinecap="round" />
       <path d="M48 52 C48 70 40 80 32 82" fill="none" stroke="#B8C2CC" strokeWidth="7" strokeLinecap="round" />
       <circle cx="39" cy="38" r="3.5" fill={INK} /><circle cx="57" cy="38" r="3.5" fill={INK} />
-      <path d="M58 56 L66 64" stroke="#FFF6E5" strokeWidth="5" strokeLinecap="round" />
+      <path d="M58 56 L66 64" stroke="#EEF4F3" strokeWidth="5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -173,7 +173,7 @@ export function GiraffeArt({ size = 96, ...rest }: ArtProps) {
       <path d="M44 86 V40 L52 40 V86" fill="#F2B544" {...line} />
       <rect x="30" y="14" width="34" height="26" rx="12" fill="#F2B544" {...line} />
       <path d="M38 14 V6 M56 14 V6" {...line} />
-      <circle cx="38" cy="5" r="3" fill="#6B3A1E" /><circle cx="56" cy="5" r="3" fill="#6B3A1E" />
+      <circle cx="38" cy="5" r="3" fill="#2E4A62" /><circle cx="56" cy="5" r="3" fill="#2E4A62" />
       <circle cx="40" cy="24" r="3" fill={INK} /><circle cx="54" cy="24" r="3" fill={INK} />
       <ellipse cx="47" cy="33" rx="8" ry="4" fill="#E0A422" />
       <circle cx="48" cy="54" r="3" fill="#B4472A" /><circle cx="47" cy="68" r="3" fill="#B4472A" /><circle cx="49" cy="80" r="2.5" fill="#B4472A" />
@@ -187,7 +187,7 @@ export function RhinoArt({ size = 96, ...rest }: ArtProps) {
       <rect x="14" y="36" width="56" height="34" rx="16" fill="#8A9097" {...line} />
       <path d="M22 70 v12 M34 70 v12 M52 70 v12 M64 70 v12" {...line} />
       <path d="M68 44 C80 42 88 50 86 62 L70 64 Z" fill="#8A9097" {...line} />
-      <path d="M80 44 L86 30 L88 46" fill="#FFF6E5" {...line} strokeWidth={3} />
+      <path d="M80 44 L86 30 L88 46" fill="#EEF4F3" {...line} strokeWidth={3} />
       <circle cx="74" cy="50" r="2.5" fill={INK} />
       <path d="M60 36 l2 -8 l4 8" fill="#8A9097" {...line} strokeWidth={3} />
     </svg>
@@ -200,8 +200,8 @@ export function TrophyArt({ size = 96, ...rest }: ArtProps) {
       <path d="M28 14 H68 V36 C68 50 58 58 48 58 C38 58 28 50 28 36 Z" fill="#F2B544" {...line} />
       <path d="M28 20 H16 C16 34 22 40 30 40 M68 20 H80 C80 34 74 40 66 40" fill="none" {...line} />
       <path d="M48 58 V70" {...line} />
-      <rect x="32" y="70" width="32" height="12" rx="3" fill="#6B3A1E" {...line} />
-      <path d="M41 30 L46 35 L56 25" fill="none" {...line} stroke="#FFF6E5" />
+      <rect x="32" y="70" width="32" height="12" rx="3" fill="#2E4A62" {...line} />
+      <path d="M41 30 L46 35 L56 25" fill="none" {...line} stroke="#EEF4F3" />
     </svg>
   );
 }
@@ -219,7 +219,7 @@ export function MangoArt({ size = 96, ...rest }: ArtProps) {
 export function TreeTile({ size = 40 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-      <rect x="17" y="24" width="6" height="12" rx="2" fill="#6B3A1E" />
+      <rect x="17" y="24" width="6" height="12" rx="2" fill="#2E4A62" />
       <circle cx="20" cy="17" r="13" fill="#3A8F4B" stroke={INK} strokeWidth="2.5" />
       <circle cx="15" cy="13" r="3" fill="#5BB06A" />
     </svg>

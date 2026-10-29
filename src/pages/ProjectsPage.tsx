@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { compressToEncodedURIComponent } from 'lz-string';
-import { Copy, ExternalLink, Link2, Link2Off, Plus, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Link2, Link2Off, Plus, Trash2 } from '@/components/icons';
 import type { Project } from '@shared/api-types';
 import type { RunLanguage } from '@shared/content';
 import { Playground } from '@/features/editor/Playground';

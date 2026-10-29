@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { compressToEncodedURIComponent } from 'lz-string';
-import { Search, Play, ArrowRight, Check } from 'lucide-react';
+import { Search, Play, ArrowRight, Check } from '@/components/icons';
 import { catalog, lessonPath, search as searchCatalog } from '@/lib/catalog';
 import { CAREERS } from '@/data/careers';
 import type { BillingPeriod, Plan } from '@shared/config';
@@ -10,6 +10,7 @@ import { ButtonLink, TrackMark, CareerMark, Button } from '@/components/ui';
 import { PlanCards, PeriodToggle } from '@/features/pricing/PlanCards';
 import { WaitlistDialog } from '@/features/pricing/WaitlistDialog';
 import { useAuth } from '@/lib/auth';
+import { Photo } from '@/components/Photo';
 import { useReveal } from '@/lib/reveal';
 import { cn } from '@/lib/utils';
 
@@ -116,8 +117,8 @@ function LearningWall() {
           <p className="mt-1.5 text-sm text-fg/70"><strong className="font-semibold text-fg">{course.name}.</strong> {course.note}</p>
         </div>
       ))}
-      <Link to="/kids" className="flex items-center justify-between gap-4 rounded-[10px] bg-[#F2B544] px-4 py-4 text-ink-900 transition-colors hover:bg-[#E9A92F]" data-reveal style={{ ['--i' as string]: 5 }}>
-        <span className="font-kids text-xl font-semibold">Kids Zone, where it all starts</span>
+      <Link to="/kids" className="flex items-center justify-between gap-4 rounded-[10px] border-2 border-teal bg-teal-100 px-4 py-4 text-ink-900 transition-colors hover:bg-[#cde7e5] dark:bg-teal/20 dark:text-sand" data-reveal style={{ ['--i' as string]: 5 }}>
+        <span className="font-display text-xl font-bold">Kids Zone, where it all starts</span>
         <span className="hidden text-[15px] font-medium sm:block">Robo Maze, Turtle Art, Bug Hunt and more</span>
         <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
       </Link>
@@ -145,7 +146,17 @@ export default function Home() {
   return (
     <div ref={page}>
       {/* ── Hero: the editor is the picture, and it runs ─────────────────── */}
-      <section className="bg-ink text-white dark:bg-night">
+      <section className="relative isolate overflow-hidden bg-ink text-white dark:bg-night">
+        {/* Victoria Falls, Mosi-oa-Tunya: the photograph sits behind the editor and dissolves into ink under the headline. */}
+        <Photo
+          name="victoria-falls"
+          alt=""
+          priority
+          sizes="(min-width: 1024px) 70vw, 100vw"
+          className="absolute inset-y-0 right-0 -z-10 w-full opacity-40 lg:w-[70%] lg:opacity-70 [mask-image:linear-gradient(180deg,#000_0%,transparent_85%)] lg:[mask-image:linear-gradient(90deg,transparent_0%,#000_45%)]"
+          imgClassName="object-[60%_45%]"
+        />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(20,43,82,.10)_0%,rgba(20,43,82,.55)_100%)] dark:bg-[linear-gradient(180deg,rgba(14,26,48,.2)_0%,rgba(14,26,48,.7)_100%)]" aria-hidden="true" />
         <div className="container grid [&>*]:min-w-0 items-center gap-12 py-14 md:py-20 lg:grid-cols-[1.02fr_1fr]">
           <div>
             <h1 className="display-xl max-w-[11ch]">Learn to code by running it.</h1>
@@ -157,10 +168,10 @@ export default function Home() {
               <ButtonLink to={user ? '/dashboard' : '/learn/python'} color="accent" size="lg" endIcon={<ArrowRight />}>{user ? 'Continue learning' : 'Start Python free'}</ButtonLink>
               <ButtonLink to="/kids" variant="outlined" color="light" size="lg">Kids Zone</ButtonLink>
             </div>
-            <p className="mt-8 text-[15px] text-white/75 tabular">{catalog.length} tracks · {lessons} lessons · {challenges} coding challenges · no install, works on a phone</p>
+            <p className="mt-8 text-[15px] text-white/80 tabular">{catalog.length} tracks · {lessons} lessons · {challenges} coding challenges · no install, works on a phone</p>
           </div>
           <div className="min-w-0 animate-rise">
-            <p className="mb-2 flex items-center justify-between text-sm text-white/75"><span>This editor is live. Press Run.</span><span>Python 3, in your browser</span></p>
+            <p className="mb-2 flex items-center justify-between text-sm text-white/90 [text-shadow:0_1px_2px_rgba(12,28,56,.8)]"><span>This editor is live. Press Run.</span><span>Python 3, in your browser</span></p>
             <Suspense fallback={<div className="h-[348px] rounded-2xl bg-night" />}>
               <Playground language="python" initialCode={HERO_CODE} height="300px" />
             </Suspense>
@@ -171,7 +182,7 @@ export default function Home() {
 
       {/* ── Python: tutorial + live example (W3Schools' signature, in our colours) ── */}
       {py && (
-        <section className="bg-card py-20 md:py-28">
+        <section className="bg-card py-16 md:py-24">
           <div className="container grid [&>*]:min-w-0 items-center gap-12 lg:grid-cols-2">
             <div data-reveal>
               <h2 className="display-lg">Python</h2>
@@ -195,20 +206,20 @@ print(f"Basket total: \${total:.2f}")`}</pre>
 
       {/* ── Web: code beside what it renders ─────────────────────────────── */}
       {web && (
-        <section className="bg-[#E34F26] py-20 text-white md:py-28">
+        <section className="border-t border-border py-16 md:py-24">
           <div className="container">
             <div className="flex flex-wrap items-end justify-between gap-6" data-reveal>
               <div>
                 <h2 className="display-lg">HTML, CSS and JavaScript</h2>
-                <p className="lede mt-5 max-w-xl text-white/90">The three languages every web page is made of. Write on the left, see the page on the right.</p>
+                <p className="lede mt-5 max-w-xl text-fg/85">The three languages every web page is made of. Write on the left, see the page on the right.</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <ButtonLink to={lessonPath('html')} color="light" size="lg">Learn HTML</ButtonLink>
-                <ButtonLink to={lessonPath('css')} variant="outlined" color="light" size="lg">Learn CSS</ButtonLink>
-                <ButtonLink to={lessonPath('javascript')} variant="outlined" color="light" size="lg">Learn JavaScript</ButtonLink>
+                <ButtonLink to={lessonPath('html')} color="action" size="lg">Learn HTML</ButtonLink>
+                <ButtonLink to={lessonPath('css')} variant="outlined" size="lg">Learn CSS</ButtonLink>
+                <ButtonLink to={lessonPath('javascript')} variant="outlined" size="lg">Learn JavaScript</ButtonLink>
               </div>
             </div>
-            <div className="mt-12 grid overflow-hidden rounded-3xl bg-white text-ink md:grid-cols-2" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
+            <div className="mt-12 grid overflow-hidden rounded-[20px] border border-border bg-white text-ink md:grid-cols-2" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
               <pre className="overflow-x-auto bg-night p-6 font-mono text-[14px] leading-relaxed text-sand">{`<h1>Mhoro, Harare!</h1>
 <p>Kombi fares today:</p>
 <ul>
@@ -223,17 +234,17 @@ print(f"Basket total: \${total:.2f}")`}</pre>
                 <p className="mt-3">Kombi fares today:</p>
                 <ul className="mt-2 list-disc pl-6"><li>CBD to Avondale — $1</li><li>CBD to Highlands — $1</li></ul>
                 <PaidButton />
-                <p className="mt-6"><Link to={tryHref('html', '<h1>Mhoro, Harare!</h1>\n<p>Kombi fares today:</p>\n<ul>\n  <li>CBD to Avondale — $1</li>\n  <li>CBD to Highlands — $1</li>\n</ul>\n<button onclick="this.textContent=\'Paid!\'">\n  Pay with EcoCash\n</button>')} className="font-semibold text-[#B33A1A] underline-offset-4 hover:underline">Open this in the editor →</Link></p>
+                <p className="mt-6"><Link to={tryHref('html', '<h1>Mhoro, Harare!</h1>\n<p>Kombi fares today:</p>\n<ul>\n  <li>CBD to Avondale — $1</li>\n  <li>CBD to Highlands — $1</li>\n</ul>\n<button onclick="this.textContent=\'Paid!\'">\n  Pay with EcoCash\n</button>')} className="font-semibold text-teal-600 underline-offset-4 hover:underline">Open this in the editor →</Link></p>
               </div>
             </div>
-            <p className="mt-5 text-[15px] text-white/90 tabular">{(web?.lessons.length ?? 0) + (track('css')?.lessons.length ?? 0) + (track('javascript')?.lessons.length ?? 0)} lessons across the three, plus TypeScript and React when you are ready.</p>
+            <p className="mt-5 text-[15px] text-fg/70 tabular">{(web?.lessons.length ?? 0) + (track('css')?.lessons.length ?? 0) + (track('javascript')?.lessons.length ?? 0)} lessons across the three, plus TypeScript and React when you are ready.</p>
           </div>
         </section>
       )}
 
       {/* ── SQL: a query and the table it returns ────────────────────────── */}
       {sql && (
-        <section className="bg-granite-100 py-20 dark:bg-night-800 md:py-28">
+        <section className="bg-card py-16 md:py-24">
           <div className="container grid [&>*]:min-w-0 items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
             <div className="lg:order-2" data-reveal>
               <h2 className="display-lg">SQL</h2>
@@ -243,7 +254,7 @@ print(f"Basket total: \${total:.2f}")`}</pre>
                 <ButtonLink to="/compiler/sql" variant="outlined" size="lg">Open the SQL editor</ButtonLink>
               </div>
             </div>
-            <div className="overflow-hidden rounded-3xl bg-card" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
+            <div className="overflow-hidden rounded-[20px] border border-border bg-card" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
               <pre className="overflow-x-auto bg-night p-6 font-mono text-[14px] leading-relaxed text-sand">{`SELECT Province, COUNT(*) AS Customers
 FROM Customers
 GROUP BY Province
@@ -274,12 +285,13 @@ LIMIT 4;`}</pre>
                 <ButtonLink to="/careers/agentic-ai-engineer" variant="outlined" color="light" size="lg">Agentic AI engineer path</ButtonLink>
               </div>
             </div>
-            <ul className="grid grid-cols-2 gap-2 self-center" data-reveal style={{ ['--i' as string]: 1 }}>
+            <ul className="grid gap-x-8 self-center sm:grid-cols-2" data-reveal style={{ ['--i' as string]: 1 }}>
               {catalog.filter((t) => t.category === 'ai').sort((a, b) => a.order - b.order).map((t) => (
-                <li key={t.id}>
-                  <Link to={lessonPath(t.id)} className="flex items-center gap-3 rounded-2xl bg-white/[.06] p-3 transition-colors hover:bg-white/[.12]">
-                    <TrackMark short={t.short} color={t.color} size={34} />
-                    <span className="min-w-0"><span className="block truncate font-semibold">{t.title}</span><span className="block text-sm text-white/70">{t.lessons.length} lessons</span></span>
+                <li key={t.id} className="border-b border-white/15">
+                  <Link to={lessonPath(t.id)} className="group flex items-center gap-3 py-3">
+                    <TrackMark short={t.short} color={t.color} size={30} />
+                    <span className="min-w-0 flex-1 truncate font-semibold group-hover:text-gold">{t.title}</span>
+                    <span className="shrink-0 text-sm text-white/70 tabular">{t.lessons.length}</span>
                   </Link>
                 </li>
               ))}
@@ -315,7 +327,16 @@ LIMIT 4;`}</pre>
       </section>
 
       {/* ── The wall: every track, laid by level ─────────────────────────── */}
-      <section className="py-20 md:py-28">
+      <section className="relative isolate overflow-hidden py-16 md:py-24">
+        {/* The Great Enclosure itself, faded far back behind the heading: the wall the metaphor comes from. */}
+        <Photo
+          name="great-zimbabwe-aerial"
+          alt=""
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="absolute inset-y-0 left-0 -z-10 w-full opacity-30 dark:opacity-[.18] lg:w-1/2 [mask-image:linear-gradient(180deg,#000_0%,transparent_75%)] lg:[mask-image:linear-gradient(90deg,#000_30%,transparent_100%)]"
+          imgClassName="object-[50%_60%] grayscale-[.35]"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-bg/40 via-bg/10 to-bg/60" aria-hidden="true" />
         <div className="container grid [&>*]:min-w-0 gap-12 lg:grid-cols-[0.8fr_1.6fr]">
           <div data-reveal>
             <h2 className="display-lg">Lay your wall</h2>
@@ -330,7 +351,7 @@ LIMIT 4;`}</pre>
       </section>
 
       {/* ── Careers: an index, not cards ─────────────────────────────────── */}
-      <section className="bg-card py-20 md:py-28">
+      <section className="bg-card py-16 md:py-24">
         <div className="container grid [&>*]:min-w-0 gap-12 lg:grid-cols-[0.8fr_1.6fr]">
           <div data-reveal>
             <h2 className="display-lg">Pick the job</h2>
@@ -355,23 +376,23 @@ LIMIT 4;`}</pre>
       </section>
 
       {/* ── Practice: the numbers are the design ─────────────────────────── */}
-      <section className="bg-teal py-20 text-white md:py-28">
-        <div className="container">
-          <h2 className="display-lg max-w-3xl" data-reveal>Practise until it sticks</h2>
-          <dl className="mt-12 grid gap-y-10 sm:grid-cols-2 lg:grid-cols-4" data-reveal style={{ ['--i' as string]: 1 }}>
+      <section className="border-y border-border bg-granite-100 py-16 dark:bg-night-800 md:py-20">
+        <div className="container grid gap-10 lg:grid-cols-[0.8fr_1.6fr]">
+          <h2 className="display-lg max-w-sm" data-reveal>Practise until it sticks</h2>
+          <dl className="grid divide-y divide-border border-y border-border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x" data-reveal style={{ ['--i' as string]: 1 }}>
             {[
               { n: exercises, label: 'Exercises', text: 'Fill-in-the-blank checks on every chapter.', to: '/exercises' },
               { n: challenges, label: 'Coding challenges', text: 'Real tests run on your code, with a weekly challenge.', to: '/challenges' },
               { n: quizzes, label: 'Quiz questions', text: 'In every lesson, then a scored quiz per track.', to: '/quiz' },
               { n: BROWSER_LANGUAGES.length, label: 'Online editors', text: 'Python, JavaScript, TypeScript, SQL, HTML and CSS, no install.', to: '/compiler/python' },
             ].map((s) => (
-              <div key={s.label} className="pr-6">
+              <div key={s.label} className="py-5 sm:px-5 lg:first:pl-0">
                 <dt className="sr-only">{s.label}</dt>
                 <dd>
                   <Link to={s.to} className="group block">
-                    <span className="block font-display text-7xl font-bold tracking-display tabular">{s.n}</span>
-                    <span className="mt-2 block text-lg font-semibold underline-offset-4 group-hover:underline">{s.label}</span>
-                    <span className="mt-1 block text-[15px] text-white/85">{s.text}</span>
+                    <span className="block font-display text-3xl font-extrabold text-ink tabular dark:text-sand">{s.n}</span>
+                    <span className="mt-1 block font-semibold text-teal-600 underline-offset-4 group-hover:underline dark:text-teal-400">{s.label}</span>
+                    <span className="mt-1 block text-[15px] text-fg/75">{s.text}</span>
                   </Link>
                 </dd>
               </div>
@@ -381,7 +402,7 @@ LIMIT 4;`}</pre>
       </section>
 
       {/* ── Academy: the teacher's real screen ───────────────────────────── */}
-      <section className="py-20 md:py-28">
+      <section className="py-16 md:py-24">
         <div className="container grid [&>*]:min-w-0 items-center gap-12 lg:grid-cols-2">
           <div data-reveal>
             <h2 className="display-lg">A classroom with a teacher</h2>
@@ -396,7 +417,10 @@ LIMIT 4;`}</pre>
               <ButtonLink to="/contact" variant="outlined" size="lg">Talk to us about your school</ButtonLink>
             </div>
           </div>
-          <div className="overflow-hidden rounded-3xl bg-card" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
+          <div className="relative" data-reveal style={{ ['--i' as string]: 1 }}>
+          {/* A real classroom (shown no wider than its source, so it stays sharp), with the teacher's screen over its corner. */}
+          <Photo name="classroom" sizes="(min-width: 1024px) 400px, 80vw" className="ml-auto block aspect-[715/429] w-[min(88%,400px)] overflow-hidden rounded-[20px]" />
+          <div className="relative -mt-16 w-[min(100%,540px)] overflow-hidden rounded-[20px] border border-border bg-card shadow-float sm:-mt-24" data-ui>
             <div className="flex items-center gap-3 bg-ink px-5 py-4 text-white">
               <span className="font-semibold">Form 4 Computer Science, Harare</span>
               <span className="ml-auto rounded-full bg-white/10 px-3 py-1 text-sm tabular">Join code K7M2QX</span>
@@ -414,6 +438,7 @@ LIMIT 4;`}</pre>
               </tbody>
             </table>
             <p className="bg-granite-100 px-5 py-3 text-sm text-fg/75 dark:bg-night-700">Next live session: Thursday 15:00 · Loops and lists</p>
+          </div>
           </div>
         </div>
       </section>
@@ -442,6 +467,6 @@ LIMIT 4;`}</pre>
 function PaidButton() {
   const [paid, setPaid] = useState(false);
   return (
-    <Button size="sm" className="mt-4 rounded-md bg-[#E34F26] text-white hover:bg-[#C9411C]" onClick={() => setPaid(true)}>{paid ? 'Paid!' : 'Pay with EcoCash'}</Button>
+    <Button size="sm" className="mt-4 rounded-md bg-teal text-white hover:bg-teal-600" onClick={() => setPaid(true)}>{paid ? 'Paid!' : 'Pay with EcoCash'}</Button>
   );
 }

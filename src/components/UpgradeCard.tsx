@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Lock, Sparkles, Check } from 'lucide-react';
+import { Lock, Sparkles, Check } from '@/components/icons';
 import type { PublicUser } from '@shared/api-types';
 import { PLANS, TRIAL, usd } from '@shared/config';
 import { api, errorMessage } from '@/lib/api';

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, Route, Routes, Link } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LayoutDashboard, Users, UserCheck, GraduationCap, CreditCard, Megaphone, Inbox, ScrollText, Search, Check, X, HeartPulse, Tag, HandHeart, ListOrdered } from 'lucide-react';
+import { LayoutDashboard, Users, UserCheck, GraduationCap, CreditCard, Megaphone, Inbox, ScrollText, Search, Check, X, HeartPulse, Tag, HandHeart, ListOrdered } from '@/components/icons';
 import type { PublicUser, PromoCode, Scholarship, WaitlistEntry } from '@shared/api-types';
 import { PLANS, type PlanId } from '@shared/config';
 import type { Role } from '@shared/rbac';

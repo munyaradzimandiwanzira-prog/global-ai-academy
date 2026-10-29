@@ -6,7 +6,7 @@ import type { Capstone } from '@shared/api-types';
 import { CAREERS } from '@/data/careers';
 import { errorMessage } from '@/lib/api';
 import { Dialog, Field, Input, Select, Textarea } from '@/components/ui';
-import { ClipboardCheck, Users, GraduationCap, AlarmClock, Plus, BookOpen, Sparkles, Brain, MessageSquare } from 'lucide-react';
+import { ClipboardCheck, Users, GraduationCap, AlarmClock, Plus, BookOpen, Sparkles, Brain, MessageSquare } from '@/components/icons';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Empty, PageHeader, PageLoader, Stat } from '@/components/ui';

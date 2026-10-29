@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from '@/components/icons';
 import type { CatalogTrack, Challenge } from '@shared/content';
 import { catalog, lessonPath, loadTrack } from '@/lib/catalog';
 import { useProgress } from '@/lib/progress';

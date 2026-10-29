@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Hammer, MapPin, Wrench, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Hammer, MapPin, Wrench, ArrowRight } from '@/components/icons';
 import { getCareer, CAREERS } from '@/data/careers';
 import { getCatalogTrack, lessonPath } from '@/lib/catalog';
 import { useProgress } from '@/lib/progress';

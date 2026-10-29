@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Smartphone, CreditCard, Check, Minus, Tag } from 'lucide-react';
+import { Smartphone, CreditCard, Check, Minus, Tag } from '@/components/icons';
 import { PLANS, PLAN_CATALOG, SITE, TRIAL, usd, priceFor, yearlyDiscountPercent, type BillingPeriod, type Plan, type PlanId } from '@shared/config';
 import type { PublicUser } from '@shared/api-types';
 import { api, errorMessage } from '@/lib/api';

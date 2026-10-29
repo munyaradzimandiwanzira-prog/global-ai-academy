@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUp, RotateCcw, RotateCw, Repeat, Play, Trash2, Star, ChevronLeft, ChevronRight, Undo2 } from 'lucide-react';
+import { ArrowUp, RotateCcw, RotateCw, Repeat, Play, Trash2, Star, ChevronLeft, ChevronRight, Undo2 } from '@/components/icons';
 import { LEVELS, countBlocks, findCell, simulate, starsFor, type Cmd, type Dir, type Node } from './maze-engine';
 import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
@@ -16,7 +16,7 @@ const newId = () => `n${++uid}`;
 const CMD_STYLE: Record<Cmd, { label: string; icon: typeof ArrowUp; bg: string }> = {
   F: { label: 'Forward', icon: ArrowUp, bg: 'bg-[#23807F]' },
   L: { label: 'Turn left', icon: RotateCcw, bg: 'bg-[#7A4FB8]' },
-  R: { label: 'Turn right', icon: RotateCw, bg: 'bg-[#E07A2F]' },
+  R: { label: 'Turn right', icon: RotateCw, bg: 'bg-[#3577B8]' },
 };
 
 /** Inserts a node into the loop with id `target` (or the root when null). */
@@ -48,8 +48,8 @@ function ProgramView({ nodes, target, setTarget, onRemove, onTimes, depth = 0 }:
           ) : (
             <motion.div layout key={n.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0 }}
               onClick={(e) => { e.stopPropagation(); setTarget(n.id); }}
-              className={cn('flex min-h-[60px] min-w-[140px] flex-col gap-2 rounded-2xl border-4 bg-[#FCE7B5] p-2', target === n.id ? 'border-[#D4A64A] ring-4 ring-[#D4A64A]/40' : 'border-[#B88A2E]')}>
-              <div className="flex items-center gap-2 text-sm font-bold text-[#6B3A1E]">
+              className={cn('flex min-h-[60px] min-w-[140px] flex-col gap-2 rounded-2xl border-4 bg-[#E3EEF6] p-2', target === n.id ? 'border-[#D4A64A] ring-4 ring-[#D4A64A]/40' : 'border-[#B88A2E]')}>
+              <div className="flex items-center gap-2 text-sm font-bold text-[#2E4A62]">
                 <Repeat className="h-4 w-4" /> Repeat
                 <select value={n.times} onClick={(e) => e.stopPropagation()} onChange={(e) => onTimes(n.id, Number(e.target.value))} className="rounded-lg border-2 border-[#B88A2E] bg-white px-1 font-bold" aria-label="Repeat times">
                   {[2, 3, 4, 5, 6, 7, 8].map((t) => <option key={t} value={t}>{t}</option>)}
@@ -57,7 +57,7 @@ function ProgramView({ nodes, target, setTarget, onRemove, onTimes, depth = 0 }:
                 times
                 <button onClick={(e) => { e.stopPropagation(); onRemove(n.id); if (target === n.id) setTarget(null); }} className="ml-auto rounded p-1 hover:bg-white/60" aria-label="Delete loop"><Trash2 className="h-4 w-4" /></button>
               </div>
-              {n.body.length ? <ProgramView nodes={n.body} target={target} setTarget={setTarget} onRemove={onRemove} onTimes={onTimes} depth={depth + 1} /> : <span className="px-1 text-xs text-[#6B3A1E]/70">{target === n.id ? 'Tap blocks to put them in here' : 'Tap me, then add blocks'}</span>}
+              {n.body.length ? <ProgramView nodes={n.body} target={target} setTarget={setTarget} onRemove={onRemove} onTimes={onTimes} depth={depth + 1} /> : <span className="px-1 text-xs text-[#2E4A62]/70">{target === n.id ? 'Tap blocks to put them in here' : 'Tap me, then add blocks'}</span>}
             </motion.div>
           ),
         )}
@@ -145,17 +145,18 @@ export default function RoboMaze() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-4 flex items-center justify-center gap-3">
-        <button disabled={li === 0} onClick={() => setLi(li - 1)} className="rounded-full bg-white p-2 shadow disabled:opacity-30" aria-label="Previous level"><ChevronLeft className="h-5 w-5" /></button>
-        <div className="flex gap-1.5">
+      <div className="mb-4 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        <button disabled={li === 0} onClick={() => setLi(li - 1)} className="grid h-11 w-11 place-items-center rounded-full bg-white shadow disabled:opacity-30" aria-label="Previous level"><ChevronLeft className="h-5 w-5" /></button>
+        <div className="flex flex-wrap justify-center gap-1.5">
           {LEVELS.map((_, i) => (
-            <button key={i} onClick={() => setLi(i)} className={cn('flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 text-sm font-bold', i === li ? 'border-ink bg-ink text-white' : 'border-ink/20 bg-white')} aria-label={`Level ${i + 1}`}>
+            <button key={i} onClick={() => setLi(i)} className={cn('flex h-11 w-11 flex-col items-center justify-center gap-1 rounded-xl border-2 text-sm font-bold', i === li ? 'border-ink bg-ink text-white' : 'border-ink/20 bg-white')} aria-label={`Level ${i + 1}, ${stars[`maze:${i + 1}`] ?? 0} of 3 stars`}>
               {i + 1}
-              <span className="flex h-2 leading-none">{Array.from({ length: stars[`maze:${i + 1}`] ?? 0 }, (_, k) => <Star key={k} className="h-2 w-2 fill-gold text-gold" />)}</span>
+              {/* Stars earned, as small gold dots (an indicator, not a control, so no icon glyphs squeezed in). */}
+              <span className="flex h-1.5 gap-0.5" aria-hidden="true">{Array.from({ length: stars[`maze:${i + 1}`] ?? 0 }, (_, k) => <span key={k} className="h-1.5 w-1.5 rounded-full bg-gold" />)}</span>
             </button>
           ))}
         </div>
-        <button disabled={li === LEVELS.length - 1} onClick={() => setLi(li + 1)} className="rounded-full bg-white p-2 shadow disabled:opacity-30" aria-label="Next level"><ChevronRight className="h-5 w-5" /></button>
+        <button disabled={li === LEVELS.length - 1} onClick={() => setLi(li + 1)} className="grid h-11 w-11 place-items-center rounded-full bg-white shadow disabled:opacity-30" aria-label="Next level"><ChevronRight className="h-5 w-5" /></button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
@@ -197,20 +198,20 @@ export default function RoboMaze() {
                 );
               })}
               {level.loops && (
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => add({ kind: 'loop', times: 3, body: [], id: newId() })} className="flex items-center gap-2 rounded-2xl border-4 border-[#B88A2E] bg-[#FCE7B5] px-4 py-2 text-lg font-bold text-[#6B3A1E]">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => add({ kind: 'loop', times: 3, body: [], id: newId() })} className="flex items-center gap-2 rounded-2xl border-4 border-[#B88A2E] bg-[#E3EEF6] px-4 py-2 text-lg font-bold text-[#2E4A62]">
                   <Repeat className="h-6 w-6" /> Repeat
                 </motion.button>
               )}
             </div>
-            {target && <button onClick={() => setTarget(null)} className="mt-3 rounded-full bg-[#FCE7B5] px-4 py-1.5 text-sm font-bold text-[#6B3A1E]">✓ Done with loop — add blocks after it</button>}
+            {target && <button onClick={() => setTarget(null)} className="mt-3 rounded-full bg-[#E3EEF6] px-4 py-1.5 text-sm font-bold text-[#2E4A62]">✓ Done with loop — add blocks after it</button>}
           </section>
 
           <section className="rounded-3xl border-4 border-ink bg-white p-4" onClick={() => setTarget(null)}>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-bold">My program <span className="text-sm font-normal text-ink/60">({countBlocks(program)} blocks · best is {level.optimal})</span></h2>
               <div className="flex gap-1">
-                <button onClick={(e) => { e.stopPropagation(); setProgram((p) => removeLast(p, target)); }} className="rounded-full p-2 hover:bg-muted" aria-label="Undo last block"><Undo2 className="h-5 w-5" /></button>
-                <button onClick={(e) => { e.stopPropagation(); setProgram([]); setTarget(null); reset(); }} className="rounded-full p-2 hover:bg-muted" aria-label="Clear program"><Trash2 className="h-5 w-5" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setProgram((p) => removeLast(p, target)); }} className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-muted" aria-label="Undo last block"><Undo2 className="h-5 w-5" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setProgram([]); setTarget(null); reset(); }} className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-muted" aria-label="Clear program"><Trash2 className="h-5 w-5" /></button>
               </div>
             </div>
             <div className="min-h-[72px] rounded-2xl border-2 border-dashed border-ink/20 p-3">

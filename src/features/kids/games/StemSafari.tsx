@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
 import { Zuva } from '../Zuva';
 import { ElephantArt, GiraffeArt, RhinoArt, LionArt, TrophyArt } from '../KidsArt';
@@ -14,7 +14,7 @@ interface Question { topic: Topic; q: string; options: string[]; answer: number;
 
 const GUIDES: Record<Topic, { animal: ComponentType<{ size?: number }>; name: string; color: string; label: string }> = {
   science: { animal: ElephantArt, name: 'Ellie the Elephant', color: '#23807F', label: 'Science' },
-  maths: { animal: GiraffeArt, name: 'Gigi the Giraffe', color: '#E07A2F', label: 'Maths' },
+  maths: { animal: GiraffeArt, name: 'Gigi the Giraffe', color: '#3577B8', label: 'Maths' },
   tech: { animal: RhinoArt, name: 'Rhino Robo', color: '#7A4FB8', label: 'Tech & coding' },
   world: { animal: LionArt, name: 'Leo the Lion', color: '#B88A2E', label: 'Our world' },
 };

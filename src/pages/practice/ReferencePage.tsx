@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { compressToEncodedURIComponent } from 'lz-string';
-import { Play, Search, ArrowRight } from 'lucide-react';
+import { Play, Search, ArrowRight } from '@/components/icons';
 import { REFERENCES, getReference, type RefEntry } from '@/data/references';
 import { lessonPath } from '@/lib/catalog';
 import { TrackMark, buttonClass } from '@/components/ui';

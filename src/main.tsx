@@ -7,9 +7,11 @@ import { AuthProvider } from '@/lib/auth';
 import { applyTheme } from '@/lib/theme';
 import { ApiError } from '@/lib/api';
 import App from './App';
-import '@fontsource-variable/inter';
-import '@fontsource-variable/bricolage-grotesque';
-import '@fontsource-variable/jetbrains-mono';
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/source-sans-3';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource/ibm-plex-mono/latin-600.css';
 import './styles/index.css';
 
 // One public address: send www.skurulearning.com (and any www. host) to the bare domain, keeping the path.

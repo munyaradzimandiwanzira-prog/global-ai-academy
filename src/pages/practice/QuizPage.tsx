@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Check, RotateCcw, X } from 'lucide-react';
+import { ArrowRight, Check, RotateCcw, X } from '@/components/icons';
 import type { QuizQuestion, Track } from '@shared/content';
 import { catalog, getCatalogTrack, lessonPath, loadTrack } from '@/lib/catalog';
 import { useProgress } from '@/lib/progress';

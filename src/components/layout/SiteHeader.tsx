@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, Moon, Sun, ChevronDown, LayoutDashboard, LogOut, Settings, GraduationCap, Shield, Award, BookOpenCheck, FolderCode, Rocket } from 'lucide-react';
+import { Search, Menu, X, Moon, Sun, ChevronDown, LayoutDashboard, LogOut, Settings, GraduationCap, Shield, Award, BookOpenCheck, FolderCode, Rocket } from '@/components/icons';
 import { Logo } from '@/components/ui/Logo';
 import { Avatar, TrackMark } from '@/components/ui';
 import { SearchDialog } from './SearchDialog';
@@ -144,7 +144,7 @@ export function SiteHeader() {
             <NavLink to="/pricing" className={navLink}>Plans</NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-1.5">
-            <button onClick={() => setSearchOpen(true)} className="flex h-10 items-center gap-2 rounded-full bg-granite-100 px-3 text-sm text-fg/70 transition-colors hover:bg-granite-200 dark:bg-night-700 2xl:w-52 2xl:px-4" aria-label="Search (Ctrl+K)">
+            <button onClick={() => setSearchOpen(true)} className="flex h-11 items-center gap-2 rounded-full bg-granite-100 px-3 text-sm text-fg/70 transition-colors hover:bg-granite-200 dark:bg-night-700 2xl:w-52 2xl:px-4" aria-label="Search (Ctrl+K)">
               <Search className="h-4 w-4" /> <span className="hidden whitespace-nowrap 2xl:inline">Search lessons…</span>
               <kbd className="ml-auto hidden whitespace-nowrap font-sans text-xs text-fg/50 2xl:inline">Ctrl K</kbd>
             </button>
@@ -162,7 +162,7 @@ export function SiteHeader() {
                 <Link to="/signup" className="btn-primary btn-sm">Join free</Link>
               </>
             )}
-            <button onClick={() => setMobile((m) => !m)} className="rounded-lg p-2 hover:bg-muted lg:hidden" aria-label="Open menu" aria-expanded={mobile}>
+            <button onClick={() => setMobile((m) => !m)} className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-muted lg:hidden" aria-label="Open menu" aria-expanded={mobile}>
               {mobile ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>

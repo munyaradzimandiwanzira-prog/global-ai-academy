@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Volume2 } from 'lucide-react';
+import { Volume2 } from '@/components/icons';
 import { speak } from './sfx';
 
 /** Zuva — the Kids Zone mascot: a little sun-robot. Original artwork. */
@@ -47,7 +47,7 @@ export function SpeechBubble({ children, readAloud = true }: { children: React.R
     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="relative flex items-start gap-3 rounded-3xl border-4 border-ink bg-white px-5 py-3 font-kids text-lg font-medium text-ink">
       <span ref={ref} className="flex-1">{children}</span>
       {readAloud && typeof window !== 'undefined' && 'speechSynthesis' in window && (
-        <button type="button" onClick={() => speak(ref.current?.textContent ?? '')} className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFE2A8] text-ink transition-transform hover:scale-105 active:scale-95" aria-label="Read this to me">
+        <button type="button" onClick={() => speak(ref.current?.textContent ?? '')} className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D6EBE8] text-ink transition-transform hover:scale-105 active:scale-95" aria-label="Read this to me">
           <Volume2 className="h-5 w-5" />
         </button>
       )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, RotateCcw } from 'lucide-react';
+import { ArrowRight, RotateCcw } from '@/components/icons';
 import { CAREERS } from '@/data/careers';
 import { getCatalogTrack, lessonPath } from '@/lib/catalog';
 import { Button, ButtonLink, CareerMark, TrackMark } from '@/components/ui';

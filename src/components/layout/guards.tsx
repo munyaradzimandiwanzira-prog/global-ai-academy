@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import type { Role } from '@shared/rbac';
 import { PageLoader, Empty } from '@/components/ui';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from '@/components/icons';
 
 export function RequireAuth({ children }: { children?: ReactNode }) {
   const { user, loading } = useAuth();

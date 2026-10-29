@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Delete, Flame, Timer, Trophy } from 'lucide-react';
+import { Delete, Flame, Timer, Trophy } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
 import { celebrate } from '@/lib/celebrate';
@@ -12,9 +12,9 @@ interface Q { a: number; b: number; op: Exclude<Op, 'mix'>; answer: number }
 const MODES: { op: Op; label: string; color: string }[] = [
   { op: '+', label: 'Adding', color: '#23807F' },
   { op: '−', label: 'Taking away', color: '#7A4FB8' },
-  { op: '×', label: 'Times tables', color: '#E07A2F' },
+  { op: '×', label: 'Times tables', color: '#3577B8' },
   { op: '÷', label: 'Sharing', color: '#B88A2E' },
-  { op: 'mix', label: 'Mix it up!', color: '#6B3A1E' },
+  { op: 'mix', label: 'Mix it up!', color: '#2E4A62' },
 ];
 const best = storage<Record<string, number>>('gaa:kids:math:best', {});
 const DURATION = 60;
@@ -135,14 +135,14 @@ export default function MathSprint() {
     <div className="mx-auto max-w-md">
       <div className="mb-4 flex items-center justify-between text-xl font-bold">
         <span className={cn('flex items-center gap-1', time <= 10 && 'animate-pulse text-red-600')}><Timer className="h-6 w-6" /> {time}s</span>
-        <span className="flex items-center gap-1">{streak >= 4 && <Flame className="h-6 w-6 text-[#E07A2F]" />} {score} pts</span>
+        <span className="flex items-center gap-1">{streak >= 4 && <Flame className="h-6 w-6 text-gold-600" />} {score} pts</span>
       </div>
       <div className="h-3 overflow-hidden rounded-full bg-white"><motion.div className="h-full bg-[#5B8C3A]" animate={{ width: `${(time / DURATION) * 100}%` }} /></div>
       <AnimatePresence mode="wait">
         <motion.div key={`${q?.a}${q?.op}${q?.b}`} initial={{ scale: 0.6, opacity: 0, rotate: -6 }} animate={{ scale: 1, opacity: 1, rotate: 0, x: flash === 'wrong' ? [0, -12, 12, -8, 0] : 0 }} exit={{ scale: 0.6, opacity: 0 }}
           className={cn('mt-6 rounded-3xl border-4 border-ink p-8 text-center shadow-[6px_6px_0_#142B52]', flash === 'right' ? 'bg-[#DFF3D3]' : flash === 'wrong' ? 'bg-[#FDE0DC]' : 'bg-white')}>
           <div className="text-5xl font-bold sm:text-6xl">{q?.a} {q?.op} {q?.b} =</div>
-          <div className="mt-4 h-16 rounded-2xl bg-[#FFF6E5] text-5xl font-bold leading-[4rem]">{input || <span className="text-ink/20">?</span>}</div>
+          <div className="mt-4 h-16 rounded-2xl bg-[#EEF4F3] text-5xl font-bold leading-[4rem]">{input || <span className="text-ink/20">?</span>}</div>
         </motion.div>
       </AnimatePresence>
       <div className="mt-5 grid grid-cols-3 gap-2">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ArrowRight, RotateCcw } from 'lucide-react';
+import { Star, ArrowRight, RotateCcw } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
 import { BugArt } from '../KidsArt';
@@ -83,7 +83,7 @@ export default function BugHunt() {
                     className={cn(
                       'flex min-h-[3.25rem] w-full items-center gap-3 rounded-2xl border-[3px] px-4 text-left text-lg transition-colors',
                       L.code && 'font-mono text-base',
-                      solved && i === L.bug ? 'border-[#3A8F4B] bg-[#E3F4E0]' : isPicked ? (foundBug ? 'border-[#B4472A] bg-[#FBE3DC]' : 'border-ink/30 bg-[#FFF6E5]') : 'border-ink/15 hover:border-ink/40',
+                      solved && i === L.bug ? 'border-[#3A8F4B] bg-[#E3F4E0]' : isPicked ? (foundBug ? 'border-[#B4472A] bg-[#FBE3DC]' : 'border-ink/30 bg-[#EEF4F3]') : 'border-ink/15 hover:border-ink/40',
                     )}
                   >
                     <span className="w-6 shrink-0 text-right font-kids text-sm text-ink/50">{i + 1}</span>
@@ -95,7 +95,7 @@ export default function BugHunt() {
           </ol>
         </section>
 
-        <section aria-label="Choose the fix" className="rounded-[28px] border-4 border-ink bg-[#FFE2A8] p-5">
+        <section aria-label="Choose the fix" className="rounded-[28px] border-4 border-ink bg-[#D6EBE8] p-5">
           <h2 className="mb-3 text-xl font-bold">{foundBug ? 'Pick the fix' : 'Fixes appear when you find the bug'}</h2>
           <AnimatePresence>
             {foundBug && (

@@ -1,6 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 /**

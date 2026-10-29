@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Award, Printer, Copy } from 'lucide-react';
+import { Award, Printer, Copy } from '@/components/icons';
 import { toast } from 'sonner';
 import type { Certificate } from '@shared/api-types';
 import { api } from '@/lib/api';

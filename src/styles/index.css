@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Material Symbols Outlined — self-hosted subset, static instance FILL 0 · wght 100 · GRAD 0 · opsz 24
+   (scripts/build-icons.py). `block` keeps a blank 24px box, never a flash of the wrong glyph. */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 100;
+  font-display: block;
+  src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+}
+
 @layer base {
   :root {
     /* Granite ground, navy ink, teal action, gold (Zuva) accent. HSL triplets for Tailwind alpha. */
@@ -46,9 +56,11 @@
   }
 
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  body { @apply bg-bg text-fg font-sans antialiased; font-feature-settings: 'cv11', 'ss01', 'ss03'; text-rendering: optimizeLegibility; }
-  h1, h2, h3, h4 { @apply font-display; letter-spacing: -0.025em; font-variation-settings: 'opsz' 48; }
-  h1 { line-height: 1.02; }
+  /* Source Sans 3 runs small, so the body is 17px; Manrope headings sit at 1.1–1.25 line-height. */
+  body { @apply bg-bg text-fg font-sans antialiased; font-size: 17px; line-height: 1.55; text-rendering: optimizeLegibility; }
+  h1, h2, h3, h4, h5, h6 { @apply font-display; letter-spacing: -0.015em; line-height: 1.2; text-wrap: balance; }
+  h1 { line-height: 1.1; letter-spacing: -0.02em; }
+  code, kbd, pre, samp { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
   ::selection { background: #d4a64a66; }
   :focus-visible { outline: 2px solid #d4a64a; outline-offset: 2px; border-radius: 6px; }
   .tabular { font-variant-numeric: tabular-nums; }
@@ -72,12 +84,9 @@
   .btn:active:not(:disabled):not([aria-disabled='true']) { transform: scale(.97); }
   .btn:disabled, .btn[aria-disabled='true'] { @apply cursor-not-allowed opacity-45; }
   .btn[aria-busy='true'] { @apply pointer-events-none; }
-  .btn svg { @apply h-[18px] w-[18px] shrink-0; }
   .btn-sm { @apply h-8 px-3 text-[13px]; }
-  .btn-sm svg { @apply h-4 w-4; }
   .btn-lg { @apply h-12 px-6 text-base; }
-  .btn-lg svg { @apply h-5 w-5; }
-  .btn-icon { @apply btn w-10 px-0; }
+  .btn-icon { @apply btn h-11 w-11 px-0; }
 
   /* contained */
   .btn-primary { @apply btn bg-ink text-white hover:bg-ink-700 dark:bg-sand dark:text-ink-900 dark:hover:bg-white; }
@@ -101,10 +110,13 @@
   .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium; }
 
   /* Display type scale (marketing pages): one very large, one small. */
-  .display-xl { @apply font-display font-bold; font-size: clamp(2.6rem, 6.4vw, 6rem); line-height: .98; letter-spacing: -0.035em; }
-  .display-lg { @apply font-display font-bold; font-size: clamp(2.2rem, 4.6vw, 4.25rem); line-height: 1; letter-spacing: -0.03em; }
-  .display-md { @apply font-display font-semibold; font-size: clamp(1.75rem, 3vw, 2.6rem); line-height: 1.05; letter-spacing: -0.025em; }
-  .lede { @apply text-lg leading-relaxed md:text-xl; }
+  /* Display scale (marketing pages): restrained — Manrope at 1.1, gently tracked, never poster-tight. */
+  .display-xl { @apply font-display font-extrabold; font-size: clamp(2.4rem, 5.2vw, 4.5rem); line-height: 1.08; letter-spacing: -0.025em; }
+  .display-lg { @apply font-display font-bold; font-size: clamp(1.9rem, 3.4vw, 3rem); line-height: 1.12; letter-spacing: -0.02em; }
+  .display-md { @apply font-display font-bold; font-size: clamp(1.5rem, 2.4vw, 2.1rem); line-height: 1.18; letter-spacing: -0.015em; }
+  .lede { @apply text-lg md:text-xl; line-height: 1.55; }
+  /* Small section label: sentence case, not all-caps micro type. */
+  .eyebrow { @apply font-display text-sm font-semibold text-teal-600 dark:text-teal-400; }
 
   /* Entrances: content is visible without script; JS adds .reveal-ready to animate in once. */
   .reveal-ready [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); transition-delay: calc(var(--i, 0) * 80ms); }
@@ -124,11 +136,33 @@
       linear-gradient(45deg, transparent 33%, #d4a64a 33% 50%, transparent 50% 83%, #d4a64a 83%) 0 0 / 14px 14px;
     opacity: .9;
   }
-  .stone-wall {
-    background-color: #6b3a1e;
-    background-image:
-      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 22px),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 46px);
+}
+
+@layer components {
+  /* The only icon class in the project. Axes are locked; size is the nominal 24px everywhere. */
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 100;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    width: 24px;
+    height: 24px;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 0, 'opsz' 24;
+    color: currentColor;
+    user-select: none;
+    speak: never;
   }
 }
 
@@ -140,11 +174,11 @@
 
 /* CodeMirror sizing */
 .cm-editor { height: 100%; font-size: 14px; }
-.cm-editor .cm-scroller { font-family: 'JetBrains Mono Variable', ui-monospace, monospace; line-height: 1.6; }
+.cm-editor .cm-scroller { font-family: 'IBM Plex Mono', ui-monospace, monospace; line-height: 1.6; }
 .cm-editor.cm-focused { outline: none; }
 
 /* Kids Zone uses its own rounded type for every heading */
-.font-kids h1, .font-kids h2, .font-kids h3 { font-family: 'Fredoka Variable', 'Inter Variable', system-ui, sans-serif; letter-spacing: 0; font-variation-settings: normal; }
+.font-kids h1, .font-kids h2, .font-kids h3 { font-family: 'Manrope Variable', system-ui, sans-serif; letter-spacing: -0.01em; }
 
 @media print {
   header, footer, nav, .print\:hidden { display: none !important; }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Send, Sparkles, Lock } from 'lucide-react';
+import { X, Send, Sparkles, Lock } from '@/components/icons';
 import { api, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Markdown } from '@/components/Markdown';

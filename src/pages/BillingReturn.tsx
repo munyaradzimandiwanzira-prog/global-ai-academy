@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, XCircle, Smartphone } from 'lucide-react';
+import { CheckCircle2, XCircle, Smartphone } from '@/components/icons';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { celebrate } from '@/lib/celebrate';

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Menu, X, MessageCircle, Clock, Check, Lock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Menu, X, MessageCircle, Clock, Check, Lock } from '@/components/icons';
 import type { Block } from '@shared/content';
 import { describeSketch } from '@shared/sketch';
 import { api } from '@/lib/api';
@@ -78,7 +78,7 @@ export default function LessonPage() {
   };
 
   const NavButtons = ({ bottom }: { bottom?: boolean }) => (
-    <div className={cn('flex items-center justify-between gap-3', bottom ? 'mt-12 border-t border-border pt-6' : 'mb-6')}>
+    <div className={cn('flex flex-wrap items-center justify-between gap-3', bottom ? 'mt-12 border-t border-border pt-6' : 'mb-6')}>
       {prev ? (
         <Link to={lessonPath(trackId, prev.slug)} className="btn-primary btn-sm"><ChevronLeft className="h-4 w-4" /> Previous</Link>
       ) : <span />}
@@ -95,7 +95,7 @@ export default function LessonPage() {
           <div className="border-b border-border p-4">
             <div className="flex items-center justify-between">
               <Link to={lessonPath(trackId)} className="flex items-center gap-2 font-display text-lg font-bold hover:text-teal-600"><TrackMark short={meta.short} color={meta.color} size={28} />{meta.title} tutorial</Link>
-              <button onClick={() => setSidebar(false)} className="rounded p-1 hover:bg-muted lg:hidden" aria-label="Close lessons"><X className="h-5 w-5" /></button>
+              <button onClick={() => setSidebar(false)} className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-muted lg:hidden" aria-label="Close lessons"><X className="h-5 w-5" /></button>
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-muted-fg"><ProgressBar value={progress.percent} className="h-1.5" /> <span className="shrink-0">{progress.done}/{progress.total}</span></div>
           </div>

@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Play, Send, Sparkles, CheckCircle2, AlertCircle, Trash2, CalendarClock } from 'lucide-react';
+import { Play, Send, Sparkles, CheckCircle2, AlertCircle, Trash2, CalendarClock } from '@/components/icons';
 import type { AiFeedback, Assignment, Submission } from '@shared/api-types';
 import type { RunLanguage } from '@shared/content';
 import { api, errorMessage } from '@/lib/api';

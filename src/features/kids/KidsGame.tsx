@@ -1,7 +1,6 @@
-import '@fontsource-variable/fredoka';
 import { lazy, Suspense } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, Star } from '@/components/icons';
 import { KID_GAMES, MuteButton } from './KidsHome';
 import { useKidsStars } from './kidsStore';
 import { Spinner } from '@/components/ui';
@@ -24,7 +23,7 @@ export default function KidsGame() {
   const Game = GAMES[game as keyof typeof GAMES];
   if (!meta || !Game) return <Navigate to="/kids" replace />;
   return (
-    <div className="min-h-screen bg-[#FFF6E5] font-kids text-ink">
+    <div className="min-h-screen bg-[#EEF4F3] font-kids text-ink">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <Link to="/kids" className="flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold"><ArrowLeft className="h-4 w-4" /> All games</Link>
         <h1 className="flex items-center gap-2 text-xl font-bold sm:text-2xl"><meta.art size={40} />{meta.title}</h1>

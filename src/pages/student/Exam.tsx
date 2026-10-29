@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Award, Clock, CheckCircle2, XCircle, Lock } from 'lucide-react';
+import { Award, Clock, CheckCircle2, XCircle, Lock } from '@/components/icons';
 import type { Certificate } from '@shared/api-types';
 import { EXAM } from '@shared/config';
 import { api, errorMessage } from '@/lib/api';

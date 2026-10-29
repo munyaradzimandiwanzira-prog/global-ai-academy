@@ -8,10 +8,12 @@ export default {
     container: { center: true, padding: { DEFAULT: '1rem', sm: '1.5rem', lg: '2rem' }, screens: { '2xl': '1280px' } },
     extend: {
       fontFamily: {
-        display: ['"Bricolage Grotesque Variable"', '"Inter Variable"', 'system-ui', 'sans-serif'],
-        sans: ['"Inter Variable"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['"JetBrains Mono Variable"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
-        kids: ['"Fredoka Variable"', '"Inter Variable"', 'system-ui', 'sans-serif'],
+        // Headings: Manrope. Body and UI: Source Sans 3. Code only: IBM Plex Mono. Two UI families, one code face.
+        display: ['"Manrope Variable"', 'system-ui', 'sans-serif'],
+        sans: ['"Source Sans 3 Variable"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        // Kids Zone keeps the same families (no third display face); it differs by scale and colour, not novelty type.
+        kids: ['"Manrope Variable"', 'system-ui', 'sans-serif'],
       },
       colors: {
         ink: { DEFAULT: '#142B52', 700: '#1C3866', 600: '#284A80', 900: '#0C1C38' },
@@ -20,7 +22,8 @@ export default {
         granite: { DEFAULT: '#F3F2EE', 100: '#E8E6E0', 200: '#D9D6CE', 400: '#9A968C', 600: '#5E5A52' },
         teal: { DEFAULT: '#23807F', 600: '#1C6B6A', 400: '#3FA3A1', 100: '#DCEFEE' },
         gold: { DEFAULT: '#D4A64A', 600: '#B88A2E', 100: '#F7ECD3' },
-        stone: { DEFAULT: '#6B3A1E', 400: '#8C5A3A', 100: '#F1E4DA' },
+        // Stone is the cool slate of weathered granite (no orange or brown anywhere in the palette).
+        stone: { DEFAULT: '#3D4A5C', 400: '#5B6878', 100: '#E6E9EE' },
         night: { DEFAULT: '#0E1A30', 800: '#13233F', 700: '#1B2E50' },
         border: 'hsl(var(--border))',
         muted: 'hsl(var(--muted))',

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ExternalLink, Github, Plus } from 'lucide-react';
+import { ExternalLink, Github, Plus } from '@/components/icons';
 import type { Capstone } from '@shared/api-types';
 import { CAREERS } from '@/data/careers';
 import { api, errorMessage } from '@/lib/api';

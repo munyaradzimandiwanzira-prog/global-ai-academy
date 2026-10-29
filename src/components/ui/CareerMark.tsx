@@ -9,11 +9,11 @@ const CAREER_MARKS: Record<string, string> = {
   'devops-engineer': 'Ops', 'mechatronics-engineer': 'IoT', 'kids-coder': 'Kid',
 };
 
-const LEVEL_COLOURS: Record<string, string> = { kids: '#F2B544', beginner: '#23807F', intermediate: '#D4A64A', advanced: '#142B52' };
+const LEVEL_COLOURS: Record<string, string> = { kids: '#3577B8', beginner: '#23807F', intermediate: '#D4A64A', advanced: '#142B52' };
 
 export function CareerMark({ id, level, size = 44, className }: { id: string; level: string; size?: number; className?: string }) {
   const text = CAREER_MARKS[id] ?? id.slice(0, 2).toUpperCase();
-  const bg = id.startsWith('lead-') ? '#6B3A1E' : LEVEL_COLOURS[level] ?? '#142B52';
+  const bg = id.startsWith('lead-') ? '#2E4A62' : LEVEL_COLOURS[level] ?? '#142B52';
   const fontSize = size * (text.length >= 4 ? 0.27 : text.length === 3 ? 0.33 : 0.42);
   return (
     <span aria-hidden="true" className={cn('inline-flex shrink-0 items-center justify-center rounded-full font-display font-bold leading-none', className)}

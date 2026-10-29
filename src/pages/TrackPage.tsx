@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Circle, Clock, Trophy, Award, Code2, PlayCircle, Lock } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Trophy, Award, Code2, PlayCircle, Lock } from '@/components/icons';
 import { useAuth } from '@/lib/auth';
 import { DEFAULT_PREVIEW_LESSONS } from '@shared/content';
 import { getCatalogTrack, lessonPath } from '@/lib/catalog';

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Megaphone, ClipboardList, Users, MessageSquare, Settings, Copy, RefreshCw, Plus, Sparkles, Trash2, Send, Brain, Archive, CalendarClock, CheckCircle2, Video, FileText } from 'lucide-react';
+import { Megaphone, ClipboardList, Users, MessageSquare, Settings, Copy, RefreshCw, Plus, Sparkles, Trash2, Send, Brain, Archive, CalendarClock, CheckCircle2, Video, FileText } from '@/components/icons';
 import type { Announcement, Assignment, ChatMessage, Classroom, LiveSession, LearnerReport } from '@shared/api-types';
 import { api, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -445,7 +445,7 @@ function Discussion({ id, manager }: { id: string; manager: boolean }) {
                 <div className={cn('mb-0.5 text-xs', mine ? 'text-white/60' : 'text-muted-fg')}>{m.user_name}{m.role !== 'student' && ' · teacher'} · {timeAgo(m.created_at)}</div>
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
               </div>
-              {(mine || manager) && <button onClick={() => del.mutate(m.id)} className="self-center rounded p-1 text-muted-fg opacity-0 hover:text-red-600 group-hover:opacity-100 focus:opacity-100" aria-label="Delete message"><Trash2 className="h-3.5 w-3.5" /></button>}
+              {(mine || manager) && <button onClick={() => del.mutate(m.id)} className="grid min-h-11 min-w-11 place-items-center self-center rounded-full text-muted-fg opacity-0 hover:bg-muted hover:text-red-600 group-hover:opacity-100 focus:opacity-100" aria-label="Delete message"><Trash2 className="h-3.5 w-3.5" /></button>}
             </div>
           );
         })}

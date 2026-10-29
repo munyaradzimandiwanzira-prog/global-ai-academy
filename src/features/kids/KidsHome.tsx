@@ -1,13 +1,13 @@
-import '@fontsource-variable/fredoka';
 import type { ComponentType } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Star, Volume2, VolumeX } from '@/components/icons';
 import { Zuva, SpeechBubble } from './Zuva';
 import { useKidsStars } from './kidsStore';
 import { useMuted } from './sfx';
 import { RobotArt, TurtleArt, StopwatchArt, BulbArt, LionArt, BugArt, PixelArt, BatteryArt, SnakeArt, ChevronStrip } from './KidsArt';
 import { useAuth } from '@/lib/auth';
+import { Photo } from '@/components/Photo';
 import { cn } from '@/lib/utils';
 
 type Art = ComponentType<{ size?: number; className?: string }>;
@@ -23,8 +23,8 @@ export const KID_GAMES: { id: string; title: string; text: string; place: string
   { id: 'pixels', title: 'Pixel Painter', text: 'Copy pictures on a grid. Whole rows at once are loops!', place: 'Mbare Art Market', art: PixelArt, color: '#C8302B', skill: 'Grids and loops', levels: 5 },
   { id: 'binary', title: 'Binary Bulbs', text: 'Light the bulbs to make numbers like a computer.', place: 'Bulawayo', art: BulbArt, color: '#B88A2E', skill: 'How computers count', levels: 4 },
   { id: 'circuit', title: 'Circuit Lab', text: 'Light a bulb, test metals and plastics, use the sun.', place: 'Hwange Solar', art: BatteryArt, color: '#2F6FB2', skill: 'Electricity', levels: 3 },
-  { id: 'math', title: 'Math Sprint', text: 'How many sums can you solve in 60 seconds?', place: 'Victoria Falls', art: StopwatchArt, color: '#E07A2F', skill: 'Mental maths', levels: 3 },
-  { id: 'safari', title: 'STEM Safari', text: 'Answer science and tech questions with the Big Five.', place: 'Hwange National Park', art: LionArt, color: '#6B3A1E', skill: 'Science and technology', levels: 3 },
+  { id: 'math', title: 'Math Sprint', text: 'How many sums can you solve in 60 seconds?', place: 'Victoria Falls', art: StopwatchArt, color: '#3577B8', skill: 'Mental maths', levels: 3 },
+  { id: 'safari', title: 'STEM Safari', text: 'Answer science and tech questions with the Big Five.', place: 'Hwange National Park', art: LionArt, color: '#2E4A62', skill: 'Science and technology', levels: 3 },
 ];
 
 export function MuteButton({ className }: { className?: string }) {
@@ -42,7 +42,7 @@ export default function KidsHome() {
   const starsFor = (id: string) => Object.entries(stars).filter(([k]) => k.startsWith(`${id === 'pixels' ? 'pixel' : id === 'bugs' ? 'bug' : id}:`)).reduce((n, [, v]) => n + v, 0);
 
   return (
-    <div className="min-h-screen bg-[#FFF6E5] font-kids text-ink">
+    <div className="min-h-screen bg-[#EEF4F3] font-kids text-ink">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
         <Link to="/" className="flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold"><ArrowLeft className="h-4 w-4" /> Grown-up site</Link>
         <div className="flex items-center gap-2">
@@ -51,12 +51,12 @@ export default function KidsHome() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-6xl items-end gap-8 px-5 pb-10 pt-4 md:grid-cols-[auto_1fr]">
+      <section className="mx-auto grid max-w-6xl items-end gap-x-8 gap-y-6 px-5 pb-10 pt-4 md:grid-cols-[auto_1fr] lg:grid-cols-[auto_1fr_300px]">
         <motion.div initial={{ scale: 0.6, rotate: -12, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 160, damping: 12 }} className="justify-self-center">
           <Zuva size={170} />
         </motion.div>
         <div>
-          <h1 className="text-5xl font-bold leading-none sm:text-7xl">Kids Zone</h1>
+          <h1 className="text-5xl font-extrabold leading-[1.05] sm:text-7xl">Kids Zone</h1>
           <ChevronStrip className="mt-3 h-4 w-56" />
           <div className="mt-6 max-w-2xl">
             <SpeechBubble>
@@ -64,14 +64,21 @@ export default function KidsHome() {
             </SpeechBubble>
           </div>
         </div>
+        {/* Real learners, softly faded into the page so the games stay the focus. */}
+        <Photo
+          name="kids-zone"
+          sizes="300px"
+          className="hidden h-[380px] w-[300px] self-end overflow-hidden rounded-t-[28px] lg:block [mask-image:linear-gradient(180deg,#000_55%,transparent)]"
+          imgClassName="object-[50%_30%]"
+        />
       </section>
 
-      <main className="relative bg-[#FFE2A8] px-5 pb-20 pt-14">
-        <svg className="absolute -top-px left-0 h-10 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 H1440 V10 Q1080 40 720 18 T0 22 Z" fill="#FFF6E5" /></svg>
+      <main className="relative bg-[#D6EBE8] px-5 pb-20 pt-14">
+        <svg className="absolute -top-px left-0 h-10 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 H1440 V10 Q1080 40 720 18 T0 22 Z" fill="#EEF4F3" /></svg>
         <h2 className="mx-auto max-w-6xl text-3xl font-bold sm:text-4xl">Zuva’s journey</h2>
         <ol className="relative mx-auto mt-10 max-w-6xl">
           {/* The road: a real path the stops sit on (desktop), a simple line on phones. */}
-          <span aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-3 rounded-full bg-[#E9C27A] md:left-1/2 md:-ml-1.5" />
+          <span aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-3 rounded-full bg-[#9CCBC6] md:left-1/2 md:-ml-1.5" />
           {KID_GAMES.map((g, i) => {
             const right = i % 2 === 1;
             const earned = starsFor(g.id);
