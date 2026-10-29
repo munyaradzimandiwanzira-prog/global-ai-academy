@@ -386,3 +386,180 @@ SOLUTIONS = {
         "    return 'realtime' if steady_traffic else 'serverless'"
     ),
 }
+
+# ── Agentic AI Security ──
+SOLUTIONS.update({
+    "agsec-trifecta": '''catalog = {
+    "web_search":   ["untrusted_input"],
+    "read_crm":     ["sensitive_access"],
+    "send_email":   ["state_change"],
+    "read_inbox":   ["untrusted_input", "sensitive_access"],
+}
+
+def rule_of_two(session_tools, catalog):
+    caps = set()
+    for tool in session_tools:
+        if tool not in catalog:
+            raise ValueError(f"unknown tool: {tool}")
+        caps.update(catalog[tool])
+    return "needs_approval" if len(caps) == 3 else "ok"
+''',
+    "agsec-taint": '''class Value:
+    def __init__(self, data, tainted):
+        self.data, self.tainted = data, tainted
+
+SENSITIVE = {"send_email": ["to"], "transfer": ["account", "amount"], "search": []}
+
+def check_call(call):
+    if call["tool"] not in SENSITIVE:
+        return "deny"
+    for name in SENSITIVE[call["tool"]]:
+        value = call["args"].get(name)
+        if value is not None and value.tainted:
+            return "ask_human"
+    return "allow"
+''',
+    "agsec-policy": '''class Gate:
+    def __init__(self, policy, max_calls):
+        self.policy, self.max_calls, self.allowed = policy, max_calls, 0
+
+    def decide(self, tool, args):
+        if self.allowed >= self.max_calls:
+            return "deny"
+        rule = self.policy.get(tool)
+        if rule is None:
+            return "deny"
+        if "max_amount" in rule and args.get("amount", 0) > rule["max_amount"]:
+            return "approve"
+        if rule["mode"] != "auto":
+            return "approve"
+        self.allowed += 1
+        return "allow"
+''',
+    "agsec-deputy": '''USERS = {"rudo": {"orders:read:own"}, "admin": {"orders:read:any"}}
+AGENTS = {"support": {"orders:read:any"}, "self-service": {"orders:read:own"}}
+
+def _allows(scopes, user, order):
+    return "orders:read:any" in scopes or ("orders:read:own" in scopes and order["customer"] == user)
+
+def can_read(user, agent, order):
+    if user not in USERS or agent not in AGENTS:
+        return False
+    return _allows(USERS[user], user, order) and _allows(AGENTS[agent], user, order)
+''',
+    "agsec-egress": '''from urllib.parse import urlsplit
+
+def allowed(url, allowlist):
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    if parts.scheme != "https" or "@" in parts.netloc:
+        return False
+    host = (parts.hostname or "").lower()
+    if not host:
+        return False
+    for entry in allowlist:
+        entry = entry.lower()
+        if host == entry or host.endswith("." + entry):
+            return True
+    return False
+''',
+    "agsec-memory": '''def recall(memory, user, sensitive):
+    out = []
+    for m in memory:
+        if m["owner"] != user:
+            continue
+        trusted = m["source"] in ("user", "admin")
+        if trusted:
+            out.append(m["text"])
+        elif not sensitive:
+            out.append("[untrusted] " + m["text"])
+    return out
+''',
+    "agsec-pins": '''import hashlib, json
+
+def fingerprint(tool):
+    canonical = json.dumps({"name": tool["name"], "description": tool["description"], "schema": tool["schema"]}, sort_keys=True)
+    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+
+def audit_tools(pins, current):
+    seen = {}
+    for t in current:
+        seen[f"{t['server']}.{t['name']}"] = fingerprint(t)
+    return {
+        "changed": sorted(k for k, fp in seen.items() if k in pins and pins[k] != fp),
+        "new": sorted(k for k in seen if k not in pins),
+        "missing": sorted(k for k in pins if k not in seen),
+    }
+''',
+    "agsec-hmac": '''import hmac, hashlib, json
+
+class Verifier:
+    def __init__(self, key, max_age):
+        self.key, self.max_age, self.seen = key, max_age, set()
+
+    def check(self, msg, tag, now):
+        expected = hmac.new(self.key, json.dumps(msg, sort_keys=True).encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, tag):
+            return "bad signature"
+        if now - msg["ts"] > self.max_age:
+            return "expired"
+        if msg["nonce"] in self.seen:
+            return "replay"
+        self.seen.add(msg["nonce"])
+        return "ok"
+''',
+    "agsec-chain": '''import hashlib, json
+
+def entry_hash(prev, event):
+    return hashlib.sha256((prev + json.dumps(event, sort_keys=True)).encode()).hexdigest()
+
+def first_bad(log):
+    prev = "genesis"
+    for i, e in enumerate(log):
+        prev = entry_hash(prev, e["event"])
+        if prev != e["hash"]:
+            return i
+    return None
+''',
+    "agsec-triage": '''from collections import Counter
+
+def triage(alerts, severity, privileged):
+    per_user = Counter(a["user"] for a in alerts)
+    out = []
+    for a in alerts:
+        p = severity.get(a["rule"], 1)
+        if a["user"] in privileged:
+            p += 3
+        if per_user[a["user"]] >= 2:
+            p += 2
+        out.append((a["id"], p))
+    return sorted(out, key=lambda x: (-x[1], x[0]))
+''',
+    "agsec-capstone": '''class Gateway:
+    def __init__(self, policy, max_calls, user_scopes):
+        self.policy, self.max_calls, self.user_scopes = policy, max_calls, user_scopes
+        self.allowed, self.log = 0, []
+
+    def _decide(self, user, tool, tainted):
+        rule = self.policy.get(tool)
+        if rule is None:
+            return "deny:unknown"
+        if rule["scope"] not in self.user_scopes.get(user, set()):
+            return "deny:scope"
+        if self.allowed >= self.max_calls:
+            return "deny:budget"
+        if tainted and rule["sensitive"]:
+            return "approve:tainted"
+        if rule["mode"] == "approve":
+            return "approve:policy"
+        self.allowed += 1
+        return "allow"
+
+    def handle(self, user, tool, args, tainted):
+        decision = self._decide(user, tool, tainted)
+        self.log.append({"user": user, "tool": tool, "decision": decision})
+        return decision
+''',
+})

@@ -459,6 +459,8 @@ Technology is only part of safety. Organisations also need:
   answer: 1
 ```
 
+> **Going further with agents.** When the AI can call tools, hold credentials and remember things, guardrails become one layer of a wider security design. **[Agentic AI Security](/learn/agentic-security)** covers threat modelling, least agency, agent identity, sandboxes, MCP supply chain and incident response.
+
 ```exam
 - q: "Which check is deterministic and cheap?"
   options: ["A regex/length input check", "An LLM judge", "Human review", "Fine-tuning"]

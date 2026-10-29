@@ -410,6 +410,8 @@ Build these into your systems from the start ("privacy by design"). For real pro
 
 SOC analyst, penetration tester, security engineer, cloud security engineer, GRC (governance, risk and compliance) analyst. Practise legally on platforms like **TryHackMe**, **Hack The Box** and **OWASP Juice Shop** — never test systems you don't own or have permission to test.
 
+> **Next: securing AI agents.** Agents that read untrusted content and take real actions add new attack paths: prompt injection, tool misuse, poisoned memory and malicious MCP servers. **[Agentic AI Security](/learn/agentic-security)** covers how to defend them, and how security teams can use agents safely.
+
 ````challenge
 id: sec-password-check
 title: Password policy checker

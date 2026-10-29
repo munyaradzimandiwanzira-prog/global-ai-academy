@@ -182,7 +182,7 @@ export const CAREERS: Career[] = [
     stages: [
       { level: 'Entry level', focus: 'Prerequisites', trackIds: ['python', 'python-functions', 'pydantic', 'prompt-engineering', 'llm-apis'], project: 'A tool-calling assistant that checks the weather and exchange rates.' },
       { level: 'Intermediate', focus: 'Agents and retrieval', trackIds: ['ai-agents', 'agentic-engineering', 'mcp', 'rag', 'postgresql', 'langchain'], project: 'A research agent that searches documents and cites sources.' },
-      { level: 'Advanced', focus: 'Safety and scale', trackIds: ['graphrag', 'ai-evaluations', 'guardrails', 'ai-workflows', 'inference-engineering'], project: 'A multi-agent workflow with human approval steps and evals.' },
+      { level: 'Advanced', focus: 'Safety and scale', trackIds: ['graphrag', 'ai-evaluations', 'guardrails', 'agentic-security', 'ai-workflows', 'inference-engineering'], project: 'A multi-agent workflow with human approval steps and evals.' },
     ],
     next: ['platform-ai-engineer', 'lead-platform-ai-engineer'],
   }),
@@ -198,7 +198,7 @@ export const CAREERS: Career[] = [
     stages: [
       { level: 'Entry level', focus: 'Basics', trackIds: ['start-here', 'python', 'prompt-engineering'], project: 'Automate a weekly sales summary email.' },
       { level: 'Intermediate', focus: 'APIs and workflows', trackIds: ['ai-workflows', 'llm-apis', 'backend', 'web-scraping'], project: 'A WhatsApp order-intake workflow with AI extraction.' },
-      { level: 'Advanced', focus: 'Agents and safety', trackIds: ['ai-agents', 'mcp', 'guardrails', 'security'], project: 'A supervised agent that drafts and files invoices.' },
+      { level: 'Advanced', focus: 'Agents and safety', trackIds: ['ai-agents', 'mcp', 'guardrails', 'agentic-security', 'security'], project: 'A supervised agent that drafts and files invoices.' },
     ],
     next: ['agentic-ai-engineer'],
   }),
@@ -233,6 +233,22 @@ export const CAREERS: Career[] = [
       { level: 'Advanced', focus: 'Leadership', trackIds: ['networking', 'hugging-face', 'machine-learning'], project: 'Write an AI governance policy and a 12-month platform roadmap.' },
     ],
     next: [],
+  }),
+  define({
+    id: 'ai-security-engineer',
+    title: 'AI Security Engineer',
+    icon: '🔐',
+    level: 'intermediate',
+    summary: 'Protect AI products and agents from prompt injection, data leaks and misuse, and help security teams use AI safely.',
+    dayToDay: ['Threat-model AI features and agents', 'Design tool permissions, identity and sandboxes', 'Red-team agents and track attack success rates', 'Monitor agent behaviour and respond to incidents'],
+    tools: ['Python', 'OWASP Agentic & LLM Top 10', 'MITRE ATLAS', 'OAuth & secrets managers', 'Containers & sandboxes', 'OpenTelemetry'],
+    zimbabwe: 'Banks, mobile-money operators and government services are adding AI assistants; each one needs people who can keep customer data and money safe.',
+    stages: [
+      { level: 'Entry level', focus: 'Security and code foundations', trackIds: ['python', 'networking', 'security', 'terminal'], project: 'Harden a small web app and write its threat model.' },
+      { level: 'Intermediate', focus: 'How AI systems work', trackIds: ['llm-apis', 'prompt-engineering', 'ai-agents', 'mcp', 'guardrails'], project: 'Build a tool-calling assistant with input and output guardrails.' },
+      { level: 'Advanced', focus: 'Securing agents', trackIds: ['agentic-security', 'ai-evaluations', 'deployment'], project: 'A secure tool gateway with policies, audit logs and a red-team test suite.' },
+    ],
+    next: ['platform-ai-engineer', 'lead-platform-ai-engineer'],
   }),
   define({
     id: 'network-engineer',
