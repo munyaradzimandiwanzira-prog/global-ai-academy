@@ -211,6 +211,48 @@ for link in links:
 
 **Beautiful Soup** turns HTML into a tree you can search. You find elements by **tag**, **class**, **id**, **attributes** or **CSS selectors**, then read their text and attributes.
 
+```sketch
+title: "From HTML to rows"
+caption: "Beautiful Soup parses the page into a tree. CSS selectors find the elements you want; you pull out text and attributes and store clean rows."
+cellW: 185
+nodes:
+  - id: html
+    label: "HTML"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+  - id: soup
+    label: "Parse tree"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "BeautifulSoup"
+  - id: sel
+    label: "select(\"tr.price\")"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: grape
+  - id: rows
+    label: "Rows"
+    col: 3.9
+    row: 0
+    shape: db
+    tone: teal
+    sub: "crop · market · price"
+edges:
+  - from: html
+    to: soup
+  - from: soup
+    to: sel
+  - from: sel
+    to: rows
+    label: ".get_text()"
+```
+
+
 | Method | Returns | Example |
 |---|---|---|
 | `soup.find("h1")` | First match or `None` | The page title |
@@ -347,6 +389,60 @@ tests: |
 # Building a Polite Crawler {#crawler}
 
 A crawler keeps a **frontier** (URLs to visit) and a **visited** set, fetches pages, extracts links, and adds new in-scope links to the frontier. **Breadth-first** order visits pages closest to the start first, which usually finds the most important pages early.
+
+```sketch
+title: "A crawler's frontier"
+caption: "Take a URL from the queue, check robots.txt and the rate limit, fetch and parse it, then add new in-scope links you have not seen."
+cellW: 185
+cellH: 95
+nodes:
+  - id: q
+    label: "URL queue"
+    col: 0
+    row: 0.6
+    shape: db
+    tone: sky
+  - id: ok
+    label: "Allowed?"
+    col: 1.4
+    row: 0.6
+    shape: diamond
+    tone: gold
+    sub: "robots.txt · scope"
+  - id: f
+    label: "Fetch + wait"
+    col: 2.8
+    row: 0
+    shape: round
+    tone: teal
+    sub: "1 req / sec"
+  - id: p
+    label: "Parse links"
+    col: 2.8
+    row: 1.3
+    shape: round
+    tone: grape
+  - id: seen
+    label: "Seen set"
+    col: 1.4
+    row: 2
+    shape: db
+edges:
+  - from: q
+    to: ok
+  - from: ok
+    to: f
+    label: "yes"
+  - from: f
+    to: p
+  - from: p
+    to: seen
+    label: "new?"
+  - from: seen
+    to: q
+    label: "add"
+```
+
 
 ## Politeness rules
 

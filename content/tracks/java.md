@@ -16,6 +16,54 @@ tags: [java, oop, backend, enterprise, android, spring]
 
 **Java** is one of the most widely used programming languages, especially for:
 
+```sketch
+title: "Write once, run anywhere"
+caption: "javac compiles your code to bytecode. Any computer with a Java Virtual Machine can run that same bytecode."
+cellW: 180
+cellH: 100
+nodes:
+  - id: src
+    label: "Main.java"
+    col: 0
+    row: 0.6
+    shape: doc
+    tone: sky
+  - id: jc
+    label: "javac"
+    col: 1.3
+    row: 0.6
+    shape: round
+    tone: gold
+  - id: bc
+    label: "Main.class"
+    col: 2.6
+    row: 0.6
+    shape: doc
+    sub: "bytecode"
+  - id: w
+    label: "JVM on Windows"
+    col: 3.9
+    row: 0
+    shape: round
+    tone: teal
+  - id: l
+    label: "JVM on Linux"
+    col: 3.9
+    row: 1.2
+    shape: round
+    tone: teal
+edges:
+  - from: src
+    to: jc
+  - from: jc
+    to: bc
+  - from: bc
+    to: w
+  - from: bc
+    to: l
+```
+
+
 - **Enterprise and banking systems** — reliable, long-lived backends.
 - **Android** — Android's original language (Kotlin is now preferred, and both run on the same platform).
 - **Big data** tools like Hadoop, Spark and Kafka.
@@ -256,6 +304,51 @@ System.out.println(p.name() + " $" + p.price());
 
 # Inheritance and Interfaces {#interfaces}
 
+
+```sketch
+title: "extends vs implements"
+caption: "A class extends one parent and inherits its code. It can implement many interfaces, each a promise to provide certain methods."
+cellW: 190
+nodes:
+  - id: acc
+    label: "Account"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "abstract class"
+  - id: pay
+    label: "Payable"
+    col: 3.2
+    row: 0
+    shape: round
+    tone: grape
+    sub: "interface"
+  - id: sav
+    label: "SavingsAccount"
+    col: 0.7
+    row: 1.3
+    shape: round
+    tone: sky
+  - id: mob
+    label: "MobileWallet"
+    col: 2.4
+    row: 1.3
+    shape: round
+    tone: teal
+edges:
+  - from: sav
+    to: acc
+    label: "extends"
+  - from: mob
+    to: acc
+    label: "extends"
+  - from: mob
+    to: pay
+    label: "implements"
+    dashed: true
+```
+
 ```java run
 interface PaymentMethod {
   String pay(double amount);
@@ -287,6 +380,51 @@ Charged card $15.00
 Code that depends on the `PaymentMethod` **interface** works with any payment type — including ones added later.
 
 # Collections {#collections}
+
+
+```sketch
+title: "Pick the right collection"
+caption: "List keeps order and allows duplicates, Set keeps only unique items, Map looks values up by key."
+cellW: 200
+nodes:
+  - id: c
+    label: "What do you need?"
+    col: 1.5
+    row: 0
+    shape: diamond
+    tone: gold
+  - id: l
+    label: "ArrayList"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: sky
+    sub: "ordered · by index"
+  - id: s
+    label: "HashSet"
+    col: 1.5
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "unique items"
+  - id: m
+    label: "HashMap"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: grape
+    sub: "key → value"
+edges:
+  - from: c
+    to: l
+    label: "a sequence"
+  - from: c
+    to: s
+    label: "no repeats"
+  - from: c
+    to: m
+    label: "lookups"
+```
 
 ```java run
 import java.util.*;
@@ -365,6 +503,49 @@ checked 150
 # Streams and Lambdas {#streams}
 
 Streams process collections in a readable, functional style:
+
+```sketch
+title: "A stream pipeline"
+caption: "A stream reads a collection, passes items through filter and map, and a final step such as collect or sum produces the result."
+cellW: 185
+nodes:
+  - id: src
+    label: "orders"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "List<Order>"
+  - id: f
+    label: "filter"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "o -> o.paid()"
+  - id: m
+    label: "map"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: gold
+    sub: "Order::total"
+  - id: t
+    label: "sum()"
+    col: 3.9
+    row: 0
+    shape: pill
+    tone: teal
+edges:
+  - from: src
+    to: f
+    label: "stream()"
+  - from: f
+    to: m
+  - from: m
+    to: t
+```
+
 
 ```java run
 import java.util.*;

@@ -107,6 +107,46 @@ edges:
 
 ## Spread
 
+
+```sketch
+title: "Same mean, different spread"
+caption: "Two markets can have the same average price but very different variability. Standard deviation measures the typical distance from the mean."
+cellW: 220
+cellH: 95
+nodes:
+  - id: a
+    label: "Market A"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "8.4 · 8.5 · 8.6"
+  - id: b
+    label: "Market B"
+    col: 0
+    row: 1.2
+    shape: round
+    tone: gold
+    sub: "6.0 · 8.5 · 11.0"
+  - id: ma
+    label: "mean 8.5 · sd 0.1"
+    col: 1.8
+    row: 0
+    shape: note
+    tone: teal
+  - id: mb
+    label: "mean 8.5 · sd 2.5"
+    col: 1.8
+    row: 1.2
+    shape: note
+    tone: rose
+edges:
+  - from: a
+    to: ma
+  - from: b
+    to: mb
+```
+
 | Measure | Definition |
 |---|---|
 | **Range** | max − min |
@@ -469,6 +509,59 @@ print(f"median {st.median(times)} s, 95% bootstrap CI {boot[250]} – {boot[9750
 # Hypothesis Testing {#hypothesis}
 
 A hypothesis test asks: **if nothing interesting were going on, how surprising is what I observed?**
+
+```sketch
+title: "The logic of a test"
+caption: "Assume there is no real effect, ask how surprising your data would be under that assumption, and only reject it if the answer is very surprising."
+cellW: 170
+cellH: 100
+nodes:
+  - id: h0
+    label: "Assume no effect"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+    sub: "H₀"
+  - id: p
+    label: "How surprising?"
+    col: 1.6
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "p-value"
+  - id: d
+    label: "p < 0.05?"
+    col: 3.1
+    row: 0.6
+    shape: diamond
+    tone: grape
+  - id: rej
+    label: "Evidence of an effect"
+    col: 4.4
+    row: 0
+    shape: pill
+    tone: teal
+  - id: no
+    label: "Not enough evidence"
+    col: 4.4
+    row: 1.2
+    shape: pill
+    tone: rose
+edges:
+  - from: h0
+    to: p
+  - from: p
+    to: d
+  - from: d
+    to: rej
+    label: "yes"
+  - from: d
+    to: no
+    label: "no"
+```
+
+
 
 1. **Null hypothesis H₀**: no effect (the new prompt is no better; the coin is fair).
 2. **Alternative H₁**: there is an effect.

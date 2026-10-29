@@ -73,6 +73,54 @@ Use `let` by default; use `var` only when the value changes.
 
 An **optional** may hold a value or `nil`. Swift forces you to handle the `nil` case — preventing crashes.
 
+```sketch
+title: "Unwrapping an optional"
+caption: "A String? might hold nothing. if let and guard let unwrap it safely; ?? gives a default; ! crashes when the value is missing."
+cellW: 195
+cellH: 90
+nodes:
+  - id: o
+    label: "name: String?"
+    col: 0
+    row: 0.9
+    shape: note
+    tone: sky
+  - id: il
+    label: "if let name { }"
+    col: 1.7
+    row: 0
+    shape: round
+    tone: teal
+  - id: gl
+    label: "guard let … else { return }"
+    col: 1.7
+    row: 0.9
+    shape: round
+    tone: gold
+  - id: dd
+    label: "name ?? \"Guest\""
+    col: 1.7
+    row: 1.8
+    shape: round
+    tone: grape
+  - id: bang
+    label: "name!"
+    col: 3.5
+    row: 0.9
+    shape: pill
+    tone: rose
+    sub: "crash if nil"
+edges:
+  - from: o
+    to: il
+  - from: o
+    to: gl
+  - from: o
+    to: dd
+```
+
+
+
 ```swift run
 let phone: String? = nil
 let email: String? = "rudo@example.com"
@@ -140,6 +188,47 @@ Cooking oil 4.5
 
 # SwiftUI Views and State {#swiftui}
 
+
+```sketch
+title: "Data flows down, bindings flow back"
+caption: "@State owns a value. Child views receive it, or a @Binding to it when they need to change it. Any change redraws the views that use it."
+cellW: 200
+nodes:
+  - id: p
+    label: "ContentView"
+    col: 1.2
+    row: 0
+    shape: round
+    tone: gold
+    sub: "@State var qty = 1"
+  - id: a
+    label: "PriceLabel"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: sky
+    sub: "let qty"
+  - id: b
+    label: "Stepper"
+    col: 2.4
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "@Binding qty"
+edges:
+  - from: p
+    to: a
+    label: "value"
+  - from: p
+    to: b
+    label: "$qty"
+  - from: b
+    to: p
+    label: "changes"
+    dashed: true
+    bend: -35
+```
+
 ```swift
 import SwiftUI
 
@@ -202,6 +291,59 @@ struct ProductListView: View {
 ```
 
 # Networking with async/await {#networking}
+
+
+```sketch
+title: "Fetch, decode, show"
+caption: "await pauses the task without freezing the screen. JSONDecoder turns the data into Codable structs, and updating state redraws the list."
+cellW: 190
+nodes:
+  - id: t
+    label: "Task { }"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: u
+    label: "URLSession.data"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "await"
+  - id: d
+    label: "JSONDecoder"
+    col: 3
+    row: 0
+    shape: round
+    tone: grape
+    sub: "[Product].self"
+  - id: s
+    label: "products = …"
+    col: 3
+    row: 1.3
+    shape: pill
+    tone: teal
+    sub: "UI updates"
+  - id: e
+    label: "catch"
+    col: 1.5
+    row: 1.3
+    shape: pill
+    tone: rose
+    sub: "show error"
+edges:
+  - from: t
+    to: u
+  - from: u
+    to: d
+  - from: d
+    to: s
+  - from: u
+    to: e
+    label: "throws"
+    dashed: true
+```
 
 ```swift
 @Observable

@@ -39,6 +39,56 @@ Mhoro from C++!
 
 C++ is **compiled** to machine code before it runs:
 
+```sketch
+title: "From .cpp file to running program"
+caption: "The compiler turns each source file into machine code, the linker joins them with libraries, and the result runs directly on the processor."
+cellW: 190
+nodes:
+  - id: src
+    label: "main.cpp"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+  - id: cmp
+    label: "Compiler"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "g++ / clang"
+  - id: obj
+    label: "main.o"
+    col: 2.6
+    row: 0
+    shape: doc
+    sub: "machine code"
+  - id: lnk
+    label: "Linker"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: gold
+    sub: "+ libraries"
+  - id: exe
+    label: "Program"
+    col: 1.3
+    row: 1.3
+    shape: pill
+    tone: teal
+    sub: "./app"
+edges:
+  - from: src
+    to: cmp
+  - from: cmp
+    to: obj
+  - from: obj
+    to: lnk
+  - from: lnk
+    to: exe
+```
+
+
 ```bash
 g++ -std=c++20 -Wall -O2 main.cpp -o main
 ./main
@@ -111,6 +161,52 @@ Weeks: 7
 # References and Pointers {#pointers}
 
 A **reference** is another name for an existing variable. A **pointer** stores a memory address.
+
+```sketch
+title: "Value, reference, pointer"
+caption: "A copy is a new box. A reference is another name for the same box. A pointer holds the box's address and must be dereferenced with *."
+cellW: 200
+nodes:
+  - id: x
+    label: "int x = 5"
+    col: 1.5
+    row: 0
+    shape: box
+    tone: gold
+    sub: "at address 0x7ffc"
+  - id: c
+    label: "int y = x"
+    col: 0
+    row: 1.3
+    shape: box
+    tone: sky
+    sub: "a separate copy"
+  - id: r
+    label: "int& r = x"
+    col: 1.5
+    row: 1.3
+    shape: box
+    tone: teal
+    sub: "same box, new name"
+  - id: p
+    label: "int* p = &x"
+    col: 3
+    row: 1.3
+    shape: box
+    tone: grape
+    sub: "holds 0x7ffc"
+edges:
+  - from: x
+    to: c
+    label: "copied"
+    dashed: true
+  - from: r
+    to: x
+  - from: p
+    to: x
+    label: "*p"
+```
+
 
 ```cpp run
 #include <iostream>
@@ -223,6 +319,58 @@ sugar: 2.8
 # Memory Management {#memory}
 
 C++ lets you manage memory yourself — powerful but risky. Modern C++ uses **RAII** and **smart pointers** so memory is freed automatically.
+
+```sketch
+title: "Stack vs heap"
+caption: "Local variables live on the stack and vanish when the function returns. new puts objects on the heap; smart pointers free them automatically."
+cellW: 200
+nodes:
+  - id: st
+    label: "Stack"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "fast · automatic"
+  - id: hp
+    label: "Heap"
+    col: 2
+    row: 0
+    shape: db
+    tone: gold
+    sub: "big · lives longer"
+  - id: loc
+    label: "int count"
+    col: 0
+    row: 1.3
+    shape: note
+    tone: sky
+  - id: up
+    label: "unique_ptr<Sensor>"
+    col: 2
+    row: 1.3
+    shape: note
+    tone: teal
+    sub: "frees itself"
+  - id: leak
+    label: "raw new, no delete"
+    col: 3.4
+    row: 1.3
+    shape: note
+    tone: rose
+    sub: "leak!"
+edges:
+  - from: loc
+    to: st
+    dashed: true
+  - from: up
+    to: hp
+    dashed: true
+  - from: leak
+    to: hp
+    dashed: true
+```
+
 
 ```cpp run
 #include <iostream>

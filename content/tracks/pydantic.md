@@ -340,6 +340,50 @@ Validators must **return** the (possibly changed) value, or raise `ValueError` w
 
 Models compose. Lists, dicts and optional nested models all validate recursively.
 
+```sketch
+title: "A discriminated union"
+caption: "A literal field such as type tells Pydantic which model to use, so it validates against exactly one shape and reports clear errors."
+cellW: 190
+cellH: 100
+nodes:
+  - id: in
+    label: "{\"type\": \"ecocash\", …}"
+    col: 0
+    row: 0.6
+    shape: note
+    tone: sky
+  - id: d
+    label: "type?"
+    col: 1.6
+    row: 0.6
+    shape: diamond
+    tone: gold
+  - id: e
+    label: "EcoCashPayment"
+    col: 3.1
+    row: 0
+    shape: round
+    tone: teal
+    sub: "phone · amount"
+  - id: c
+    label: "CardPayment"
+    col: 3.1
+    row: 1.2
+    shape: round
+    tone: grape
+    sub: "last4 · amount"
+edges:
+  - from: in
+    to: d
+  - from: d
+    to: e
+    label: "ecocash"
+  - from: d
+    to: c
+    label: "card"
+```
+
+
 ## Discriminated unions
 
 When a field can hold **different shapes**, add a **discriminator** field (a `Literal`) so Pydantic picks the right model instantly and gives clear errors. This is how you model events, messages and tool calls.
@@ -534,6 +578,54 @@ except ValidationError as e:
 # Pydantic for AI Engineering {#ai}
 
 Pydantic is the glue between language models and your code:
+
+```sketch
+title: "Validate, retry with the errors"
+caption: "Ask the model for JSON matching your schema. If validation fails, send the error messages back and ask again, a fixed number of times."
+cellW: 190
+cellH: 105
+nodes:
+  - id: ask
+    label: "Ask the LLM"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+    sub: "schema in prompt"
+  - id: val
+    label: "model_validate_json"
+    col: 1.6
+    row: 0.6
+    shape: diamond
+    tone: gold
+  - id: ok
+    label: "Typed object"
+    col: 3.2
+    row: 0
+    shape: pill
+    tone: teal
+  - id: err
+    label: "ValidationError"
+    col: 1.6
+    row: 1.9
+    shape: round
+    tone: rose
+    sub: "send errors back"
+edges:
+  - from: ask
+    to: val
+  - from: val
+    to: ok
+    label: "valid"
+  - from: val
+    to: err
+    label: "invalid"
+  - from: err
+    to: ask
+    label: "retry"
+```
+
+
 
 | Use | How |
 |---|---|

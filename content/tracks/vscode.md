@@ -63,6 +63,53 @@ answers: ["."]
 
 # The Interface {#interface}
 
+
+```sketch
+title: "The parts of the window"
+caption: "The activity bar switches the side panel (files, search, Git, extensions). Editors sit in the middle; the panel below holds the terminal and problems."
+cellW: 170
+cellH: 95
+nodes:
+  - id: ab
+    label: "Activity bar"
+    col: 0
+    row: 0
+    shape: box
+    tone: gold
+    h: 2.2
+  - id: sb
+    label: "Side bar"
+    col: 1
+    row: 0
+    shape: box
+    tone: sky
+    sub: "Explorer · Search · Git"
+    h: 2.2
+  - id: ed
+    label: "Editor tabs"
+    col: 2.2
+    row: 0
+    shape: box
+    tone: teal
+    w: 1.6
+  - id: pn
+    label: "Panel"
+    col: 2.2
+    row: 1.2
+    shape: box
+    tone: grape
+    sub: "Terminal · Problems"
+    w: 1.6
+  - id: st
+    label: "Status bar"
+    col: 1.6
+    row: 2.4
+    shape: box
+    sub: "branch · errors · language"
+    w: 3
+edges: []
+```
+
 ```text
 ┌───┬──────────────┬─────────────────────────────────────┐
 │ A │  B Sidebar   │  C Editor (tabs, split views)       │
@@ -131,6 +178,56 @@ Learning a few shortcuts saves hours. (On a Mac use **Cmd** where Windows/Linux 
 # Extensions {#extensions}
 
 Open the **Extensions** view (`Ctrl+Shift+X` / `Cmd+Shift+X`), search, and click **Install**.
+
+```sketch
+title: "What an extension adds"
+caption: "The editor is small; extensions add language support, linters, formatters and themes. A language server gives you completion and errors as you type."
+cellW: 190
+nodes:
+  - id: vs
+    label: "VS Code"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: py
+    label: "Python"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: sky
+    sub: "language server"
+  - id: fm
+    label: "Prettier · Black"
+    col: 1
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "formatting"
+  - id: li
+    label: "ESLint · Ruff"
+    col: 2
+    row: 1.3
+    shape: round
+    tone: grape
+    sub: "linting"
+  - id: gl
+    label: "GitLens"
+    col: 3
+    row: 1.3
+    shape: round
+    sub: "history"
+edges:
+  - from: vs
+    to: py
+  - from: vs
+    to: fm
+  - from: vs
+    to: li
+  - from: vs
+    to: gl
+```
+
 
 ## Recommended starter set
 
@@ -257,6 +354,54 @@ Press **F12** in your browser to inspect elements, edit CSS live, read console e
 # Debugging {#debugging}
 
 Debugging means stepping through code to find out **why** it behaves the way it does.
+
+```sketch
+title: "The debugging loop"
+caption: "Set a breakpoint, start debugging, inspect variables when it pauses, step line by line, and fix the line where reality differs from what you expected."
+cellW: 180
+nodes:
+  - id: bp
+    label: "Set breakpoint"
+    col: 0
+    row: 0
+    shape: round
+    tone: rose
+  - id: run
+    label: "Start (F5)"
+    col: 1.4
+    row: 0
+    shape: round
+    tone: sky
+  - id: ins
+    label: "Inspect variables"
+    col: 2.8
+    row: 0
+    shape: round
+    tone: gold
+  - id: step
+    label: "Step over / into"
+    col: 2.8
+    row: 1.3
+    shape: round
+    tone: teal
+  - id: fix
+    label: "Fix the bug"
+    col: 1.4
+    row: 1.3
+    shape: pill
+    tone: grape
+edges:
+  - from: bp
+    to: run
+  - from: run
+    to: ins
+    label: "pauses"
+  - from: ins
+    to: step
+  - from: step
+    to: fix
+```
+
 
 1. Click in the margin left of a line number to add a **breakpoint** (a red dot).
 2. Press **F5** (Run → Start Debugging) and pick your language.

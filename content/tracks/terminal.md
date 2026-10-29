@@ -33,6 +33,36 @@ This track teaches **bash/zsh** commands, used on Linux, macOS, servers, Git Bas
 
 ## Anatomy of a command
 
+
+```sketch
+title: "command, options, arguments"
+caption: "The first word is the program. Options (starting with - or --) change how it behaves; arguments say what to work on."
+cellW: 170
+nodes:
+  - id: c
+    label: "ls"
+    col: 0
+    row: 0
+    shape: box
+    tone: gold
+    sub: "command"
+  - id: o
+    label: "-la"
+    col: 1
+    row: 0
+    shape: box
+    tone: sky
+    sub: "options"
+  - id: a
+    label: "projects/"
+    col: 2
+    row: 0
+    shape: box
+    tone: teal
+    sub: "argument"
+edges: []
+```
+
 ```bash
 ls -la ~/projects
 ```
@@ -61,6 +91,69 @@ cd -                # go back to the previous folder
 ```
 
 ## Paths
+
+
+
+```sketch
+title: "Absolute and relative paths"
+caption: "An absolute path starts at the root (/). A relative path starts where you are now; .. means the folder above."
+cellW: 190
+cellH: 78
+nodes:
+  - id: root
+    label: "/"
+    col: 1.5
+    row: 0
+    shape: pill
+    tone: gold
+  - id: home
+    label: "home"
+    col: 1.5
+    row: 1
+    shape: round
+  - id: you
+    label: "rudo"
+    col: 1.5
+    row: 2
+    shape: round
+    tone: sky
+    sub: "you are here"
+  - id: p
+    label: "projects"
+    col: 0.5
+    row: 3
+    shape: round
+    tone: teal
+  - id: d
+    label: "Documents"
+    col: 2.5
+    row: 3
+    shape: round
+    tone: teal
+  - id: abs
+    label: "/home/rudo/projects"
+    col: 3.6
+    row: 0.6
+    shape: note
+    tone: grape
+    sub: "absolute"
+  - id: rel
+    label: "projects  or  ../rudo/projects"
+    col: 3.6
+    row: 1.9
+    shape: note
+    tone: grape
+    sub: "relative"
+edges:
+  - from: root
+    to: home
+  - from: home
+    to: you
+  - from: you
+    to: p
+  - from: you
+    to: d
+```
 
 - **Absolute path**: from the root — `/home/tariro/projects/app` (Windows: `C:\Users\Tariro\projects`).
 - **Relative path**: from where you are — `projects/app`, `../notes`.
@@ -123,6 +216,48 @@ find . -name "*.py"             # all Python files below this folder
 ## Pipes: connect commands
 
 The **pipe** `|` sends one command's output into another command:
+
+```sketch
+title: "Small tools joined with |"
+caption: "Each command does one job. The pipe sends one command's output straight into the next, and > saves the final result to a file."
+cellW: 180
+nodes:
+  - id: a
+    label: "cat sales.csv"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: b
+    label: "grep Harare"
+    col: 1.4
+    row: 0
+    shape: round
+    tone: gold
+  - id: c
+    label: "wc -l"
+    col: 2.8
+    row: 0
+    shape: round
+    tone: teal
+  - id: f
+    label: "count.txt"
+    col: 2.8
+    row: 1.3
+    shape: doc
+    tone: grape
+edges:
+  - from: a
+    to: b
+    label: "|"
+  - from: b
+    to: c
+    label: "|"
+  - from: c
+    to: f
+    label: ">"
+```
+
 
 ```bash
 cat sales.csv | grep "Harare" | wc -l       # how many Harare sales?
@@ -220,6 +355,54 @@ chmod +x deploy.sh       # make it executable
 ## SSH: control another computer
 
 **SSH** gives you a secure terminal on a remote server — how you manage cloud machines and Raspberry Pis.
+
+```sketch
+title: "SSH with keys"
+caption: "Your private key stays on your laptop. The server holds the matching public key and lets you in when you prove you have the private one."
+cellW: 210
+cellH: 95
+nodes:
+  - id: lap
+    label: "Your laptop"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+    sub: "~/.ssh/id_ed25519"
+  - id: srv
+    label: "Server"
+    col: 2
+    row: 0.6
+    shape: db
+    tone: gold
+    sub: "authorized_keys"
+  - id: pk
+    label: "Private key"
+    col: 0
+    row: 1.8
+    shape: note
+    tone: rose
+    sub: "never share"
+  - id: pub
+    label: "Public key"
+    col: 2
+    row: 1.8
+    shape: note
+    tone: teal
+    sub: "safe to copy"
+edges:
+  - from: lap
+    to: srv
+    label: "ssh rudo@server"
+    arrow: both
+  - from: pk
+    to: lap
+    dashed: true
+  - from: pub
+    to: srv
+    dashed: true
+```
+
 
 ```bash
 ssh tariro@203.0.113.10                 # log in to a server

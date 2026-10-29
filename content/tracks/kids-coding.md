@@ -70,6 +70,36 @@ Change the number of cows and chickens and run it again!
 
 A **variable** is like a labelled box where the computer keeps something.
 
+```sketch
+title: "A variable is a labelled box"
+caption: "You put something in the box and write a name on it. Later you ask for the box by name and get back what is inside."
+cellW: 190
+nodes:
+  - id: b1
+    label: "name"
+    col: 0
+    row: 0
+    shape: box
+    tone: gold
+    sub: "holds \"Tari\""
+  - id: b2
+    label: "age"
+    col: 1.4
+    row: 0
+    shape: box
+    tone: sky
+    sub: "holds 10"
+  - id: b3
+    label: "score"
+    col: 2.8
+    row: 0
+    shape: box
+    tone: teal
+    sub: "holds 0, then 5"
+edges: []
+```
+
+
 ```python run
 name = "Chipo"
 age = 10
@@ -123,6 +153,40 @@ print("Yum!", food, "is delicious!")
 
 Computers can decide what to do with `if` and `else`.
 
+```sketch
+title: "If it is raining…"
+caption: "The computer checks a question that is either true or false, then follows only one of the two paths."
+cellW: 200
+cellH: 95
+nodes:
+  - id: q
+    label: "Is it raining?"
+    col: 0
+    row: 0.6
+    shape: diamond
+    tone: sky
+  - id: y
+    label: "Take an umbrella"
+    col: 1.7
+    row: 0
+    shape: pill
+    tone: teal
+  - id: n
+    label: "Wear a hat"
+    col: 1.7
+    row: 1.2
+    shape: pill
+    tone: gold
+edges:
+  - from: q
+    to: y
+    label: "yes"
+  - from: q
+    to: n
+    label: "no"
+```
+
+
 ```python run
 temperature = 32
 
@@ -160,6 +224,57 @@ Change `guess` until you win! (`==` means "is equal to".)
 # Repeat with Loops {#loops}
 
 A **loop** repeats things so you don't have to type them again and again. (Remember the Repeat block in Robo Maze? Same idea!)
+
+```sketch
+title: "Do it again, and again"
+caption: "A loop runs the same steps many times so you do not have to write them out. It stops when it has counted enough."
+cellW: 180
+nodes:
+  - id: s
+    label: "Start: count = 1"
+    col: 0
+    row: 0
+    shape: pill
+    tone: sky
+  - id: do
+    label: "Clap!"
+    col: 1.5
+    row: 0
+    shape: circle
+    tone: gold
+  - id: add
+    label: "count + 1"
+    col: 3
+    row: 0
+    shape: round
+    tone: teal
+  - id: chk
+    label: "count > 3?"
+    col: 2.25
+    row: 1.3
+    shape: diamond
+    tone: grape
+  - id: end
+    label: "Stop"
+    col: 3.6
+    row: 1.3
+    shape: pill
+    tone: rose
+edges:
+  - from: s
+    to: do
+  - from: do
+    to: add
+  - from: add
+    to: chk
+  - from: chk
+    to: do
+    label: "no"
+  - from: chk
+    to: end
+    label: "yes"
+```
+
 
 ```python run
 for i in range(5):

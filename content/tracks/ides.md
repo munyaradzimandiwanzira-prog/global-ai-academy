@@ -16,6 +16,57 @@ tags: [ide, pycharm, intellij, android studio, xcode, jupyter, tools]
 
 VS Code covers most needs, but some jobs have a specialised tool that does them better. You **don't** need to install all of these — pick the one for the path you're following.
 
+```sketch
+title: "Which editor for which job"
+caption: "Start simple, then pick the tool that matches what you build. Many developers use VS Code for most things and a specialist IDE for mobile."
+cellW: 200
+nodes:
+  - id: q
+    label: "What are you building?"
+    col: 1.5
+    row: 0
+    shape: diamond
+    tone: gold
+  - id: t
+    label: "Thonny"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: sky
+    sub: "first Python"
+  - id: j
+    label: "Jupyter / Colab"
+    col: 1
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "data · ML"
+  - id: v
+    label: "VS Code"
+    col: 2
+    row: 1.3
+    shape: round
+    tone: grape
+    sub: "web · general"
+  - id: a
+    label: "Android Studio · Xcode"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: rose
+    sub: "mobile"
+edges:
+  - from: q
+    to: t
+  - from: q
+    to: j
+  - from: q
+    to: v
+  - from: q
+    to: a
+```
+
+
 | Tool | Best for | Cost |
 |---|---|---|
 | **VS Code** | Almost everything: Python, web, scripting | Free |
@@ -61,6 +112,50 @@ It's heavier than VS Code — it needs at least 8 GB of RAM to feel smooth.
 # Jupyter and Google Colab {#jupyter}
 
 **Notebooks** mix code, results, charts and notes in one document — the standard for data science and AI research.
+
+```sketch
+title: "A notebook keeps state between cells"
+caption: "Each cell runs in the same kernel, so variables from earlier cells stay alive. Running cells out of order is the classic notebook bug."
+cellW: 200
+cellH: 85
+nodes:
+  - id: c1
+    label: "Cell 1"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "df = load()"
+  - id: c2
+    label: "Cell 2"
+    col: 0
+    row: 1
+    shape: box
+    tone: sky
+    sub: "df.describe()"
+  - id: c3
+    label: "Cell 3"
+    col: 0
+    row: 2
+    shape: box
+    tone: sky
+    sub: "plot(df)"
+  - id: k
+    label: "Kernel"
+    col: 1.8
+    row: 1
+    shape: circle
+    tone: gold
+    sub: "memory: df"
+edges:
+  - from: c1
+    to: k
+  - from: c2
+    to: k
+  - from: c3
+    to: k
+```
+
 
 ```python
 # A cell — run it with Shift+Enter
@@ -132,6 +227,61 @@ See the **[Mechatronics](/learn/mechatronics)** track.
 # AI-First Editors {#ai-editors}
 
 A new generation of editors puts an AI assistant at the centre: chat with your codebase, ask for multi-file changes, and run agents that plan and edit code. Many are based on VS Code, so your skills transfer.
+
+```sketch
+title: "Working with an AI coding assistant"
+caption: "You describe the change, the assistant proposes edits across files, and you review, run the tests and keep only what you understand."
+cellW: 190
+nodes:
+  - id: you
+    label: "Describe the change"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: ai
+    label: "Assistant edits"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: grape
+    sub: "reads your project"
+  - id: rev
+    label: "Review the diff"
+    col: 3
+    row: 0
+    shape: diamond
+    tone: gold
+  - id: test
+    label: "Run tests"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: teal
+  - id: keep
+    label: "Commit"
+    col: 1.5
+    row: 1.3
+    shape: pill
+    tone: teal
+edges:
+  - from: you
+    to: ai
+  - from: ai
+    to: rev
+  - from: rev
+    to: test
+    label: "looks right"
+  - from: test
+    to: keep
+    label: "pass"
+  - from: rev
+    to: you
+    label: "ask again"
+    dashed: true
+    bend: -40
+```
+
 
 How to evaluate one:
 

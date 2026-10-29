@@ -193,6 +193,49 @@ print("slices with fewer than 2 examples (too thin to measure):", thin)
 
 A **grader** turns an output into a score. Use the cheapest grader that measures what you care about.
 
+```sketch
+title: "Three kinds of grader"
+caption: "Use code wherever the check is exact, an LLM judge for fuzzy qualities, and humans to calibrate the judge and handle the hardest cases."
+cellW: 210
+nodes:
+  - id: c
+    label: "Code checks"
+    col: 0
+    row: 0
+    shape: round
+    tone: teal
+    sub: "JSON valid · exact match"
+  - id: m
+    label: "LLM judge"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "rubric · tone · faithfulness"
+  - id: h
+    label: "Human review"
+    col: 3
+    row: 0
+    shape: round
+    tone: grape
+    sub: "calibrate · edge cases"
+  - id: cost
+    label: "cheap & fast → slow & costly"
+    col: 1.5
+    row: 1.2
+    shape: note
+edges:
+  - from: c
+    to: m
+    dashed: true
+    arrow: none
+  - from: m
+    to: h
+    dashed: true
+    arrow: none
+```
+
+
 | Grader | Measures | Speed / cost | Example |
 |---|---|---|---|
 | **Code (deterministic)** | Exact facts, formats, structure | Instant, free | Contains "$35"; valid JSON; matches schema; code passes unit tests |
@@ -436,6 +479,58 @@ If retrieval recall is low, no prompt will fix answers; if recall is high but fa
 ## Agents: evaluate the trajectory, not only the final answer
 
 An agent can reach the right answer by luck, or the wrong answer for a fixable reason. Grade the **trajectory**: the sequence of tool calls.
+
+```sketch
+title: "Score the path, not just the destination"
+caption: "An agent can reach the right answer by luck or by an unsafe route. Check which tools it called, in what order, and how many steps it took."
+cellW: 185
+cellH: 95
+nodes:
+  - id: g
+    label: "Goal"
+    col: 0
+    row: 0.6
+    shape: note
+    tone: sky
+  - id: t1
+    label: "search_orders"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+  - id: t2
+    label: "refund (needs approval)"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: rose
+  - id: a
+    label: "Answer"
+    col: 3.9
+    row: 0.6
+    shape: pill
+    tone: teal
+  - id: j
+    label: "Grade: tools · order · steps · safety"
+    col: 1.95
+    row: 1.4
+    shape: note
+    tone: grape
+edges:
+  - from: g
+    to: t1
+  - from: t1
+    to: t2
+  - from: t2
+    to: a
+  - from: j
+    to: t1
+    dashed: true
+  - from: j
+    to: t2
+    dashed: true
+```
+
 
 | Metric | Question |
 |---|---|

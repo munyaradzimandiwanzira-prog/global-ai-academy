@@ -16,6 +16,50 @@ tags: [php, web, backend, laravel, wordpress, server]
 
 **PHP** is a server-side language for building websites. It runs on the web server, builds HTML and sends it to the browser. It powers **WordPress** (a large share of all websites), many e-commerce sites, and modern apps built with **Laravel**.
 
+```sketch
+title: "PHP runs on the server"
+caption: "The browser asks for a page; the server runs the PHP, which may query a database, and sends back plain HTML. The browser never sees your PHP code."
+cellW: 190
+cellH: 100
+nodes:
+  - id: b
+    label: "Browser"
+    col: 0
+    row: 0.6
+    shape: person
+  - id: s
+    label: "Web server + PHP"
+    col: 1.5
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "index.php runs"
+  - id: db
+    label: "MySQL"
+    col: 3
+    row: 0
+    shape: db
+    tone: teal
+  - id: html
+    label: "HTML only"
+    col: 3
+    row: 1.2
+    shape: doc
+    tone: sky
+edges:
+  - from: b
+    to: s
+    label: "GET /"
+  - from: s
+    to: db
+    arrow: both
+  - from: s
+    to: html
+    label: "sends back"
+```
+
+
+
 Many Zimbabwean businesses, schools and NGOs run WordPress or PHP sites — knowing PHP means plenty of local freelance work.
 
 ```php run title="Hello, PHP"
@@ -167,6 +211,59 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 # Sessions and Login {#sessions}
 
+
+```sketch
+title: "How a PHP session works"
+caption: "session_start gives the browser a cookie with a random ID. On every later request PHP uses that ID to load the same $_SESSION data."
+cellW: 190
+nodes:
+  - id: lg
+    label: "Login form"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+  - id: chk
+    label: "password_verify()"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: ss
+    label: "$_SESSION"
+    col: 3
+    row: 0
+    shape: db
+    tone: teal
+    sub: "user_id = 7"
+  - id: ck
+    label: "Cookie PHPSESSID"
+    col: 1.5
+    row: 1.3
+    shape: note
+    tone: grape
+    sub: "random ID only"
+  - id: next
+    label: "Next request"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: sky
+edges:
+  - from: lg
+    to: chk
+  - from: chk
+    to: ss
+    label: "ok"
+  - from: chk
+    to: ck
+  - from: ck
+    to: next
+  - from: next
+    to: ss
+    label: "load"
+```
+
 ```php
 <?php
 session_start();
@@ -190,6 +287,48 @@ if (empty($_SESSION["user_id"])) {
 # Databases with PDO {#pdo}
 
 **PDO** connects PHP to MySQL, PostgreSQL, SQLite and more. Always use **prepared statements**:
+
+```sketch
+title: "Prepared statements"
+caption: "The SQL and the values travel separately. The database compiles the SQL first, so a value can never change what the query does."
+cellW: 210
+cellH: 95
+nodes:
+  - id: sql
+    label: "prepare(\"…WHERE id = ?\")"
+    col: 0
+    row: 0
+    shape: round
+    tone: gold
+  - id: val
+    label: "execute([$id])"
+    col: 0
+    row: 1.2
+    shape: round
+    tone: sky
+  - id: db
+    label: "Database"
+    col: 2
+    row: 0.6
+    shape: db
+    tone: teal
+    sub: "SQL fixed first"
+  - id: rows
+    label: "fetchAll()"
+    col: 3.4
+    row: 0.6
+    shape: pill
+    tone: grape
+edges:
+  - from: sql
+    to: db
+  - from: val
+    to: db
+    label: "value only"
+  - from: db
+    to: rows
+```
+
 
 ```php
 <?php

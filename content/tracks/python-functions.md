@@ -203,6 +203,49 @@ answers: ["*"]
 
 Python looks up names in this order: **L**ocal → **E**nclosing function → **G**lobal (module) → **B**uilt-in. This is the **LEGB** rule.
 
+```sketch
+title: "Where Python looks for a name: LEGB"
+caption: "Local first, then any enclosing function, then the module's globals, then the built-ins. The first match wins."
+cellW: 180
+nodes:
+  - id: l
+    label: "Local"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "inside this function"
+  - id: e
+    label: "Enclosing"
+    col: 1.3
+    row: 0
+    shape: box
+    tone: teal
+    sub: "outer function"
+  - id: g
+    label: "Global"
+    col: 2.6
+    row: 0
+    shape: box
+    tone: gold
+    sub: "module level"
+  - id: b
+    label: "Built-in"
+    col: 3.9
+    row: 0
+    shape: box
+    tone: grape
+    sub: "len · print"
+edges:
+  - from: l
+    to: e
+  - from: e
+    to: g
+  - from: g
+    to: b
+```
+
+
 ```python run title="LEGB in action"
 rate = 26.8                                  # global
 
@@ -497,6 +540,45 @@ tests: |
 # Generators {#generators}
 
 A **generator function** uses `yield` instead of `return`. Calling it doesn't run the body; it returns a **generator** that produces values **one at a time, on demand**. Generators handle huge or endless streams in tiny memory, which is exactly how LLM APIs stream tokens.
+
+```sketch
+title: "A generator hands out one value at a time"
+caption: "yield pauses the function and gives a value to the loop. The next request resumes it from exactly that point, so nothing is held in memory up front."
+cellW: 200
+cellH: 100
+nodes:
+  - id: loop
+    label: "for row in read_rows()"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+  - id: gen
+    label: "read_rows()"
+    col: 1.8
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "paused at yield"
+  - id: file
+    label: "big.csv"
+    col: 3.4
+    row: 0.6
+    shape: doc
+    tone: teal
+    sub: "read lazily"
+edges:
+  - from: loop
+    to: gen
+    label: "next()"
+  - from: gen
+    to: loop
+    label: "yield row"
+    bend: 40
+  - from: file
+    to: gen
+```
+
 
 ```python run title="yield produces values lazily"
 def read_sms_log():

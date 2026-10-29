@@ -16,6 +16,54 @@ tags: [mechatronics, arduino, esp32, iot, robotics, electronics, sensors]
 
 **Mechatronics** combines **mechanical engineering**, **electronics** and **computing** to build intelligent machines: robots, drones, automatic gates, 3D printers, smart irrigation systems, production lines.
 
+```sketch
+title: "Sense, decide, act"
+caption: "Every mechatronic system is a loop: sensors measure the world, a controller decides, and actuators change the world, which the sensors measure again."
+cellW: 190
+cellH: 100
+nodes:
+  - id: s
+    label: "Sensors"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+    sub: "soil · light · distance"
+  - id: c
+    label: "Controller"
+    col: 1.5
+    row: 0.6
+    shape: circle
+    tone: gold
+    sub: "ESP32 code"
+  - id: a
+    label: "Actuators"
+    col: 3
+    row: 0.6
+    shape: round
+    tone: teal
+    sub: "pump · motor · relay"
+  - id: w
+    label: "The world"
+    col: 1.5
+    row: 2
+    shape: pill
+    tone: grape
+    sub: "the garden gets wetter"
+edges:
+  - from: s
+    to: c
+    label: "readings"
+  - from: c
+    to: a
+    label: "commands"
+  - from: a
+    to: w
+  - from: w
+    to: s
+```
+
+
 ```text
   SENSE  ───▶  THINK  ───▶  ACT
   sensors      microcontroller    motors, relays, pumps,
@@ -36,6 +84,54 @@ tags: [mechatronics, arduino, esp32, iot, robotics, electronics, sensors]
 > No hardware yet? Use the free **Wokwi** simulator (wokwi.com) to build and run Arduino and ESP32 circuits in your browser.
 
 # Electronics Basics {#electronics}
+
+
+```sketch
+title: "Ohm's law triangle"
+caption: "Voltage pushes, current flows, resistance limits. V = I × R: cover the one you want and the other two tell you how to work it out."
+cellW: 210
+cellH: 100
+nodes:
+  - id: v
+    label: "V  volts"
+    col: 1
+    row: 0
+    shape: circle
+    tone: gold
+    sub: "push"
+  - id: i
+    label: "I  amps"
+    col: 0
+    row: 1.2
+    shape: circle
+    tone: sky
+    sub: "flow"
+  - id: r
+    label: "R  ohms"
+    col: 2
+    row: 1.2
+    shape: circle
+    tone: rose
+    sub: "resistance"
+  - id: ex
+    label: "LED: (5 V − 2 V) ÷ 0.02 A = 150 Ω"
+    col: 1
+    row: 2.4
+    shape: note
+edges:
+  - from: v
+    to: i
+    label: "I = V ÷ R"
+    arrow: none
+  - from: v
+    to: r
+    label: "R = V ÷ I"
+    arrow: none
+  - from: i
+    to: r
+    label: "V = I × R"
+    arrow: none
+```
 
 | Quantity | Symbol | Unit | Water analogy |
 |---|---|---|---|
@@ -212,6 +308,56 @@ void loop() {
 
 Real machines need more than on/off:
 
+```sketch
+title: "Thermostat-style control with hysteresis"
+caption: "Two thresholds instead of one stop the pump from switching on and off every second when the reading hovers around a single value."
+cellW: 190
+cellH: 105
+nodes:
+  - id: rd
+    label: "Read moisture"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+  - id: lo
+    label: "Below 30%?"
+    col: 1.5
+    row: 0
+    shape: diamond
+    tone: gold
+  - id: hi
+    label: "Above 45%?"
+    col: 1.5
+    row: 1.3
+    shape: diamond
+    tone: gold
+  - id: on
+    label: "Pump ON"
+    col: 3
+    row: 0
+    shape: pill
+    tone: teal
+  - id: off
+    label: "Pump OFF"
+    col: 3
+    row: 1.3
+    shape: pill
+    tone: rose
+edges:
+  - from: rd
+    to: lo
+  - from: rd
+    to: hi
+  - from: lo
+    to: on
+    label: "yes"
+  - from: hi
+    to: off
+    label: "yes"
+```
+
+
 - **Hysteresis** — switch on below 30% moisture, off above 45%, so the pump doesn't flicker on and off.
 - **State machines** — clear modes: `IDLE → FILLING → FULL → FAULT`.
 - **PID control** — smoothly hold a value (temperature, motor speed) at a target.
@@ -230,6 +376,50 @@ for r in readings:
 ```
 
 # Communication and IoT {#iot}
+
+
+```sketch
+title: "From sensor to phone"
+caption: "The device publishes readings to a broker or API over Wi-Fi or GSM. A server stores them; a dashboard or WhatsApp alert shows them to people."
+cellW: 190
+cellH: 100
+nodes:
+  - id: dev
+    label: "ESP32"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "reads sensors"
+  - id: br
+    label: "MQTT broker / API"
+    col: 1.6
+    row: 0.6
+    shape: db
+    tone: sky
+    sub: "Wi-Fi or GSM"
+  - id: db
+    label: "Database"
+    col: 3.2
+    row: 0
+    shape: db
+    tone: grape
+  - id: ph
+    label: "Phone alert"
+    col: 3.2
+    row: 1.2
+    shape: pill
+    tone: teal
+    sub: "\"Tank 20%\""
+edges:
+  - from: dev
+    to: br
+    label: "publish"
+  - from: br
+    to: db
+  - from: br
+    to: ph
+```
 
 ## Wired protocols between chips
 

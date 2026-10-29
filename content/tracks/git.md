@@ -56,6 +56,53 @@ git log --oneline              # history
 
 ## The three areas
 
+
+
+```sketch
+title: "Working folder, staging area, history"
+caption: "You edit files in the working folder, choose changes with git add, and save a snapshot with git commit. git push copies commits to GitHub; git pull brings other people's commits down."
+cellW: 200
+nodes:
+  - id: wd
+    label: "Working folder"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "your edits"
+  - id: st
+    label: "Staging area"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "next snapshot"
+  - id: repo
+    label: "Local history"
+    col: 3
+    row: 0
+    shape: db
+    tone: teal
+    sub: "commits"
+  - id: rem
+    label: "GitHub"
+    col: 3
+    row: 1.3
+    shape: db
+    tone: grape
+    sub: "remote"
+edges:
+  - from: wd
+    to: st
+    label: "git add"
+  - from: st
+    to: repo
+    label: "git commit"
+  - from: repo
+    to: rem
+    label: "git push"
+```
+
 ```text
  Working folder  --git add-->  Staging area  --git commit-->  Repository (history)
  (your files)                  (next snapshot)                 (saved snapshots)
@@ -135,6 +182,76 @@ dist/
 
 A **branch** is a separate line of development. Build a feature on its own branch; `main` keeps working.
 
+```sketch
+title: "A feature branch"
+caption: "A branch is a movable label on a commit. Work on a branch without touching main, then merge it back when it is ready."
+cellW: 165
+cellH: 110
+nodes:
+  - id: a
+    label: "A"
+    col: 0
+    row: 0
+    shape: circle
+    tone: sky
+  - id: b
+    label: "B"
+    col: 1
+    row: 0
+    shape: circle
+    tone: sky
+  - id: e
+    label: "E"
+    col: 3
+    row: 0
+    shape: circle
+    tone: sky
+    sub: "merge"
+  - id: c
+    label: "C"
+    col: 1.7
+    row: 1
+    shape: circle
+    tone: gold
+  - id: d
+    label: "D"
+    col: 2.4
+    row: 1
+    shape: circle
+    tone: gold
+  - id: m
+    label: "main"
+    col: 4
+    row: 0
+    shape: note
+    tone: teal
+  - id: f
+    label: "feature"
+    col: 3.3
+    row: 1
+    shape: note
+    tone: gold
+edges:
+  - from: a
+    to: b
+  - from: b
+    to: e
+  - from: b
+    to: c
+  - from: c
+    to: d
+  - from: d
+    to: e
+  - from: m
+    to: e
+    dashed: true
+  - from: f
+    to: d
+    dashed: true
+```
+
+
+
 ```bash
 git branch                       # list branches
 git switch -c feature/login      # create and switch to a new branch
@@ -203,6 +320,58 @@ GitHub doesn't accept your account password for Git. Use either:
 # Pull Requests and Teamwork {#pull-requests}
 
 Professional teams don't push straight to `main`. They use **pull requests (PRs)**:
+
+```sketch
+title: "The pull request flow"
+caption: "Push a branch, open a pull request, let checks and a reviewer look at it, fix what they find, and merge into main."
+cellW: 185
+nodes:
+  - id: br
+    label: "Push branch"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: pr
+    label: "Open PR"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+  - id: ci
+    label: "CI + review"
+    col: 2.6
+    row: 0
+    shape: diamond
+    tone: grape
+  - id: fix
+    label: "Push fixes"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: rose
+  - id: mg
+    label: "Merge to main"
+    col: 3.9
+    row: 0
+    shape: pill
+    tone: teal
+edges:
+  - from: br
+    to: pr
+  - from: pr
+    to: ci
+  - from: ci
+    to: mg
+    label: "approved"
+  - from: ci
+    to: fix
+    label: "changes"
+  - from: fix
+    to: ci
+    bend: -40
+```
+
 
 1. Create a branch: `git switch -c fix/empty-cart`.
 2. Commit your changes and push the branch: `git push -u origin fix/empty-cart`.

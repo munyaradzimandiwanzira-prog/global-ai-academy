@@ -75,6 +75,57 @@ answers: [val]
 
 In Kotlin, a normal type **cannot** hold `null`. To allow null, add `?`:
 
+```sketch
+title: "Handling a value that might be null"
+caption: "A String? may be null, so Kotlin makes you decide: use ?. to skip, ?: to give a default, or check it with if."
+cellW: 190
+cellH: 90
+nodes:
+  - id: v
+    label: "phone: String?"
+    col: 0
+    row: 0.9
+    shape: note
+    tone: sky
+  - id: safe
+    label: "phone?.length"
+    col: 1.7
+    row: 0
+    shape: round
+    tone: teal
+    sub: "null if missing"
+  - id: elv
+    label: "phone ?: \"none\""
+    col: 1.7
+    row: 0.9
+    shape: round
+    tone: gold
+    sub: "default"
+  - id: chk
+    label: "if (phone != null)"
+    col: 1.7
+    row: 1.8
+    shape: round
+    tone: grape
+    sub: "smart cast"
+  - id: bang
+    label: "phone!!"
+    col: 3.3
+    row: 0.9
+    shape: pill
+    tone: rose
+    sub: "crash if null"
+edges:
+  - from: v
+    to: safe
+  - from: v
+    to: elv
+  - from: v
+    to: chk
+```
+
+
+
 ```kotlin run
 fun main() {
     val name: String = "Tendai"
@@ -159,6 +210,47 @@ Mhoro Mr Moyo
 
 # Classes and Data Classes {#classes}
 
+
+```sketch
+title: "What a data class writes for you"
+caption: "One line declares the properties. Kotlin generates equals, hashCode, toString and copy, which you would otherwise write by hand."
+cellW: 200
+cellH: 85
+nodes:
+  - id: dc
+    label: "data class Product"
+    col: 0
+    row: 1
+    shape: doc
+    tone: gold
+    sub: "(name, price)"
+  - id: eq
+    label: "equals / hashCode"
+    col: 1.7
+    row: 0
+    shape: round
+    tone: sky
+  - id: ts
+    label: "toString()"
+    col: 1.7
+    row: 1
+    shape: round
+    tone: teal
+  - id: cp
+    label: "copy(price = 9.0)"
+    col: 1.7
+    row: 2
+    shape: round
+    tone: grape
+edges:
+  - from: dc
+    to: eq
+  - from: dc
+    to: ts
+  - from: dc
+    to: cp
+```
+
 ```kotlin run
 data class Product(val name: String, val price: Double, val stock: Int = 0)
 
@@ -219,6 +311,49 @@ Sipho, Rudo
 # Coroutines {#coroutines}
 
 Apps must not freeze while waiting for the network. **Coroutines** run waiting work without blocking:
+
+```sketch
+title: "Suspend instead of block"
+caption: "A coroutine pauses at a suspend call such as a network request, freeing the thread for other work, and resumes when the result arrives."
+cellW: 190
+nodes:
+  - id: ui
+    label: "Main thread"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "keeps drawing"
+  - id: l
+    label: "launch { }"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: net
+    label: "api.getPrices()"
+    col: 3
+    row: 0
+    shape: round
+    tone: grape
+    sub: "suspends"
+  - id: res
+    label: "Update UI"
+    col: 3
+    row: 1.3
+    shape: pill
+    tone: teal
+    sub: "resumes"
+edges:
+  - from: ui
+    to: l
+  - from: l
+    to: net
+  - from: net
+    to: res
+    label: "result"
+```
+
 
 ```kotlin
 import kotlinx.coroutines.*

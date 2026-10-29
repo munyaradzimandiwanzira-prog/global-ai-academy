@@ -85,6 +85,42 @@ fun PriceCardPreview() = PriceCard("Roller meal 10kg", 8.50, inStock = true)
 
 When state changes, Compose **recomposes** (redraws) the affected UI.
 
+```sketch
+title: "State drives the UI"
+caption: "Compose draws the screen from state. When state changes, only the composables that read it are redrawn (recomposition)."
+cellW: 220
+cellH: 95
+nodes:
+  - id: st
+    label: "count state"
+    col: 0
+    row: 0.6
+    shape: db
+    tone: gold
+    sub: "remember { mutableStateOf(0) }"
+  - id: ui
+    label: "Text(\"$count\")"
+    col: 1.8
+    row: 0.6
+    shape: round
+    tone: sky
+  - id: ev
+    label: "Button onClick"
+    col: 1.8
+    row: 1.8
+    shape: round
+    tone: teal
+    sub: "count++"
+edges:
+  - from: st
+    to: ui
+    label: "read"
+  - from: ev
+    to: st
+    label: "change"
+```
+
+
 ```kotlin
 @Composable
 fun AttendanceCounter() {
@@ -137,6 +173,58 @@ Always provide a stable **`key`** so Compose can track items efficiently.
 # ViewModels and Architecture {#architecture}
 
 Recommended architecture separates concerns:
+
+```sketch
+title: "Recommended app architecture"
+caption: "The UI shows state and sends events. The ViewModel holds UI state and survives rotation. The repository decides whether data comes from the network or the local database."
+cellW: 190
+cellH: 110
+nodes:
+  - id: ui
+    label: "Composable screen"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: vm
+    label: "ViewModel"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "StateFlow"
+  - id: repo
+    label: "Repository"
+    col: 3
+    row: 0
+    shape: round
+    tone: grape
+  - id: api
+    label: "Retrofit API"
+    col: 2.4
+    row: 1.3
+    shape: db
+    tone: teal
+  - id: room
+    label: "Room DB"
+    col: 3.6
+    row: 1.3
+    shape: db
+    tone: teal
+edges:
+  - from: ui
+    to: vm
+    label: "events · state"
+    arrow: both
+  - from: vm
+    to: repo
+  - from: repo
+    to: api
+  - from: repo
+    to: room
+```
+
+
 
 ```text
  UI (Composables)  ──events──▶  ViewModel  ──▶  Repository  ──▶  Network (Retrofit)
@@ -197,6 +285,50 @@ Add `<uses-permission android:name="android.permission.INTERNET"/>` to the manif
 # Offline-First with Room {#offline}
 
 Connectivity can be patchy and data is expensive. **Offline-first** apps read from a local database and sync when online.
+
+```sketch
+title: "The database is the source of truth"
+caption: "The UI always reads from Room. The network refreshes Room in the background, so the app works offline and updates when data arrives."
+cellW: 175
+nodes:
+  - id: ui
+    label: "UI"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+  - id: room
+    label: "Room"
+    col: 1.5
+    row: 0.6
+    shape: db
+    tone: gold
+    sub: "source of truth"
+  - id: sync
+    label: "Sync worker"
+    col: 3
+    row: 0.6
+    shape: round
+    tone: grape
+    sub: "when online"
+  - id: api
+    label: "Server"
+    col: 4.3
+    row: 0.6
+    shape: db
+    tone: teal
+edges:
+  - from: room
+    to: ui
+    label: "Flow"
+  - from: sync
+    to: room
+    label: "write"
+  - from: api
+    to: sync
+    label: "fetch"
+```
+
 
 ```kotlin
 @Entity data class ProductEntity(@PrimaryKey val id: Int, val name: String, val price: Double, val updatedAt: Long)
