@@ -2,7 +2,7 @@
 id: security
 title: Cybersecurity Essentials
 short: SECURITY
-category: engineering
+category: cloud
 level: intermediate
 language: python
 color: "#B4472A"

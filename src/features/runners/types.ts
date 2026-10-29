@@ -41,6 +41,7 @@ export const LANGUAGE_LABELS: Record<RunLanguage, string> = {
   html: 'HTML',
   css: 'CSS',
   sql: 'SQL',
+  postgres: 'PostgreSQL',
   java: 'Java',
   kotlin: 'Kotlin',
   php: 'PHP',

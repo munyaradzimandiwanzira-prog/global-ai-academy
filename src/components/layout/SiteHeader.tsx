@@ -4,8 +4,9 @@ import { Search, Menu, X, Moon, Sun, ChevronDown, LayoutDashboard, LogOut, Setti
 import { Logo } from '@/components/ui/Logo';
 import { Avatar, TrackMark } from '@/components/ui';
 import { SearchDialog } from './SearchDialog';
+import { CategoryBar } from './CategoryBar';
 import { useAuth } from '@/lib/auth';
-import { catalog, tracksByCategory, lessonPath } from '@/lib/catalog';
+import { tracksByCategory, lessonPath } from '@/lib/catalog';
 import { CATEGORY_LABELS } from '@shared/content';
 import { ROLE_HOME } from '@shared/rbac';
 import { PLANS } from '@shared/config';
@@ -24,7 +25,6 @@ const PRACTICE_LINKS: [string, string][] = [
   ['/certificates', 'Get certified'],
 ];
 
-const TAB_IDS = ['html', 'css', 'javascript', 'python', 'sql', 'neo4j', 'ai-fundamentals', 'machine-learning', 'rag', 'ai-agents', 'agentic-engineering', 'mcp', 'graphrag', 'java', 'kotlin', 'php', 'typescript', 'cpp', 'git', 'vscode', 'data-science', 'langchain', 'android', 'ios-swift'];
 
 function TutorialsMenu({ onClose }: { onClose: () => void }) {
   const groups = tracksByCategory();
@@ -110,8 +110,6 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const location = useLocation();
-  const tabs = TAB_IDS.map((id) => catalog.find((t) => t.id === id)).filter((t): t is NonNullable<typeof t> => !!t);
-  const activeTrack = location.pathname.split('/')[2];
 
   useEffect(() => { setMenu(false); setMobile(false); }, [location.pathname]);
   useEffect(() => {
@@ -179,24 +177,7 @@ export function SiteHeader() {
           </nav>
         )}
       </div>
-      {/* Language tab bar — the W3Schools-style quick switcher */}
-      <nav className="bg-ink text-white dark:bg-night-800" aria-label="Tutorials quick bar">
-        <div className="container flex items-center overflow-x-auto scrollbar-none">
-          {tabs.map((t) => (
-            <Link
-              key={t.id}
-              to={lessonPath(t.id)}
-              className={cn(
-                'shrink-0 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold transition-colors hover:bg-white/10',
-                activeTrack === t.id ? 'border-gold bg-white/10 text-gold' : 'border-transparent text-white/85',
-              )}
-            >
-              {t.short}
-            </Link>
-          ))}
-          <Link to="/tutorials" className="ml-auto shrink-0 px-3.5 py-2.5 text-[13px] text-white/75 hover:text-white">All {catalog.length} tracks</Link>
-        </div>
-      </nav>
+      <CategoryBar />
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );

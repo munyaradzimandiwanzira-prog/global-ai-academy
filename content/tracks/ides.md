@@ -2,7 +2,7 @@
 id: ides
 title: Other IDEs
 short: IDEs
-category: start
+category: tools
 level: beginner
 language: text
 color: "#6B3A1E"

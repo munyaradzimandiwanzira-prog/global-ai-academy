@@ -29,7 +29,7 @@ Classic **vector RAG** splits documents into chunks, embeds them, and at questio
 ```sketch
 title: Vector RAG vs GraphRAG retrieval
 caption: Vector search finds similar chunks. GraphRAG starts there, then follows entities and relationships to connected facts, keeping source links for citations.
-cellW: 165
+cellW: 150
 cellH: 108
 nodes:
   - id: q1
@@ -60,7 +60,7 @@ nodes:
     row: 0
     shape: doc
   - id: e1
-    label: Zuva Scholarship
+    label: "Zuva\nScholarship"
     col: 5.2
     row: 0
     shape: circle
@@ -68,7 +68,7 @@ nodes:
     w: 0.75
     h: 0.9
   - id: e2
-    label: Tuition loan
+    label: "Tuition\nloan"
     col: 5.2
     row: 1.4
     shape: circle
@@ -148,7 +148,7 @@ The pipeline from raw text to a queryable graph:
 ```sketch
 title: Knowledge graph construction pipeline
 caption: Each stage is testable on its own. Entity resolution is the step most teams underestimate.
-cellW: 160
+cellW: 165
 cellH: 110
 nodes:
   - id: docs
@@ -590,7 +590,7 @@ In classic RAG the pipeline is fixed: retrieve once, then answer. In **agentic R
 ```sketch
 title: An agentic RAG loop with self-correction
 caption: The agent routes, grades what it found, rewrites or switches source when context is weak, and only answers when it can ground every claim.
-cellW: 165
+cellW: 158
 cellH: 110
 nodes:
   - id: q
@@ -633,13 +633,13 @@ nodes:
     w: 0.95
     h: 1
   - id: rewrite
-    label: Rewrite / decompose
-    col: 3.5
-    row: 2.3
+    label: "Rewrite /\ndecompose"
+    col: 1.1
+    row: 3
     shape: round
     tone: grape
   - id: ans
-    label: Answer with citations
+    label: "Answer with\ncitations"
     col: 4.7
     row: 1
     shape: pill
@@ -665,10 +665,10 @@ edges:
   - from: grade
     to: rewrite
     label: weak
+    bend: -60
   - from: rewrite
     to: route
     label: retry (max 2)
-    bend: -40
 ```
 
 ## Techniques

@@ -495,7 +495,7 @@ Offline sets age: users ask new things, data changes, providers update models. *
 ```sketch
 title: Online evaluation loop
 caption: Trace everything, score a sample automatically, collect user signals, compare variants, watch for drift, and feed failures back offline.
-cellW: 160
+cellW: 152
 cellH: 110
 nodes:
   - id: users
@@ -538,7 +538,7 @@ nodes:
     shape: doc
   - id: data
     label: Golden dataset
-    col: 4.8
+    col: 5.15
     row: 1.2
     shape: db
     tone: teal

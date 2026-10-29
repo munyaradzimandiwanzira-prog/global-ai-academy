@@ -2,7 +2,7 @@
 id: langchain
 title: LangChain & LangGraph
 short: LANGCHAIN
-category: ai
+category: frameworks
 level: intermediate
 language: python
 color: "#1C3C3C"

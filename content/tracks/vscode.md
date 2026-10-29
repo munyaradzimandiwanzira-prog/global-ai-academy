@@ -2,7 +2,7 @@
 id: vscode
 title: VS Code
 short: VS CODE
-category: start
+category: tools
 level: beginner
 language: text
 color: "#007ACC"

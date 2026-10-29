@@ -2,7 +2,7 @@
 id: networking
 title: Networking
 short: NETWORKING
-category: engineering
+category: cloud
 level: beginner
 language: python
 color: "#1F6FB2"

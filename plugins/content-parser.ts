@@ -1,6 +1,6 @@
 import { parse as parseYaml } from 'yaml';
 import { parseSketch } from '../shared/sketch';
-import { isLockedLesson } from '../shared/content';
+import { CATEGORY_ORDER, isLockedLesson } from '../shared/content';
 import type { Block, CatalogTrack, Challenge, Lesson, QuizQuestion, RunLanguage, Track, TrackMeta } from '../shared/content';
 
 /**
@@ -34,6 +34,12 @@ export class ContentError extends Error {
  * "colon-space starts a mapping" rule. Quote those single-line scalars automatically.
  */
 const PROSE_KEYS = ['q', 'explain', 'prompt', 'hint', 'title'];
+function requireCategory(raw: Record<string, unknown>, file: string): TrackMeta['category'] {
+  const value = requireString(raw, 'category', file);
+  if (!(CATEGORY_ORDER as string[]).includes(value)) throw new ContentError(file, `unknown category "${value}" (use one of: ${CATEGORY_ORDER.join(', ')})`);
+  return value as TrackMeta['category'];
+}
+
 export function quoteProse(yamlText: string): string {
   let blockIndent = -1; // indent of the key that opened a | or > block scalar
   return yamlText
@@ -77,7 +83,7 @@ function parseMeta(raw: Record<string, unknown>, file: string): TrackMeta {
     id: requireString(raw, 'id', file),
     title: requireString(raw, 'title', file),
     short: (raw.short as string) ?? requireString(raw, 'title', file).toUpperCase(),
-    category: requireString(raw, 'category', file) as TrackMeta['category'],
+    category: requireCategory(raw, file),
     level: (raw.level as TrackMeta['level']) ?? 'beginner',
     language: ((raw.language as RunLanguage) ?? 'text') as RunLanguage,
     color: (raw.color as string) ?? '#1f3a6b',

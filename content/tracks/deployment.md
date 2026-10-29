@@ -2,7 +2,7 @@
 id: deployment
 title: Deployment & DevOps
 short: DEPLOY
-category: engineering
+category: cloud
 level: intermediate
 language: bash
 color: "#F38020"

@@ -67,6 +67,7 @@ function loadLanguage(lang: RunLanguage | string): Promise<Extension[]> {
       case 'html': return [(await import('@codemirror/lang-html')).html()];
       case 'css': return [(await import('@codemirror/lang-css')).css()];
       case 'sql': { const m = await import('@codemirror/lang-sql'); return [m.sql({ dialect: m.SQLite, upperCaseKeywords: true })]; }
+      case 'postgres': { const m = await import('@codemirror/lang-sql'); return [m.sql({ dialect: m.PostgreSQL, upperCaseKeywords: true })]; }
       case 'java': return [(await import('@codemirror/lang-java')).java()];
       case 'c':
       case 'cpp': return [(await import('@codemirror/lang-cpp')).cpp()];

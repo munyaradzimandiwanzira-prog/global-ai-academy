@@ -6,8 +6,14 @@ export { catalog };
 const byId = new Map(catalog.map((t) => [t.id, t]));
 export const getCatalogTrack = (id: string): CatalogTrack | undefined => byId.get(id);
 
+const LEVEL_RANK: Record<string, number> = { kids: 0, beginner: 1, intermediate: 2, advanced: 3 };
+
+/** Topics in menu order; inside each, easiest first so a newcomer meets the right first track. */
 export function tracksByCategory(): { category: TrackCategory; tracks: CatalogTrack[] }[] {
-  return CATEGORY_ORDER.map((category) => ({ category, tracks: catalog.filter((t) => t.category === category) })).filter((g) => g.tracks.length);
+  return CATEGORY_ORDER.map((category) => ({
+    category,
+    tracks: catalog.filter((t) => t.category === category).sort((a, b) => LEVEL_RANK[a.level] - LEVEL_RANK[b.level] || a.order - b.order),
+  })).filter((g) => g.tracks.length);
 }
 
 /** Lazy loaders — each track becomes its own small chunk. */

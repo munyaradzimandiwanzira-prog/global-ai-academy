@@ -2,7 +2,7 @@
 id: ai-workflows
 title: AI Workflows & Automation
 short: WORKFLOWS
-category: ai
+category: agentic
 level: intermediate
 language: python
 color: "#EA4B71"

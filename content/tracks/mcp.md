@@ -2,7 +2,7 @@
 id: mcp
 title: MCP & Agent Protocols
 short: MCP
-category: ai
+category: agentic
 level: advanced
 language: python
 color: "#1F5F8B"
@@ -23,7 +23,7 @@ The **Model Context Protocol (MCP)** is an open standard that turns this into **
 ```sketch
 title: From N×M integrations to N+M
 caption: Without a protocol every app needs its own connector to every system. With MCP each side implements the protocol once.
-cellW: 150
+cellW: 138
 cellH: 100
 nodes:
   - id: a1
@@ -98,7 +98,7 @@ nodes:
     shape: db
     tone: teal
   - id: t3
-    label: Calendar server
+    label: "Calendar\nserver"
     col: 5.4
     row: 2
     shape: db
@@ -720,7 +720,7 @@ The web UI opens with a one-time URL token. Inspector stores OAuth tokens and `e
 ```sketch
 title: The MCP development loop
 caption: Check each layer in order; most bugs are found in the first two steps.
-cellW: 170
+cellW: 210
 nodes:
   - id: a
     label: 1. Server starts?
@@ -746,15 +746,15 @@ nodes:
   - id: d
     label: 4. Errors helpful?
     sub: isError text
-    col: 3
-    row: 0
+    col: 2
+    row: 1.3
     shape: round
     tone: teal
   - id: e
     label: 5. In a real host
     sub: does the model pick it?
-    col: 4
-    row: 0
+    col: 1
+    row: 1.3
     shape: round
     tone: gold
 edges:
@@ -770,7 +770,6 @@ edges:
     to: b
     label: fix descriptions
     dashed: true
-    bend: 30
 ```
 
 1. **Does it start?** Run it under Inspector. If it dies, read stderr. On stdio, any `print()` to stdout breaks the protocol: log to stderr.

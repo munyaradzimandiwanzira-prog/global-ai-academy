@@ -2,7 +2,7 @@
 id: web-scraping
 title: Web Crawling & Scraping
 short: SCRAPING
-category: data
+category: maths-data
 level: intermediate
 language: python
 color: "#4A5B23"
@@ -41,7 +41,7 @@ nodes:
     shape: db
     tone: sky
   - id: rules
-    label: robots.txt · rate limit
+    label: "robots.txt\nrate limit"
     col: 1.15
     row: 1.2
     shape: diamond
@@ -68,7 +68,7 @@ nodes:
     row: 1.2
     shape: note
   - id: valid
-    label: Validate & dedupe
+    label: "Validate\n& dedupe"
     col: 4.6
     row: 0
     shape: diamond

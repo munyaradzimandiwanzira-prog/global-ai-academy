@@ -2,7 +2,7 @@
 id: backend
 title: Backend Engineering
 short: BACKEND
-category: engineering
+category: web
 level: intermediate
 language: python
 color: "#009688"

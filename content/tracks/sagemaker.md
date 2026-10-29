@@ -610,7 +610,7 @@ nodes:
   - id: reg
     label: Register
     sub: pending approval
-    col: 3
+    col: 3.3
     row: 1.4
     shape: db
     tone: grape
@@ -623,7 +623,7 @@ nodes:
     tone: teal
   - id: mon
     label: Monitor
-    col: 1
+    col: 0.8
     row: 1.4
     shape: round
     tone: rose

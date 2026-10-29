@@ -95,8 +95,8 @@ function LearningWall() {
   const courses: { name: string; note: string; tracks: CatalogTrack[]; tone: string }[] = [
     { name: 'Advanced', note: 'LLMs in production: RAG, agents, guardrails, MLOps', tracks: byLevel((t) => t.level === 'advanced'), tone: 'bg-ink text-white hover:bg-ink-700 dark:bg-ink-600' },
     { name: 'Intermediate', note: 'Back ends, data, mobile, deployment, AI engineering', tracks: byLevel((t) => t.level === 'intermediate'), tone: 'bg-[#C9C5BB] text-ink-900 hover:bg-[#BEB9AE] dark:bg-night-700 dark:text-sand' },
-    { name: 'Entry level', note: 'Your first languages and your first real projects', tracks: byLevel((t) => t.level === 'beginner' && t.category !== 'start' && t.category !== 'kids'), tone: 'bg-[#DEDBD3] text-ink-900 hover:bg-[#D3CFC6] dark:bg-night-800 dark:text-sand' },
-    { name: 'Foundations', note: 'How computers, editors, terminals and Git work', tracks: byLevel((t) => t.category === 'start'), tone: 'bg-white text-ink-900 hover:bg-sand dark:bg-night dark:text-sand' },
+    { name: 'Entry level', note: 'Your first languages and your first real projects', tracks: byLevel((t) => t.level === 'beginner' && t.category !== 'start' && t.category !== 'tools' && t.category !== 'kids'), tone: 'bg-[#DEDBD3] text-ink-900 hover:bg-[#D3CFC6] dark:bg-night-800 dark:text-sand' },
+    { name: 'Foundations', note: 'How computers, editors, terminals and Git work', tracks: byLevel((t) => t.category === 'start' || t.category === 'tools'), tone: 'bg-white text-ink-900 hover:bg-sand dark:bg-night dark:text-sand' },
   ];
   const lead = CAREERS.find((c) => c.id === 'lead-platform-ai-engineer');
 
@@ -286,7 +286,7 @@ LIMIT 4;`}</pre>
               </div>
             </div>
             <ul className="grid gap-x-8 self-center sm:grid-cols-2" data-reveal style={{ ['--i' as string]: 1 }}>
-              {catalog.filter((t) => t.category === 'ai').sort((a, b) => a.order - b.order).map((t) => (
+              {catalog.filter((t) => t.category === 'ai' || t.category === 'agentic').sort((a, b) => a.order - b.order).map((t) => (
                 <li key={t.id} className="border-b border-white/15">
                   <Link to={lessonPath(t.id)} className="group flex items-center gap-3 py-3">
                     <TrackMark short={t.short} color={t.color} size={30} />

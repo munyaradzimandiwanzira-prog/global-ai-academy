@@ -331,7 +331,7 @@ A **decorator** is a function that takes a function and returns a new function t
 ```sketch
 title: What @decorator does
 caption: The name now points at the wrapper, which runs extra code and calls the original.
-cellW: 190
+cellW: 205
 nodes:
   - id: orig
     label: get_rate(currency)

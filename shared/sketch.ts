@@ -100,6 +100,11 @@ export interface SketchLayout {
 
 const SHAPES: SketchShape[] = ['box', 'round', 'pill', 'db', 'circle', 'diamond', 'doc', 'person', 'note', 'dot'];
 const TONES: SketchTone[] = ['plain', 'teal', 'gold', 'rose', 'sky', 'grape', 'ink'];
+// ── Text metrics ──
+// The renderer draws in Caveat; measured widths at the sizes it uses, plus a margin.
+const LABEL_CH = 7.8; // 21px weight 600 (measured ≈7.3px per character)
+const SUB_CH = 5.9; // 16px (measured ≈5.5)
+const EDGE_CH = 6.6; // 17px weight 600 (measured ≈6.0); also the label backdrop width in Sketch.tsx
 const PAD = 28;
 const GROUP_PAD = 18;
 const GROUP_LABEL = 22;
@@ -198,8 +203,11 @@ export function layoutSketch(spec: SketchSpec): SketchLayout {
     // A 'dot' is a small anchor, e.g. for a note that points at the middle of a relationship.
     const defaultW = n.shape === 'dot' ? 9 : n.shape === 'circle' ? 96 : n.shape === 'person' ? 60 : n.shape === 'diamond' ? 140 : cellW - 44;
     const defaultH = n.shape === 'dot' ? 9 : n.shape === 'circle' ? 96 : n.shape === 'person' ? 78 : n.shape === 'diamond' ? 84 : n.shape === 'db' ? 78 : 64;
-    const w = n.w != null ? n.w * cellW - 44 : defaultW;
-    const h = n.h != null ? n.h * cellH - 40 : defaultH;
+    // Shapes grow to fit their text unless the author fixed a size; the lint then catches any crowding.
+    const fit = fitText(n);
+    // An author's w/h is a minimum: text always fits.
+    const w = Math.max(n.w != null ? n.w * cellW - 44 : defaultW, fit.w);
+    const h = Math.max(n.h != null ? n.h * cellH - 40 : defaultH, n.shape === 'circle' && n.h == null ? fit.w : fit.h);
     const cx = left + n.col * cellW + cellW / 2;
     const cy = top + n.row * cellH + cellH / 2;
     return { ...n, box: { x: cx - w / 2, y: cy - h / 2, w, h }, cx, cy };
@@ -232,6 +240,8 @@ export function layoutSketch(spec: SketchSpec): SketchLayout {
     return { ...e, start, end, control, labelAt };
   });
 
+  placeEdgeLabels(nodes, edges);
+
   const groups: LaidOutGroup[] = spec.groups.map((g) => {
     const members = g.nodes.map((id) => byId.get(id)!);
     const x0 = Math.min(...members.map((m) => m.box.x)) - GROUP_PAD;
@@ -262,6 +272,57 @@ export function layoutSketch(spec: SketchSpec): SketchLayout {
   return { width: Math.ceil(maxX + PAD + shiftX), height: Math.ceil(maxY + PAD + shift), nodes, edges, groups };
 }
 
+/**
+ * Edge labels start at the middle of their line. If that spot covers a shape or another label,
+ * try sliding the label off the line (either side) and along it, and keep the first clear spot.
+ */
+function placeEdgeLabels(nodes: LaidOutNode[], edges: LaidOutEdge[]) {
+  const solids = nodes.filter((n) => n.shape !== 'dot').map((n) => n.box);
+  const placed: Rect[] = [];
+  const pointAt = (e: LaidOutEdge, t: number): Point =>
+    e.control
+      ? { x: (1 - t) ** 2 * e.start.x + 2 * (1 - t) * t * e.control.x + t ** 2 * e.end.x, y: (1 - t) ** 2 * e.start.y + 2 * (1 - t) * t * e.control.y + t ** 2 * e.end.y }
+      : { x: e.start.x + (e.end.x - e.start.x) * t, y: e.start.y + (e.end.y - e.start.y) * t };
+  for (const e of edges) {
+    if (!e.label || !e.labelAt || e.loop) continue;
+    const box0 = edgeLabelBox(e)!;
+    const clear = (r: Rect) => !solids.some((b) => overlap(r, b, 3)) && !placed.some((b) => overlap(r, b, 2));
+    if (clear(box0)) { placed.push(box0); continue; }
+    const dx = e.end.x - e.start.x;
+    const dy = e.end.y - e.start.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    // Distance that moves the label just clear of its own line, given its size and the line's angle.
+    const off = Math.abs(nx) * (box0.w / 2) + Math.abs(ny) * (box0.h / 2) + 4;
+    let best: Point | null = null;
+    outer: for (const t of [0.5, 0.42, 0.58, 0.34, 0.66]) {
+      for (const side of [0, 1, -1]) {
+        const p = pointAt(e, t);
+        const at = { x: p.x + nx * off * side, y: p.y + ny * off * side };
+        const r = { ...box0, x: at.x - box0.w / 2, y: at.y - box0.h / 2 };
+        if (clear(r)) { best = at; placed.push(r); break outer; }
+      }
+    }
+    if (best) e.labelAt = best; else placed.push(box0);
+  }
+}
+
+/** The smallest shape that holds a node's label and sub-line comfortably (see the lint constants). */
+function fitText(n: SketchNode): { w: number; h: number } {
+  if (n.shape === 'dot' || n.shape === 'person') return { w: 0, h: 0 };
+  const label = Math.max(0, ...n.label.split('\n').map((l) => l.length * LABEL_CH));
+  const sub = n.sub ? Math.max(...n.sub.split('\n').map((l) => l.length * SUB_CH)) : 0;
+  const text = Math.max(label, sub);
+  const h = n.label.split('\n').length * 22 + (n.sub ? n.sub.split('\n').length * 18 : 0) + 18;
+  switch (n.shape) {
+    case 'circle': return { w: Math.ceil(text / 0.86) + 6, h };
+    case 'diamond': return { w: Math.ceil(text / 0.64) + 6, h: h + 26 };
+    case 'pill': case 'round': return { w: Math.ceil(text) + 28, h };
+    default: return { w: Math.ceil(text) + 20, h };
+  }
+}
+
 /** Arrows stop a few pixels short of the shape so the head never overlaps the outline. */
 function padBox(n: LaidOutNode): Rect {
   if (n.shape === 'dot') return { ...n.box };
@@ -277,4 +338,95 @@ export function describeSketch(spec: SketchSpec): string {
   const lines = spec.edges.map((e) => `${name.get(e.from)} ${e.arrow === 'both' ? '↔' : '→'} ${name.get(e.to)}${e.label ? ` (${e.label.replace(/\n/g, ' ')})` : ''}`);
   const groups = spec.groups.map((g) => `${g.label}: ${g.nodes.map((id) => name.get(id)).join(', ')}`);
   return [spec.title, ...groups, ...lines].filter(Boolean).join('. ');
+}
+
+// ── Layout lint ────────────────────────────────────────────────────────────
+const MAX_WIDTH = 1000;
+
+const usableWidth = (n: LaidOutNode): number => {
+  switch (n.shape) {
+    case 'circle': return n.box.w * 0.86;
+    case 'diamond': return n.box.w * 0.64;
+    case 'pill': case 'round': return n.box.w - 22;
+    case 'person': return 150; // label sits under the figure
+    default: return n.box.w - 14;
+  }
+};
+
+const overlap = (a: Rect, b: Rect, slack = 0) =>
+  a.x + slack < b.x + b.w && b.x + slack < a.x + a.w && a.y + slack < b.y + b.h && b.y + slack < a.y + a.h;
+
+function segmentHitsRect(p: Point, q: Point, r: Rect): boolean {
+  // Sample the segment; robust and plenty precise at diagram scale.
+  for (let t = 0.04; t <= 0.96; t += 0.02) {
+    const x = p.x + (q.x - p.x) * t;
+    const y = p.y + (q.y - p.y) * t;
+    if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return true;
+  }
+  return false;
+}
+
+function edgePoints(e: LaidOutEdge): Point[] {
+  if (e.loop) return [];
+  if (!e.control) return [e.start, e.end];
+  const pts: Point[] = [];
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24;
+    pts.push({
+      x: (1 - t) ** 2 * e.start.x + 2 * (1 - t) * t * e.control.x + t ** 2 * e.end.x,
+      y: (1 - t) ** 2 * e.start.y + 2 * (1 - t) * t * e.control.y + t ** 2 * e.end.y,
+    });
+  }
+  return pts;
+}
+
+export function edgeLabelBox(e: LaidOutEdge): Rect | null {
+  if (!e.label || !e.labelAt) return null;
+  const lines = e.label.split('\n');
+  const w = Math.max(...lines.map((l) => l.length)) * EDGE_CH + 12;
+  const h = lines.length * 18 + 6;
+  return { x: e.labelAt.x - w / 2, y: e.labelAt.y - h / 2, w, h };
+}
+
+/**
+ * Finds layout problems a reader would notice: overlapping shapes, text wider than its shape,
+ * arrows cutting through other shapes, and edge labels sitting on shapes or on each other.
+ * The content checker fails the build on any of these, so every diagram stays clean.
+ */
+export function lintSketch(spec: SketchSpec): string[] {
+  const L = layoutSketch(spec);
+  const issues: string[] = [];
+  const solid = L.nodes.filter((n) => n.shape !== 'dot');
+  const name = (n: LaidOutNode) => n.id;
+
+  for (let i = 0; i < solid.length; i++)
+    for (let j = i + 1; j < solid.length; j++)
+      if (overlap(solid[i].box, solid[j].box, 2)) issues.push(`nodes "${name(solid[i])}" and "${name(solid[j])}" overlap`);
+
+  for (const n of solid) {
+    const room = usableWidth(n);
+    for (const line of n.label.split('\n')) if (line.length * LABEL_CH > room + 2) issues.push(`label "${line}" is too wide for node "${n.id}" (${Math.round(line.length * LABEL_CH)}px > ${Math.round(room)}px)`);
+    if (n.sub) for (const line of n.sub.split('\n')) if (line.length * SUB_CH > room + 2) issues.push(`sub "${line}" is too wide for node "${n.id}"`);
+    const textH = n.label.split('\n').length * 22 + (n.sub ? n.sub.split('\n').length * 18 : 0);
+    if (n.shape !== 'person' && textH > n.box.h + 4) issues.push(`text is too tall for node "${n.id}"`);
+  }
+
+  for (const e of L.edges) {
+    const pts = edgePoints(e);
+    for (const n of solid) {
+      if (n.id === e.from || n.id === e.to) continue;
+      const pad = { x: n.box.x + 4, y: n.box.y + 4, w: n.box.w - 8, h: n.box.h - 8 };
+      for (let k = 1; k < pts.length; k++) if (segmentHitsRect(pts[k - 1], pts[k], pad)) { issues.push(`edge ${e.from}→${e.to} passes through node "${n.id}"`); break; }
+    }
+  }
+
+  const labels = L.edges.map((e) => ({ e, box: edgeLabelBox(e) })).filter((x): x is { e: LaidOutEdge; box: Rect } => !!x.box);
+  for (const { e, box } of labels)
+    for (const n of solid) if (overlap(box, n.box, 3)) issues.push(`label "${e.label}" on ${e.from}→${e.to} overlaps node "${n.id}"`);
+  for (let i = 0; i < labels.length; i++)
+    for (let j = i + 1; j < labels.length; j++)
+      if (overlap(labels[i].box, labels[j].box, 2)) issues.push(`labels "${labels[i].e.label}" and "${labels[j].e.label}" overlap`);
+
+  if (L.width > MAX_WIDTH) issues.push(`diagram is ${L.width}px wide (max ${MAX_WIDTH}); use fewer columns or a smaller cellW`);
+  return issues;
 }

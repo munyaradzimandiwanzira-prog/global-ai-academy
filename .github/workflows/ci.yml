@@ -18,6 +18,8 @@ jobs:
       # Fail on any high/critical advisory in code that ships to visitors or runs on Cloudflare.
       - run: npm audit --omit=dev --audit-level=high
       - run: npx tsx scripts/check-content.ts
+      # Every PostgreSQL example and challenge, on real Postgres + pgvector.
+      - run: npx tsx scripts/run-postgres.ts
       - run: npm run typecheck
       - run: npm test
       - run: npx vite build

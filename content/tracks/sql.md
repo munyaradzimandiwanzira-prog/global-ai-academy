@@ -2,7 +2,7 @@
 id: sql
 title: SQL
 short: SQL
-category: data
+category: databases
 level: beginner
 language: sql
 color: "#00758F"
@@ -395,6 +395,8 @@ cursor.execute("SELECT * FROM Customers WHERE City = ?", (city,))
   options: ["INNER JOIN", "LEFT JOIN", "CROSS JOIN", "SELF JOIN"]
   answer: 1
 ```
+
+> **Next: PostgreSQL.** Everything here works in Postgres, the database most products (and most AI apps) run on. **[PostgreSQL & pgvector](/learn/postgresql)** adds JSONB, window functions, indexes and transactions, then vector search for RAG, all running for real in your browser.
 
 > **Next: graphs.** When your queries become chains of JOINs (friends of friends, supply chains, fraud rings, prerequisites), a graph database is often the better tool. Try **[Neo4j & Graph Databases](/learn/neo4j)** and the **[Graph Lab](/lab)** work placements.
 

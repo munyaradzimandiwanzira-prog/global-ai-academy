@@ -2,7 +2,7 @@
 id: hugging-face
 title: Hugging Face
 short: HUGGING FACE
-category: ai
+category: frameworks
 level: intermediate
 language: python
 color: "#FFB000"

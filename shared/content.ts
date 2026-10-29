@@ -12,6 +12,7 @@ export type RunLanguage =
   | 'html'
   | 'css'
   | 'sql'
+  | 'postgres'
   | 'java'
   | 'kotlin'
   | 'php'
@@ -27,10 +28,14 @@ export type TrackCategory =
   | 'start'
   | 'languages'
   | 'web'
-  | 'data'
+  | 'frameworks'
+  | 'databases'
+  | 'maths-data'
   | 'ai'
-  | 'engineering'
+  | 'agentic'
   | 'mobile'
+  | 'cloud'
+  | 'tools'
   | 'hardware'
   | 'kids';
 
@@ -119,28 +124,56 @@ export interface CatalogTrack extends TrackMeta {
 }
 
 export const CATEGORY_LABELS: Record<TrackCategory, string> = {
-  start: 'Start Here',
-  languages: 'Programming Languages',
-  web: 'Web Development',
-  data: 'Data & Databases',
-  ai: 'Artificial Intelligence',
-  engineering: 'Engineering & DevOps',
-  mobile: 'Mobile Development',
-  hardware: 'Hardware & Mechatronics',
-  kids: 'Kids & Teens',
+  start: 'Start here',
+  languages: 'Programming languages',
+  web: 'Web development',
+  frameworks: 'Frameworks & libraries',
+  databases: 'Databases',
+  'maths-data': 'Mathematics & data',
+  ai: 'AI & machine learning',
+  agentic: 'Agentic AI',
+  mobile: 'Mobile apps',
+  cloud: 'Cloud, DevOps & security',
+  tools: 'Developer tools',
+  hardware: 'Hardware & robotics',
+  kids: 'Kids & teens',
 };
 
-export const CATEGORY_ORDER: TrackCategory[] = [
-  'start',
-  'web',
-  'languages',
-  'data',
-  'ai',
-  'engineering',
-  'mobile',
-  'hardware',
-  'kids',
-];
+/** Short names for the category bar under the header. */
+export const CATEGORY_SHORT: Record<TrackCategory, string> = {
+  start: 'Start here',
+  languages: 'Languages',
+  web: 'Web',
+  frameworks: 'Frameworks',
+  databases: 'Databases',
+  'maths-data': 'Maths & data',
+  ai: 'AI & ML',
+  agentic: 'Agentic AI',
+  mobile: 'Mobile',
+  cloud: 'Cloud & DevOps',
+  tools: 'Tools',
+  hardware: 'Hardware',
+  kids: 'Kids',
+};
+
+/** One line on what each category is for, so a newcomer can choose without opening every track. */
+export const CATEGORY_BLURBS: Record<TrackCategory, string> = {
+  start: 'New to coding? Begin here: how computers, code and this site work, in under an hour.',
+  languages: 'General-purpose languages you write programs in, from Python to C++.',
+  web: 'Build websites and web apps: structure, style, behaviour and the server behind them.',
+  frameworks: 'Libraries that do the heavy lifting once you know a language.',
+  databases: 'Store and query data: SQL, PostgreSQL with vectors, and graph databases.',
+  'maths-data': 'The statistics, maths and data skills underneath AI and analysis.',
+  ai: 'How models learn, how to use them through APIs, and how to run them in production.',
+  agentic: 'Systems where models plan, call tools and act: agents, MCP and workflows.',
+  mobile: 'Apps for Android and iPhone.',
+  cloud: 'Ship, connect and protect software: deployment, networks and security.',
+  tools: 'The everyday tools of a developer: code editors, the terminal and Git.',
+  hardware: 'Electronics, sensors and robots you program.',
+  kids: 'Games and first steps for young learners.',
+};
+
+export const CATEGORY_ORDER: TrackCategory[] = ['start', 'languages', 'web', 'frameworks', 'databases', 'maths-data', 'ai', 'agentic', 'mobile', 'cloud', 'tools', 'hardware', 'kids'];
 
 export const LEVEL_LABELS: Record<Level, string> = {
   kids: 'Kids',
@@ -150,7 +183,7 @@ export const LEVEL_LABELS: Record<Level, string> = {
 };
 
 /** Languages that execute fully in the browser (no server needed). */
-export const BROWSER_LANGUAGES: RunLanguage[] = ['python', 'javascript', 'typescript', 'html', 'css', 'sql'];
+export const BROWSER_LANGUAGES: RunLanguage[] = ['python', 'javascript', 'typescript', 'html', 'css', 'sql', 'postgres'];
 
 /** Languages executed through the optional Judge0 server runner. */
 export const REMOTE_LANGUAGES: RunLanguage[] = ['java', 'kotlin', 'php', 'cpp', 'c', 'swift', 'go', 'bash'];

@@ -77,7 +77,7 @@ export function Playground({ language, initialCode, expectedOutput, fullscreen, 
         <span className="rounded bg-night-700 px-2 py-0.5 font-mono text-[11px] text-sand/70">{LANGUAGE_LABELS[language]}</span>
         {!isBrowserRunnable(language) && <span className="flex items-center gap-1 text-[11px] text-sand/50"><Server className="h-3 w-3" /> {remote ? 'runs on server' : 'server runner off'}</span>}
         <div className="ml-auto flex items-center gap-1">
-          {!['html', 'css', 'sql', 'cypher'].includes(language) && (
+          {!['html', 'css', 'sql', 'postgres', 'cypher'].includes(language) && (
             <button onClick={() => setShowStdin((s) => !s)} className={cn('grid min-h-11 min-w-11 place-items-center rounded-lg text-sand/70 hover:bg-night-700 hover:text-sand', showStdin && 'text-gold')} title="Program input (stdin)" aria-label="Program input (stdin)" aria-pressed={showStdin}>
               <Keyboard className="h-4 w-4" />
             </button>

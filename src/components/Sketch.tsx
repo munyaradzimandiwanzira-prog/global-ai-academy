@@ -213,7 +213,7 @@ export const Sketch = memo(function Sketch({ spec }: { spec: SketchSpec }) {
                 <rect
                   x={e.labelAt.x - Math.max(...e.label.split('\n').map((l) => l.length)) * 4.3 - 6}
                   y={e.labelAt.y - e.label.split('\n').length * 9.5 - 2}
-                  width={Math.max(...e.label.split('\n').map((l) => l.length)) * 8.6 + 12}
+                  width={Math.max(...e.label.split("\n").map((l) => l.length)) * 6.6 + 12}
                   height={e.label.split('\n').length * 19 + 4}
                   rx={6}
                   style={{ fill: 'var(--sk-paper)', opacity: 0.92 }}

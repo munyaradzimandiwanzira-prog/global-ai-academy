@@ -2,7 +2,7 @@
 id: data-science
 title: Data Science
 short: DATA SCIENCE
-category: data
+category: maths-data
 level: intermediate
 language: python
 color: "#150458"

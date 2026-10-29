@@ -29,5 +29,8 @@ export default defineConfig({
       },
     },
   },
+  // Module workers so the Postgres and Python workers can code-split; PGlite ships its own wasm.
+  worker: { format: 'es' },
+  optimizeDeps: { exclude: ['@electric-sql/pglite', '@electric-sql/pglite-pgvector'] },
   server: { port: 5173 },
 });

@@ -2,7 +2,7 @@
 id: typescript
 title: TypeScript
 short: TYPESCRIPT
-category: web
+category: languages
 level: intermediate
 language: typescript
 color: "#3178C6"

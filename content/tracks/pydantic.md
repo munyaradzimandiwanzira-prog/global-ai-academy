@@ -2,7 +2,7 @@
 id: pydantic
 title: Pydantic in Depth
 short: PYDANTIC
-category: languages
+category: frameworks
 level: intermediate
 language: python
 color: "#7A1F5C"

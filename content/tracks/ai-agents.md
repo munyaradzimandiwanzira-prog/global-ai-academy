@@ -2,7 +2,7 @@
 id: ai-agents
 title: AI Agents
 short: AGENTS
-category: ai
+category: agentic
 level: advanced
 language: python
 color: "#5B3FA0"

@@ -2,7 +2,7 @@
 id: terminal
 title: Terminal & Command Line
 short: TERMINAL
-category: start
+category: tools
 level: beginner
 language: bash
 color: "#2B2B2B"

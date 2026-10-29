@@ -2,7 +2,7 @@
 id: neo4j
 title: Neo4j & Graph Databases
 short: NEO4J
-category: data
+category: databases
 level: intermediate
 language: cypher
 color: "#0B6E99"

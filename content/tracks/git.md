@@ -2,7 +2,7 @@
 id: git
 title: Git & GitHub
 short: GIT
-category: start
+category: tools
 level: beginner
 language: bash
 color: "#F05032"

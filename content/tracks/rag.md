@@ -131,7 +131,7 @@ def embed(texts):
 
 | Option | Notes |
 |---|---|
-| **pgvector** (PostgreSQL extension) | Vectors next to your normal data; great default |
+| **pgvector** (PostgreSQL extension) | Vectors next to your normal data; great default. Hands-on: **[PostgreSQL & pgvector](/learn/postgresql/pgvector)** |
 | **Chroma** | Simple, local, popular for prototypes |
 | **Qdrant**, **Weaviate**, **Milvus** | Dedicated vector databases, open source |
 | **Pinecone** | Managed service |

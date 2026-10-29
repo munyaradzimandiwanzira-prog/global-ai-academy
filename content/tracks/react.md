@@ -2,7 +2,7 @@
 id: react
 title: React
 short: REACT
-category: web
+category: frameworks
 level: intermediate
 language: html
 color: "#149ECA"

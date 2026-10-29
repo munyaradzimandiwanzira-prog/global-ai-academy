@@ -2,7 +2,7 @@
 id: statistics
 title: Statistics for AI
 short: STATS
-category: data
+category: maths-data
 level: intermediate
 language: python
 color: "#2F5D2A"
@@ -65,7 +65,7 @@ nodes:
   - id: inf
     label: Inference
     sub: "μ is probably in [a, b]"
-    col: 4.1
+    col: 4.35
     row: 0.5
     shape: round
     tone: grape

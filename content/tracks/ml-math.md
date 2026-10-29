@@ -2,7 +2,7 @@
 id: ml-math
 title: Mathematics & First Principles of ML
 short: ML MATH
-category: ai
+category: maths-data
 level: intermediate
 language: python
 color: "#3D3B8E"
@@ -67,7 +67,7 @@ nodes:
     tone: gold
   - id: upd
     label: "θ ← θ − η·∂L/∂θ"
-    col: 1.3
+    col: 0
     row: 2.5
     shape: note
 edges:
@@ -90,7 +90,6 @@ edges:
   - from: upd
     to: model
     label: update
-    bend: 45
 ```
 
 This track builds every piece of that loop from scratch. Each section answers one question:
@@ -388,7 +387,7 @@ if y = f(g(x)), then dy/dx = f'(g(x)) · g'(x)
 ```sketch
 title: A computation graph, forward and backward
 caption: Forward pass computes values left to right. Backward pass multiplies local derivatives right to left (the chain rule) to get every gradient.
-cellW: 150
+cellW: 160
 cellH: 110
 nodes:
   - id: x

@@ -37,7 +37,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Banks, NGOs, mining houses and agritech start-ups in Harare and Bulawayo hire Python developers to automate reporting, reconciliation and data collection.',
     stages: [
       { level: 'Entry level', focus: 'Programming fundamentals and your tools', trackIds: ['start-here', 'vscode', 'terminal', 'git', 'python'], project: 'A command-line budget tracker that reads and writes CSV files.' },
-      { level: 'Intermediate', focus: 'Data and the web', trackIds: ['sql', 'backend', 'data-science'], project: 'A FastAPI service with a database that tracks market prices across Zimbabwean towns.' },
+      { level: 'Intermediate', focus: 'Data and the web', trackIds: ['sql', 'postgresql', 'backend', 'data-science'], project: 'A FastAPI service with a database that tracks market prices across Zimbabwean towns.' },
       { level: 'Advanced', focus: 'Shipping to production', trackIds: ['deployment', 'security'], project: 'Deploy your API with automated tests, CI and monitoring.' },
     ],
     next: ['backend-engineer', 'data-scientist', 'ai-engineer'],
@@ -53,7 +53,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Every business moving online — retailers, schools, churches, tourism operators — needs fast, mobile-first sites that work on limited data bundles.',
     stages: [
       { level: 'Entry level', focus: 'The web platform', trackIds: ['start-here', 'vscode', 'html', 'css', 'javascript', 'git'], project: 'A responsive portfolio site for a local business.' },
-      { level: 'Intermediate', focus: 'Apps, types and APIs', trackIds: ['typescript', 'react', 'backend', 'sql'], project: 'A React booking app for a Victoria Falls tour operator.' },
+      { level: 'Intermediate', focus: 'Apps, types and APIs', trackIds: ['typescript', 'react', 'backend', 'sql', 'postgresql'], project: 'A React booking app for a Victoria Falls tour operator.' },
       { level: 'Advanced', focus: 'Performance, security, deployment', trackIds: ['deployment', 'security', 'networking'], project: 'Ship a full-stack app on Cloudflare with authentication.' },
     ],
     next: ['backend-engineer', 'ai-engineer'],
@@ -69,7 +69,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Fintech and mobile-money integrations, insurance platforms and e-government services all need robust, secure backends.',
     stages: [
       { level: 'Entry level', focus: 'One language well, plus tools', trackIds: ['python', 'terminal', 'git', 'sql'], project: 'A REST API for a school library.' },
-      { level: 'Intermediate', focus: 'APIs, networking and security', trackIds: ['backend', 'networking', 'security'], project: 'A payments-style ledger API with idempotent transactions.' },
+      { level: 'Intermediate', focus: 'APIs, networking and security', trackIds: ['backend', 'postgresql', 'networking', 'security'], project: 'A payments-style ledger API with idempotent transactions.' },
       { level: 'Advanced', focus: 'Scale and operations', trackIds: ['deployment', 'java'], project: 'Containerise and deploy a multi-service backend with CI/CD.' },
     ],
     next: ['platform-ai-engineer', 'devops-engineer'],
@@ -85,7 +85,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Banks and telecoms in the region run large Java systems and need engineers who can maintain and modernise them.',
     stages: [
       { level: 'Entry level', focus: 'Java fundamentals', trackIds: ['start-here', 'ides', 'git', 'java'], project: 'A console bank-account simulator with classes and exceptions.' },
-      { level: 'Intermediate', focus: 'Data and services', trackIds: ['sql', 'backend'], project: 'A Spring Boot-style REST service for loan applications.' },
+      { level: 'Intermediate', focus: 'Data and services', trackIds: ['sql', 'postgresql', 'backend'], project: 'A Spring Boot-style REST service for loan applications.' },
       { level: 'Advanced', focus: 'Production and mobile', trackIds: ['deployment', 'kotlin', 'security'], project: 'Deploy your service and add a Kotlin client.' },
     ],
     next: ['android-engineer', 'backend-engineer'],
@@ -133,7 +133,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Agriculture yield forecasting, health programme monitoring, mobile-money fraud detection and retail demand all need data scientists.',
     stages: [
       { level: 'Entry level', focus: 'Python and SQL', trackIds: ['python', 'sql', 'ides'], project: 'Analyse rainfall and maize yields by province.' },
-      { level: 'Intermediate', focus: 'Analysis and ML', trackIds: ['data-science', 'statistics', 'machine-learning', 'ai-fundamentals'], project: 'Predict house prices in Harare suburbs.' },
+      { level: 'Intermediate', focus: 'Analysis and ML', trackIds: ['data-science', 'statistics', 'postgresql', 'machine-learning', 'ai-fundamentals'], project: 'Predict house prices in Harare suburbs.' },
       { level: 'Advanced', focus: 'Production ML', trackIds: ['mlops', 'hugging-face', 'neo4j', 'web-scraping'], project: 'Deploy a model behind an API with monitoring.' },
     ],
     next: ['ml-engineer', 'ai-engineer'],
@@ -165,7 +165,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Law firms, banks, insurers and government departments want assistants that answer from their own policies and documents.',
     stages: [
       { level: 'Entry level', focus: 'Python and AI basics', trackIds: ['python', 'ai-fundamentals', 'prompt-engineering', 'git'], project: 'A prompt-engineered study buddy for ZIMSEC revision.' },
-      { level: 'Intermediate', focus: 'LLM applications', trackIds: ['llm-apis', 'openai-platform', 'pydantic', 'rag', 'langchain', 'hugging-face'], project: 'A RAG assistant over a set of public policy PDFs.' },
+      { level: 'Intermediate', focus: 'LLM applications', trackIds: ['llm-apis', 'openai-platform', 'pydantic', 'postgresql', 'rag', 'langchain', 'hugging-face'], project: 'A RAG assistant over a set of public policy PDFs.' },
       { level: 'Advanced', focus: 'Reliability and safety', trackIds: ['guardrails', 'ai-evaluations', 'graphrag', 'ai-agents', 'deployment'], project: 'Add evaluation, guardrails and deployment to your assistant.' },
     ],
     next: ['agentic-ai-engineer', 'platform-ai-engineer'],
@@ -181,7 +181,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'Agents that process loan applications, triage customer queries or monitor farms can multiply what small teams can do.',
     stages: [
       { level: 'Entry level', focus: 'Prerequisites', trackIds: ['python', 'python-functions', 'pydantic', 'prompt-engineering', 'llm-apis'], project: 'A tool-calling assistant that checks the weather and exchange rates.' },
-      { level: 'Intermediate', focus: 'Agents and retrieval', trackIds: ['ai-agents', 'agentic-engineering', 'mcp', 'rag', 'langchain'], project: 'A research agent that searches documents and cites sources.' },
+      { level: 'Intermediate', focus: 'Agents and retrieval', trackIds: ['ai-agents', 'agentic-engineering', 'mcp', 'rag', 'postgresql', 'langchain'], project: 'A research agent that searches documents and cites sources.' },
       { level: 'Advanced', focus: 'Safety and scale', trackIds: ['graphrag', 'ai-evaluations', 'guardrails', 'ai-workflows', 'inference-engineering'], project: 'A multi-agent workflow with human approval steps and evals.' },
     ],
     next: ['platform-ai-engineer', 'lead-platform-ai-engineer'],
@@ -213,7 +213,7 @@ export const CAREERS: Career[] = [
     zimbabwe: 'As local enterprises adopt AI, someone must make it reliable, affordable and compliant — that is this role.',
     stages: [
       { level: 'Entry level', focus: 'Engineering base', trackIds: ['python', 'terminal', 'git', 'backend'], project: 'A small API with logging and tests.' },
-      { level: 'Intermediate', focus: 'AI systems', trackIds: ['llm-apis', 'rag', 'mlops', 'inference-engineering', 'networking'], project: 'An LLM gateway with caching and rate limits.' },
+      { level: 'Intermediate', focus: 'AI systems', trackIds: ['llm-apis', 'rag', 'postgresql', 'mlops', 'inference-engineering', 'networking'], project: 'An LLM gateway with caching and rate limits.' },
       { level: 'Advanced', focus: 'Production platform', trackIds: ['deployment', 'guardrails', 'security', 'ai-agents', 'ai-evaluations', 'sagemaker'], project: 'An evaluation and observability dashboard for AI services.' },
     ],
     next: ['lead-platform-ai-engineer'],

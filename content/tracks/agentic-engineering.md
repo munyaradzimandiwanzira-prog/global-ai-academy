@@ -2,7 +2,7 @@
 id: agentic-engineering
 title: Agentic AI Engineering
 short: AGENTIC
-category: ai
+category: agentic
 level: advanced
 language: python
 color: "#3B2A7A"
@@ -23,7 +23,7 @@ The surprising lesson from teams that ship agents: most of the quality comes fro
 ```sketch
 title: The model sits inside a harness
 caption: The model only chooses the next step. Everything else (loop, tools, context, memory, guardrails, tracing) is engineering you control.
-cellW: 175
+cellW: 158
 cellH: 115
 nodes:
   - id: user
@@ -75,7 +75,7 @@ nodes:
     tone: rose
   - id: obs
     label: Traces & evals
-    col: 4.6
+    col: 4.55
     row: 1.5
     shape: doc
 edges:
@@ -190,7 +190,7 @@ Retrying instantly makes an overload worse. Wait longer after each failure (**ex
 ```sketch
 title: Exponential backoff with jitter
 caption: Each retry waits roughly twice as long, with randomness. Give up after a cap and surface a clear error.
-cellW: 215
+cellW: 245
 cellH: 125
 nodes:
   - id: call
@@ -218,8 +218,6 @@ nodes:
     col: 1
     row: 1.35
     shape: diamond
-    w: 0.95
-    h: 0.95
   - id: wait
     label: "Wait base × 2ⁿ"
     sub: "+ random jitter"
@@ -727,7 +725,7 @@ The agent loop looks simple: call the model, run tools, repeat. In production, l
 title: A production agent loop as a state machine
 caption: Every path out of the loop is explicit. Budgets and loop detection are checked every turn, not hoped for.
 cellW: 175
-cellH: 112
+cellH: 118
 nodes:
   - id: start
     label: Start
@@ -745,38 +743,34 @@ nodes:
     col: 2
     row: 1
     shape: diamond
-    w: 0.95
-    h: 1
+  - id: final
+    label: Final answer
+    col: 2
+    row: 0
+    shape: pill
+    tone: gold
   - id: guard
     label: "Allowed?\nduplicate?"
-    col: 3
-    row: 0
+    col: 3.1
+    row: 1
     shape: diamond
     tone: rose
-    w: 0.95
-    h: 1
   - id: run
     label: Run tool
-    col: 4
-    row: 0
+    col: 4.2
+    row: 1
     shape: round
     tone: teal
   - id: budget
-    label: "Budget left?\nsteps · tokens · time · $"
-    col: 2
-    row: 2.3
+    label: "Budget left?"
+    sub: "steps · tokens · time · $"
+    col: 3.1
+    row: 2.4
     shape: note
-    w: 1.15
-  - id: final
-    label: Final answer
-    col: 3.5
-    row: 1.5
-    shape: pill
-    tone: gold
   - id: stop
     label: Stop with summary
-    col: 0.8
-    row: 2.3
+    col: 1
+    row: 2.4
     shape: pill
     tone: rose
 edges:
@@ -785,25 +779,24 @@ edges:
   - from: think
     to: kind
   - from: kind
-    to: guard
-    label: tool
-  - from: kind
     to: final
     label: answer
+  - from: kind
+    to: guard
+    label: tool
   - from: guard
     to: run
     label: "yes"
   - from: run
     to: budget
     label: observe
-    bend: -40
   - from: guard
     to: budget
     label: "no → tell model"
   - from: budget
     to: think
-    label: "yes"
-    bend: 20
+    label: "yes, loop"
+    bend: -18
   - from: budget
     to: stop
     label: "no"
@@ -1079,49 +1072,49 @@ Caching means **reusing work you've already paid for**. In AI systems that work 
 
 ```sketch
 title: Where caches live in an AI system
-caption: From the GPU up to your app, each layer can skip repeated work. Each has different keys, lifetimes and risks.
-cellW: 175
-cellH: 112
+caption: From your app down to the GPU, each layer can skip repeated work. Each has different keys, lifetimes and risks.
+cellW: 190
+cellH: 108
 nodes:
   - id: app
     label: Your app
     col: 0
-    row: 1
+    row: 1.5
     shape: round
     tone: sky
   - id: resp
     label: Response cache
     sub: exact or semantic
-    col: 1.2
+    col: 1.4
     row: 0
     shape: db
     tone: gold
   - id: tool
     label: Tool-result cache
     sub: TTL per tool
-    col: 1.2
+    col: 1.4
     row: 1
     shape: db
     tone: gold
   - id: emb
     label: Embedding cache
     sub: hash(text) → vector
-    col: 1.2
+    col: 1.4
     row: 2
     shape: db
     tone: gold
   - id: prov
     label: Provider prompt cache
     sub: shared prefix
-    col: 2.6
-    row: 1
+    col: 1.4
+    row: 3.2
     shape: db
     tone: teal
   - id: kv
     label: KV cache
     sub: attention keys/values on GPU
-    col: 4
-    row: 1
+    col: 2.9
+    row: 3.2
     shape: db
     tone: grape
 edges:
@@ -1134,10 +1127,16 @@ edges:
   - from: app
     to: prov
     label: request
-    bend: 30
   - from: prov
     to: kv
     label: reuses
+groups:
+  - label: In your app
+    nodes: [resp, tool, emb]
+    tone: gold
+  - label: At the model provider
+    nodes: [prov, kv]
+    tone: teal
 ```
 
 ## 1. Provider prompt caching (prefix caching)
@@ -1816,7 +1815,7 @@ A **multi-agent system** splits work across several model-driven components, eac
 ```sketch
 title: Common multi-agent architectures
 caption: Supervisor delegates and stays in control; handoffs pass control along; a router dispatches once; a network lets agents talk freely (hardest to control).
-cellW: 140
+cellW: 128
 cellH: 100
 nodes:
   - id: s
