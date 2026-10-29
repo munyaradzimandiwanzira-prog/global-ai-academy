@@ -9,6 +9,7 @@ import { api, ApiError, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Field, Input, PageHeader, Select, Textarea } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
+import { SecuritySettings } from './SecuritySettings';
 
 export default function Settings() {
   const { user, setUser, refresh } = useAuth();
@@ -52,6 +53,9 @@ export default function Settings() {
     <div className="container max-w-3xl py-10">
       <PageHeader title="Settings" />
       <div className="space-y-6">
+        {user.mfaSetupRequired && (
+          <p role="status" className="rounded-xl border border-gold/50 bg-gold/10 px-4 py-3 text-sm"><strong className="font-semibold">Admin tools are paused</strong> until you turn on two-step login below.</p>
+        )}
         <form onSubmit={saveProfile} className="card space-y-4 p-6">
           <h2 className="font-display text-xl font-semibold">Profile</h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -104,6 +108,8 @@ export default function Settings() {
           </div>
           <button className="btn-outline">Change password</button>
         </form>
+
+        <SecuritySettings />
       </div>
     </div>
   );

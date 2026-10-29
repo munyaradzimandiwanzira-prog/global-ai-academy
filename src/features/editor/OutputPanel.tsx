@@ -5,11 +5,28 @@ import { cn } from '@/lib/utils';
 
 const GraphView = lazy(() => import('@/features/graph/GraphView'));
 
+/**
+ * Renders learner HTML in /sandbox/preview: an opaque-origin, sandboxed document with its own CSP
+ * (see worker/sandbox.ts). The frame says "ready", then receives the HTML to render. A new `key`
+ * per render gives every run a fresh document, so nothing leaks between runs.
+ */
 export function HtmlPreview({ html, onTest, onConsole, className }: { html: string; onTest?: (passed: boolean, message?: string) => void; onConsole?: (line: OutputLine) => void; className?: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
+  const [run, setRun] = useState(0);
+  const htmlRef = useRef(html);
+  useEffect(() => {
+    htmlRef.current = html;
+    setRun((n) => n + 1);
+  }, [html]);
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.source !== ref.current?.contentWindow || !e.data?.__gaa) return;
+      if (e.source !== ref.current?.contentWindow) return;
+      if (e.data?.__gaaSandbox === 'ready') {
+        // The sandbox is an opaque origin, so '*' is the only target that reaches it; the payload is the learner's own page.
+        ref.current?.contentWindow?.postMessage({ __gaaSandbox: 'render', html: htmlRef.current }, '*');
+        return;
+      }
+      if (!e.data?.__gaa) return;
       if (e.data.type === 'test') onTest?.(e.data.passed, e.data.message);
       if (e.data.type === 'out') onConsole?.({ kind: e.data.kind, text: e.data.text });
     };
@@ -18,10 +35,11 @@ export function HtmlPreview({ html, onTest, onConsole, className }: { html: stri
   }, [onTest, onConsole]);
   return (
     <iframe
+      key={run}
       ref={ref}
       title="Result preview"
       sandbox="allow-scripts allow-modals"
-      srcDoc={html}
+      src="/sandbox/preview"
       className={cn('h-full min-h-[240px] w-full rounded-b-lg bg-white', className)}
     />
   );

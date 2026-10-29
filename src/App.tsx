@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { RequireAuth, RequireRole } from '@/components/layout/guards';
 import { PageLoader } from '@/components/ui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useAuth } from '@/lib/auth';
 
 const Home = lazy(() => import('@/pages/Home'));
 const Tutorials = lazy(() => import('@/pages/Tutorials'));
@@ -56,10 +57,26 @@ function ScrollToTop() {
   return null;
 }
 
+/** Admins without two-step login act as learners until they enrol; tell them why the admin tools are missing. */
+function AdminMfaBanner() {
+  const { user } = useAuth();
+  const { pathname } = useLocation();
+  if (!user?.mfaSetupRequired || pathname === '/settings') return null;
+  return (
+    <div role="status" className="border-b border-gold/40 bg-gold-100 text-night dark:bg-gold/15 dark:text-sand">
+      <div className="container flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5 text-sm">
+        <p><strong className="font-semibold">Your admin tools are paused.</strong> Admin accounts need two-step login. It takes about two minutes.</p>
+        <Link to="/settings#security" className="btn-primary btn-sm">Set up two-step login</Link>
+      </div>
+    </div>
+  );
+}
+
 function SiteLayout({ footer = true }: { footer?: boolean }) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
+      <AdminMfaBanner />
       <main id="main" className="flex-1">
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>

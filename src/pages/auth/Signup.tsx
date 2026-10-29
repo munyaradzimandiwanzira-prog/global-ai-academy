@@ -8,6 +8,7 @@ import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { safeNext, cn } from '@/lib/utils';
 import { Field, Input } from '@/components/ui';
+import { useTurnstile } from '@/components/Turnstile';
 import { AuthShell } from './AuthShell';
 
 const LEVELS: { id: Level; title: string; text: string; icon: string }[] = [
@@ -21,7 +22,8 @@ export default function Signup() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { setUser } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', city: '', level: 'beginner' as Level, wantsToTeach: false });
+  const [form, setForm] = useState({ name: '', email: '', password: '', city: '', level: 'beginner' as Level, wantsToTeach: false, acceptTerms: false });
+  const bot = useTurnstile('signup');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -30,7 +32,7 @@ export default function Signup() {
     setBusy(true);
     setErrors({});
     try {
-      const { user, devVerifyUrl } = await api.post<{ user: PublicUser; devVerifyUrl?: string }>('/api/auth/signup', { ...form, city: form.city || undefined });
+      const { user, devVerifyUrl } = await api.post<{ user: PublicUser; devVerifyUrl?: string }>('/api/auth/signup', { ...form, city: form.city || undefined, turnstileToken: bot.token });
       setUser(user);
       toast.success('Account created. Welcome to the Academy!', { description: devVerifyUrl ? `Dev mode: confirm your email at ${devVerifyUrl}` : 'Check your inbox to confirm your email.' });
       const fallback = form.level === 'kids' ? '/kids' : ROLE_HOME[user.role];
@@ -38,6 +40,7 @@ export default function Signup() {
     } catch (err) {
       if (err instanceof ApiError) setErrors(err.fields ?? { _: err.message });
       else setErrors({ _: 'Could not create your account. Try again.' });
+      bot.reset();
     } finally {
       setBusy(false);
     }
@@ -75,8 +78,16 @@ export default function Signup() {
           <input type="checkbox" checked={form.wantsToTeach} onChange={(e) => setForm({ ...form, wantsToTeach: e.target.checked })} className="mt-0.5 h-4 w-4 accent-teal" />
           <span>I’m a teacher and want to run classes <span className="text-muted-fg">(an administrator reviews teaching requests)</span></span>
         </label>
+        <div>
+          <label className="flex items-start gap-2.5 text-sm">
+            <input type="checkbox" required checked={form.acceptTerms} onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })} aria-invalid={!!errors.acceptTerms} aria-describedby={errors.acceptTerms ? 'terms-error' : undefined} className="mt-0.5 h-4 w-4 accent-teal" />
+            <span>I agree to the <Link to="/terms" target="_blank" className="font-medium text-teal-600 underline">terms</Link> and <Link to="/privacy" target="_blank" className="font-medium text-teal-600 underline">privacy policy</Link>. If I’m under 18, my parent or guardian has agreed too.</span>
+          </label>
+          {errors.acceptTerms && <p id="terms-error" className="mt-1 text-xs font-medium text-red-600">{errors.acceptTerms}</p>}
+        </div>
+        {bot.widget}
+        {errors.turnstile && <p className="text-xs font-medium text-red-600">{errors.turnstile}</p>}
         <button disabled={busy} className="btn-primary btn-lg w-full">{busy ? 'Creating account…' : 'Create account'}</button>
-        <p className="text-center text-xs text-muted-fg">By creating an account you agree to our <Link to="/terms" className="underline">terms</Link> and <Link to="/privacy" className="underline">privacy policy</Link>. Learners under 13 should sign up with a parent or teacher.</p>
       </form>
     </AuthShell>
   );

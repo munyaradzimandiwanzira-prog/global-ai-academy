@@ -21,6 +21,13 @@ export interface PublicUser {
   pendingTeacherRequest?: boolean;
   /** True until the learner has used their one free Plus trial. */
   trialAvailable: boolean;
+  /** Two-step login is switched on for this account. */
+  mfaEnabled: boolean;
+  /**
+   * Admin account that has not set up two-step login yet. Until it does, the session acts with
+   * learner permissions only, so a stolen password alone can never reach the admin tools.
+   */
+  mfaSetupRequired?: boolean;
 }
 
 export interface ProgressRow {
@@ -233,4 +240,22 @@ export interface WaitlistEntry {
   plan: string;
   note: string;
   createdAt: string;
+}
+
+export interface MfaStatus {
+  /** The site has an encryption key configured, so two-step login can be switched on. */
+  available: boolean;
+  enabled: boolean;
+  enabledAt: string | null;
+  /** Admin accounts must keep it on. */
+  required: boolean;
+  recoveryCodesLeft: number;
+}
+
+export interface AccountSession {
+  /** Opaque handle (not the cookie or its hash) used to sign this device out. */
+  id: string;
+  createdAt: string;
+  userAgent: string;
+  current: boolean;
 }

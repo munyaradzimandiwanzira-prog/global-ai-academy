@@ -79,6 +79,19 @@ admin.patch('/users/:id', async (c) => {
   return c.json({ ok: true });
 });
 
+/** Clears two-step login for someone who lost their phone and recovery codes (after you have verified who they are). */
+admin.post('/users/:id/reset-mfa', async (c) => {
+  const actor = requirePermission(c, 'users.manage');
+  if (c.req.param('id') === actor.id) throw badRequest('Ask another admin to reset your own two-step login.');
+  const res = await c.env.DB.prepare('UPDATE users SET mfa_secret = NULL, mfa_pending_secret = NULL, mfa_enabled_at = NULL, mfa_last_step = NULL, updated_at = ? WHERE id = ?')
+    .bind(nowIso(), c.req.param('id')).run();
+  if (!res.meta.changes) throw notFound('User not found.');
+  await c.env.DB.prepare('DELETE FROM mfa_recovery_codes WHERE user_id = ?').bind(c.req.param('id')).run();
+  await destroyAllSessions(c.env.DB, c.req.param('id'));
+  await audit(c.env.DB, actor.id, 'admin.mfa_reset', c.req.param('id'));
+  return c.json({ ok: true });
+});
+
 admin.get('/teacher-requests', async (c) => {
   requirePermission(c, 'users.manage');
   const rows = await c.env.DB.prepare(

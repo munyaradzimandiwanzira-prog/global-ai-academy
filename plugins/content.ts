@@ -1,12 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
-import { parseTrack, proLessons, publicTrack, toCatalogEntry } from './content-parser';
+import { activityIds, parseTrack, proLessons, publicTrack, toCatalogEntry } from './content-parser';
 import type { QuizQuestion, Track } from '../shared/content';
 
 const VIRTUAL_CATALOG = 'virtual:catalog';
 const VIRTUAL_QUIZ_BANK = 'virtual:quiz-bank';
 const VIRTUAL_PRO = 'virtual:pro-lessons';
+const VIRTUAL_ACTIVITY = 'virtual:activity-ids';
 const RESOLVED = (id: string) => '\0' + id;
 
 /**
@@ -37,7 +38,7 @@ export function contentPlugin(): Plugin {
     name: 'gaa-content',
     enforce: 'pre',
     resolveId(id) {
-      if (id === VIRTUAL_CATALOG || id === VIRTUAL_QUIZ_BANK || id === VIRTUAL_PRO) return RESOLVED(id);
+      if (id === VIRTUAL_CATALOG || id === VIRTUAL_QUIZ_BANK || id === VIRTUAL_PRO || id === VIRTUAL_ACTIVITY) return RESOLVED(id);
       return null;
     },
     load(id) {
@@ -59,6 +60,10 @@ export function contentPlugin(): Plugin {
         // Server-only: imported by the Worker, never by browser code.
         return `export default ${JSON.stringify(proLessons(loadAll()))};`;
       }
+      if (id === RESOLVED(VIRTUAL_ACTIVITY)) {
+        // Server-only: the Worker validates activity ids against this before awarding XP.
+        return `export default ${JSON.stringify(activityIds(loadAll()))};`;
+      }
       if (id.endsWith('.md?track')) {
         const file = id.slice(0, -'?track'.length);
         this.addWatchFile(file);
@@ -74,7 +79,7 @@ export function contentPlugin(): Plugin {
         if (!file.startsWith(dir)) return;
         cache = null;
         for (const env of Object.values(server.environments)) {
-          for (const v of [VIRTUAL_CATALOG, VIRTUAL_QUIZ_BANK, VIRTUAL_PRO]) {
+          for (const v of [VIRTUAL_CATALOG, VIRTUAL_QUIZ_BANK, VIRTUAL_PRO, VIRTUAL_ACTIVITY]) {
             const mod = env.moduleGraph.getModuleById(RESOLVED(v));
             if (mod) env.moduleGraph.invalidateModule(mod);
           }

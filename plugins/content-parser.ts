@@ -275,3 +275,26 @@ export function proLessons(tracks: Track[]): Record<string, Block[]> {
   }
   return out;
 }
+
+export type ActivityKind = 'exercise' | 'challenge' | 'quiz';
+
+/**
+ * Every exercise, challenge and practice quiz that can earn XP, keyed by the id the browser reports,
+ * mapped to its kind and track. Server-only: lets the Worker reject invented ids, so XP (and the
+ * public leaderboard) can only grow from activities that actually exist.
+ */
+export function activityIds(tracks: Track[]): Record<string, { kind: ActivityKind; trackId: string }> {
+  const out: Record<string, { kind: ActivityKind; trackId: string }> = {};
+  for (const t of tracks) {
+    const trackId = t.meta.id;
+    out[`track-quiz:${trackId}`] = { kind: 'quiz', trackId };
+    for (const l of t.lessons) {
+      for (const b of l.blocks) {
+        if (b.type === 'exercise') out[b.id] = { kind: 'exercise', trackId };
+        else if (b.type === 'challenge') out[b.challenge.id] = { kind: 'challenge', trackId };
+        else if (b.type === 'quiz' && !b.examOnly) out[b.id] = { kind: 'quiz', trackId };
+      }
+    }
+  }
+  return out;
+}

@@ -5,6 +5,11 @@
  */
 declare const self: DedicatedWorkerGlobalScope;
 
+import { installNetworkGuard } from './network-guard';
+
+// Before Pyodide or any learner code exists: no requests back to this site from Python.
+installNetworkGuard();
+
 const PYODIDE_VERSION = '0.29.4';
 const INDEX_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 

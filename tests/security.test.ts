@@ -80,7 +80,7 @@ describe('misc', () => {
   });
   it('validates sign-up input', () => {
     expect(signupSchema.safeParse({ name: 'Tari', email: 'T@Example.com', password: 'short' }).success).toBe(false);
-    const ok = signupSchema.safeParse({ name: 'Tari', email: ' T@Example.com ', password: 'longenough1' });
+    const ok = signupSchema.safeParse({ name: 'Tari', email: ' T@Example.com ', password: 'longenough1', acceptTerms: true });
     expect(ok.success && ok.data.email).toBe('t@example.com');
   });
 });

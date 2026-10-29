@@ -26,6 +26,12 @@ export interface UserRow {
   last_lesson: string | null;
   disabled_at: string | null;
   trial_used_at: string | null;
+  mfa_secret: string | null;
+  mfa_pending_secret: string | null;
+  mfa_enabled_at: string | null;
+  mfa_last_step: number | null;
+  terms_accepted_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +61,7 @@ export function toPublicUser(u: UserRow): PublicUser {
     avatarColor: u.avatar_color,
     createdAt: u.created_at,
     trialAvailable: !u.trial_used_at && u.role === 'student' && effectivePlan(u) === 'free',
+    mfaEnabled: !!u.mfa_enabled_at,
   };
 }
 

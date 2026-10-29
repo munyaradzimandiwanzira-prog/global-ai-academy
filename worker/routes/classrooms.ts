@@ -11,7 +11,7 @@ import { newId, randomCode } from '../lib/crypto';
 import { badRequest, forbidden, notFound, conflict, upgradeRequired } from '../lib/errors';
 import { chatJson } from '../lib/openai';
 import { consumeAiQuota } from '../lib/ai-quota';
-import { ASSIGNMENT_GENERATOR_PROMPT, GRADER_SYSTEM_PROMPT, INSIGHTS_PROMPT, SESSION_SUMMARY_PROMPT, LEARNER_REPORT_PROMPT } from '../lib/prompts';
+import { asData, ASSIGNMENT_GENERATOR_PROMPT, GRADER_SYSTEM_PROMPT, INSIGHTS_PROMPT, SESSION_SUMMARY_PROMPT, LEARNER_REPORT_PROMPT } from '../lib/prompts';
 import { awardXp } from '../lib/xp';
 import { getTrack } from '../lib/catalog';
 import { hit } from '../lib/ratelimit';
@@ -328,7 +328,7 @@ classrooms.post('/:id/sessions/:sid/summary', async (c) => {
     maxTokens: 900,
     messages: [
       { role: 'system', content: SESSION_SUMMARY_PROMPT },
-      { role: 'user', content: `Class: ${room.name}. Session: ${row.title} on ${row.starts_at.slice(0, 10)}.\n<notes>\n${input.notes}\n</notes>` },
+      { role: 'user', content: `Class: ${room.name}. Session: ${row.title} on ${row.starts_at.slice(0, 10)}.\n<notes>\n${asData(input.notes)}\n</notes>` },
     ],
   });
   await c.env.DB.prepare('UPDATE live_sessions SET notes = ?, summary = ?, recording_url = CASE WHEN ? != \'\' THEN ? ELSE recording_url END WHERE id = ?')
@@ -442,7 +442,7 @@ async function aiGrade(c: Ctx, a: AssignmentRow, code: string, text: string): Pr
         { role: 'system', content: GRADER_SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `<task>\nTitle: ${a.title}\nLanguage: ${a.language}\nInstructions:\n${a.instructions}\nRubric:\n${a.rubric || '(none — use general criteria)'}\n</task>\n<student_code>\n${code || '(no code)'}\n</student_code>\n<student_message>\n${text || '(no written answer)'}\n</student_message>`,
+          content: `<task>\nTitle: ${a.title}\nLanguage: ${a.language}\nInstructions:\n${asData(a.instructions)}\nRubric:\n${asData(a.rubric || '(none — use general criteria)')}\n</task>\n<student_code>\n${asData(code || '(no code)')}\n</student_code>\n<student_message>\n${asData(text || '(no written answer)')}\n</student_message>`,
         },
       ],
     });

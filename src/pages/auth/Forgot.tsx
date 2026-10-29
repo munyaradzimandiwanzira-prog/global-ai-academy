@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, errorMessage } from '@/lib/api';
 import { Field, Input } from '@/components/ui';
+import { useTurnstile } from '@/components/Turnstile';
 import { AuthShell } from './AuthShell';
 
 export default function Forgot() {
@@ -9,18 +10,20 @@ export default function Forgot() {
   const [state, setState] = useState<'idle' | 'busy' | 'sent'>('idle');
   const [error, setError] = useState('');
   const [devUrl, setDevUrl] = useState<string>();
+  const bot = useTurnstile('forgot');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setState('busy');
     setError('');
     try {
-      const r = await api.post<{ devResetUrl?: string }>('/api/auth/forgot', { email });
+      const r = await api.post<{ devResetUrl?: string }>('/api/auth/forgot', { email, turnstileToken: bot.token });
       setDevUrl(r.devResetUrl);
       setState('sent');
     } catch (err) {
       setError(errorMessage(err));
       setState('idle');
+      bot.reset();
     }
   };
 
@@ -38,6 +41,7 @@ export default function Forgot() {
           <Field label="Email" error={error} htmlFor="email">
             <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
+          {bot.widget}
           <button disabled={state === 'busy'} className="btn-primary btn-lg w-full">{state === 'busy' ? 'Sending…' : 'Send reset link'}</button>
           <p className="text-center text-sm"><Link to="/login" className="text-teal-600 hover:underline">Back to sign in</Link></p>
         </form>

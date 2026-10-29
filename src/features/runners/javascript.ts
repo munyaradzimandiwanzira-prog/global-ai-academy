@@ -1,4 +1,5 @@
 import type { OutputLine, RunOptions, RunResult } from './types';
+import { NETWORK_GUARD_SOURCE } from './network-guard';
 
 /**
  * Runs JavaScript/TypeScript in a throw-away Web Worker created from a Blob.
@@ -66,7 +67,7 @@ export async function runJavaScript(code: string, opts: RunOptions & { typescrip
   }
 
   const stdin = JSON.stringify((opts.stdin ?? '').split('\n'));
-  const header = `${PRELUDE}\nconst __stdin = ${stdin};\n(async () => {\nlet __error = null;\ntry {\n`;
+  const header = `${NETWORK_GUARD_SOURCE}\n${PRELUDE}\nconst __stdin = ${stdin};\n(async () => {\nlet __error = null;\ntry {\n`;
   const offset = lineOffset(header) - 1;
   const testsBlock = opts.tests
     ? `\n;try { const output = __lines.join('\\n'); ${opts.tests}\n; postMessage({ type: 'test', passed: true }); } catch (t) { postMessage({ type: 'test', passed: false, message: (t && t.message) || String(t) }); }`

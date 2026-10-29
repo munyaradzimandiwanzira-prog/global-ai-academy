@@ -11,6 +11,8 @@ export type AppEnv = {
   Variables: {
     user: UserRow | null;
     sessionId: string | null;
+    /** Signed-in admin who has not enrolled in two-step login (acting with learner permissions). */
+    mfaSetupRequired: boolean;
   };
 };
 

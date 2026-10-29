@@ -6,3 +6,7 @@ OPENAI_API_KEY=
 # PAYNOW_INTEGRATION_KEY=
 # JUDGE0_API_KEY=
 ADMIN_EMAILS=you@example.com
+# Two-step login: 32 random bytes, base64. Generate with: openssl rand -base64 32
+MFA_KEY=
+# Optional Cloudflare Turnstile (bot check). Also set TURNSTILE_SITE_KEY in wrangler.jsonc vars.
+# TURNSTILE_SECRET_KEY=

@@ -21,3 +21,8 @@ declare module 'virtual:pro-lessons' {
   const lessons: Record<string, Block[]>;
   export default lessons;
 }
+
+declare module 'virtual:activity-ids' {
+  const ids: Record<string, { kind: 'exercise' | 'challenge' | 'quiz'; trackId: string }>;
+  export default ids;
+}

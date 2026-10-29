@@ -16,6 +16,8 @@ import pub from './routes/public';
 import projects from './routes/projects';
 import capstones from './routes/capstones';
 import content from './routes/content';
+import account from './routes/account';
+import { sandboxResponse } from './sandbox';
 
 const app = new Hono<AppEnv>();
 
@@ -40,7 +42,10 @@ app.route('/api/payments', payments);
 app.route('/api/projects', projects);
 app.route('/api/capstones', capstones);
 app.route('/api/content', content);
+app.route('/api/account', account);
 app.route('/api', pub);
+
+app.get('/sandbox/preview', () => sandboxResponse());
 
 app.notFound((c) => {
   if (c.req.path.startsWith('/api/')) return c.json({ error: { code: 'not_found', message: 'Unknown API route.' } }, 404);

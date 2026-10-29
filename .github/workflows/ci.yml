@@ -3,6 +3,10 @@ on:
   push: { branches: [main] }
   pull_request:
 
+# Least privilege: the workflow can read the code and nothing else.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -11,6 +15,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      # Fail on any high/critical advisory in code that ships to visitors or runs on Cloudflare.
+      - run: npm audit --omit=dev --audit-level=high
       - run: npx tsx scripts/check-content.ts
       - run: npm run typecheck
       - run: npm test

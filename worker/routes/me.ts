@@ -1,5 +1,5 @@
 import { createRouter, body, requireUser, requirePermission } from '../app';
-import { profileSchema, progressSchema, activitySchema, goalSchema } from '@shared/schemas';
+import { profileSchema, progressSchema, activitySchema, goalSchema, KIDS_ACTIVITY_KEY } from '@shared/schemas';
 import { XP, TRIAL, PLANS } from '@shared/config';
 import type { ActivityRow, Goal, ProgressRow } from '@shared/api-types';
 import { audit, effectivePlan, nowIso, toPublicUser, todayUtc, type UserRow } from '../lib/db';
@@ -8,6 +8,8 @@ import { awardXp } from '../lib/xp';
 import { badRequest, notFound, conflict, forbidden } from '../lib/errors';
 import { getTrack, lessonExists, lessonMinutes } from '../lib/catalog';
 import { newId } from '../lib/crypto';
+import { hit } from '../lib/ratelimit';
+import activityIds from 'virtual:activity-ids';
 
 const me = createRouter();
 
@@ -15,7 +17,8 @@ me.get('/', async (c) => {
   const user = c.get('user');
   if (!user) return c.json({ user: null });
   const pending = await c.env.DB.prepare("SELECT 1 FROM teacher_requests WHERE user_id = ? AND status = 'pending'").bind(user.id).first();
-  return c.json({ user: { ...toPublicUser(user), pendingTeacherRequest: !!pending } });
+  const setup = c.get('mfaSetupRequired');
+  return c.json({ user: { ...toPublicUser(user), pendingTeacherRequest: !!pending, ...(setup ? { mfaSetupRequired: true, trialAvailable: false } : {}) } });
 });
 
 /** One free 7-day Plus trial per account (Base44 "trial" feature, without the abuse holes). */
@@ -111,7 +114,18 @@ me.post('/progress', async (c) => {
 me.post('/activity', async (c) => {
   const user = requireUser(c);
   const input = await body(c, activitySchema);
-  if (input.trackId && !getTrack(input.trackId) && input.kind !== 'kids') throw notFound('Unknown track.');
+  // XP feeds the public leaderboard, so only real activities count. Content ids come from the build;
+  // Kids Zone level keys are shaped like "maze:3" and capped per day instead.
+  if (input.kind === 'kids') {
+    if (!KIDS_ACTIVITY_KEY.test(input.refId)) throw notFound('Unknown game level.');
+    input.trackId = 'kids';
+    await hit(c.env.DB, `kids-activity:${user.id}`, 60, 86400, 'That is plenty of play for today. Come back tomorrow for more stars.');
+  } else {
+    const known = activityIds[input.refId];
+    if (!known || known.kind !== input.kind) throw notFound('Unknown activity.');
+    input.trackId = known.trackId;
+  }
+  await hit(c.env.DB, `activity:${user.id}`, 600, 3600, 'Too many attempts this hour. Take a short break and try again.');
   await c.env.DB.prepare(
     `INSERT INTO activity (user_id, kind, ref_id, track_id, passed, score, attempts, last_code, updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
      ON CONFLICT(user_id, kind, ref_id) DO UPDATE SET

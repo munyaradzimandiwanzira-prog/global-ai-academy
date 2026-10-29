@@ -7,6 +7,9 @@ const password = z
   .max(128, 'Use at most 128 characters')
   .refine((v) => /[A-Za-z]/.test(v) && /\d/.test(v), 'Use at least one letter and one number');
 
+/** Cloudflare Turnstile response token (only checked when Turnstile is configured). */
+const turnstileToken = z.string().max(2048).optional();
+
 export const levelSchema = z.enum(['kids', 'beginner', 'intermediate', 'advanced']);
 
 export const signupSchema = z.object({
@@ -17,10 +20,22 @@ export const signupSchema = z.object({
   city: z.string().trim().max(60).optional(),
   // Teachers request elevated access; an admin approves it.
   wantsToTeach: z.boolean().optional(),
+  // Consent record (Cyber and Data Protection Act): terms + privacy, and a guardian's agreement for under-18s.
+  acceptTerms: z.literal(true, { error: 'Please agree to the terms and privacy policy to continue' }),
+  turnstileToken,
 });
 
-export const loginSchema = z.object({ email, password: z.string().min(1, 'Enter your password').max(128) });
-export const forgotSchema = z.object({ email });
+export const loginSchema = z.object({ email, password: z.string().min(1, 'Enter your password').max(128), turnstileToken });
+export const forgotSchema = z.object({ email, turnstileToken });
+export const mfaVerifySchema = z.object({ challenge: z.string().min(20).max(100), code: z.string().trim().min(6).max(12) });
+export const mfaCodeSchema = z.object({ code: z.string().trim().min(6).max(12) });
+export const mfaSetupSchema = z.object({ password: z.string().min(1, 'Enter your password').max(128) });
+export const mfaDisableSchema = z.object({ password: z.string().min(1, 'Enter your password').max(128), code: z.string().trim().min(6).max(12) });
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Enter your password').max(128),
+  code: z.string().trim().max(12).optional(),
+  confirm: z.literal('DELETE', { error: 'Type DELETE to confirm' }),
+});
 export const resetSchema = z.object({ token: z.string().min(20).max(200), password });
 export const verifySchema = z.object({ token: z.string().min(20).max(200) });
 
@@ -39,6 +54,9 @@ export const progressSchema = z.object({
   lessonSlug: z.string().min(1).max(80),
   status: z.enum(['started', 'completed']),
 });
+
+/** Kids Zone level keys the games report, e.g. "maze:3", "math:×:2", "turtle:square". */
+export const KIDS_ACTIVITY_KEY = /^(maze|bug|turtle|pixel|binary|circuit|math|safari):[^\s:]{1,24}(:[^\s:]{1,8})?$/u;
 
 export const activitySchema = z.object({
   kind: z.enum(['exercise', 'challenge', 'quiz', 'kids']),
@@ -73,7 +91,8 @@ export const tutorSchema = z.object({
   messages: z
     .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(4000) }))
     .min(1)
-    .max(24),
+    .max(24)
+    .refine((ms) => ms.reduce((n, m) => n + m.content.length, 0) <= 24_000, 'This chat is too long. Start a new one to keep going.'),
 });
 
 export const runSchema = z.object({

@@ -9,9 +9,9 @@
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"],
+    "types": ["node", "@cloudflare/workers-types"],
     "baseUrl": ".",
     "paths": { "@shared/*": ["./shared/*"], "@/*": ["./src/*"] }
   },
-  "include": ["vite.config.ts", "plugins/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": ["vite.config.ts", "plugins/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "worker/env.d.ts"]
 }

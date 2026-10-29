@@ -5,6 +5,8 @@ import { effectivePlan } from './db';
 import { hit, peek } from './ratelimit';
 
 const DAY = 86400;
+/** ~$5–15/day at current small-model prices; override with the AI_GLOBAL_DAILY_LIMIT var. */
+const DEFAULT_GLOBAL_DAILY_LIMIT = 4000;
 
 function quotaKey(c: Ctx): { key: string; limit: number } {
   const user = c.get('user');
@@ -19,6 +21,9 @@ export async function consumeAiQuota(c: Ctx): Promise<{ used: number; limit: num
     ? `You have used today's ${limit} AI requests. They reset at midnight UTC — or upgrade for more.`
     : `Guests get ${limit} AI hints a day. Create a free account for more.`;
   const used = await hit(c.env.DB, key, limit, DAY, message);
+  // Site-wide circuit breaker: however many accounts someone creates, AI spend per day is bounded.
+  const globalLimit = Number(c.env.AI_GLOBAL_DAILY_LIMIT) || DEFAULT_GLOBAL_DAILY_LIMIT;
+  await hit(c.env.DB, 'ai:global', globalLimit, DAY, 'Our AI helpers are very busy today. Please try again tomorrow.');
   return { used, limit };
 }
 

@@ -130,6 +130,11 @@ function UsersAdmin() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); setEditing(null); toast.success('User updated'); },
     onError: (e) => toast.error(errorMessage(e)),
   });
+  const resetMfa = useMutation({
+    mutationFn: () => api.post(`/api/admin/users/${editing!.id}/reset-mfa`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); toast.success('Two-step login reset. They can sign in with their password and set it up again.'); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
 
   return (
     <div>
@@ -143,7 +148,7 @@ function UsersAdmin() {
           <tbody>
             {data?.users.map((u) => (
               <tr key={u.id} className={cn('border-t border-border', u.disabled && 'opacity-50')}>
-                <td className="px-4 py-2.5"><div className="flex items-center gap-2.5"><Avatar name={u.name} color={u.avatarColor} size={28} /><div><div className="font-medium">{u.name}</div><div className="text-xs text-muted-fg">{u.email}</div></div></div></td>
+                <td className="px-4 py-2.5"><div className="flex items-center gap-2.5"><Avatar name={u.name} color={u.avatarColor} size={28} /><div><div className="font-medium">{u.name}</div><div className="text-xs text-muted-fg">{u.email}{u.mfaEnabled && <span className="ml-1.5 font-medium text-teal-700 dark:text-teal-300">· 2-step on</span>}</div></div></div></td>
                 <td className="px-4 capitalize">{u.role}</td>
                 <td className="px-4">{PLANS[u.plan].name}{u.planExpiresAt && u.plan !== 'free' && <div className="text-xs text-muted-fg">to {formatDate(u.planExpiresAt)}</div>}</td>
                 <td className="px-4 tabular-nums">{u.xp}</td>
@@ -168,6 +173,12 @@ function UsersAdmin() {
           </div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-red-600" checked={form.disabled} disabled={editing?.id === me?.id} onChange={(e) => setForm({ ...form, disabled: e.target.checked })} /> Disable account (signs them out everywhere)</label>
           <button disabled={save.isPending} className="btn-primary w-full">Save</button>
+          {editing?.mfaEnabled && editing.id !== me?.id && (
+            <div className="border-t border-border pt-4 text-sm">
+              <p className="text-muted-fg">Lost their phone and recovery codes? Only reset after confirming who they are (for example a call to the number on file).</p>
+              <button type="button" disabled={resetMfa.isPending} onClick={() => { if (window.confirm(`Reset two-step login for ${editing.name}? They will be signed out everywhere.`)) resetMfa.mutate(); }} className="btn-outline btn-sm mt-2">Reset two-step login</button>
+            </div>
+          )}
         </form>
       </Dialog>
     </div>
