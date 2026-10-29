@@ -22,6 +22,53 @@ Almost every app you use stores its data in a database: bank balances, school re
 
 Every example runs on a live sample database for a made-up company, **Zim Traders**:
 
+```sketch
+title: "How the tables connect"
+caption: "Each table stores one kind of thing. Matching ID columns link them: an order belongs to one customer and lists several products."
+cellW: 215
+cellH: 120
+nodes:
+  - id: cus
+    label: "Customers"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "CustomerID · Name · City"
+  - id: ord
+    label: "Orders"
+    col: 2
+    row: 0
+    shape: db
+    tone: gold
+    sub: "OrderID · CustomerID"
+  - id: oi
+    label: "OrderItems"
+    col: 2
+    row: 1.5
+    shape: db
+    tone: teal
+    sub: "OrderID · ProductID · Qty"
+  - id: pro
+    label: "Products"
+    col: 0
+    row: 1.5
+    shape: db
+    tone: grape
+    sub: "ProductID · Price"
+edges:
+  - from: cus
+    to: ord
+    label: "places many"
+  - from: ord
+    to: oi
+    label: "contains"
+  - from: pro
+    to: oi
+    label: "appears in"
+```
+
+
 | Table | Holds |
 |---|---|
 | `Customers` | shops and companies around Zimbabwe |
@@ -50,6 +97,76 @@ SELECT * FROM Customers;
 # SELECT {#select}
 
 `SELECT` reads data. List the columns you want, or `*` for all of them.
+
+```sketch
+title: "The order SQL actually runs a query"
+caption: "You write SELECT first, but the database starts with FROM, filters rows, groups them, and only then picks columns, sorts and limits."
+cellW: 190
+nodes:
+  - id: f
+    label: "FROM / JOIN"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "which tables"
+  - id: w
+    label: "WHERE"
+    col: 1
+    row: 0
+    shape: round
+    tone: sky
+    sub: "filter rows"
+  - id: gb
+    label: "GROUP BY"
+    col: 2
+    row: 0
+    shape: round
+    tone: gold
+    sub: "make groups"
+  - id: h
+    label: "HAVING"
+    col: 3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "filter groups"
+  - id: s
+    label: "SELECT"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "pick columns"
+  - id: o
+    label: "ORDER BY"
+    col: 2
+    row: 1.3
+    shape: round
+    tone: grape
+    sub: "sort"
+  - id: l
+    label: "LIMIT"
+    col: 1
+    row: 1.3
+    shape: pill
+    tone: grape
+    sub: "first n rows"
+edges:
+  - from: f
+    to: w
+  - from: w
+    to: gb
+  - from: gb
+    to: h
+  - from: h
+    to: s
+  - from: s
+    to: o
+  - from: o
+    to: l
+```
+
 
 ```sql run
 SELECT CustomerName, City FROM Customers;
@@ -172,6 +289,66 @@ FROM Products;
 
 `GROUP BY` groups rows that share a value, so aggregates are calculated **per group**.
 
+```sketch
+title: "Many rows in, one row per group out"
+caption: "GROUP BY puts rows with the same value together; an aggregate such as SUM or COUNT squeezes each group into a single row."
+cellW: 200
+cellH: 95
+nodes:
+  - id: r1
+    label: "Harare · 8.50"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+  - id: r2
+    label: "Bulawayo · 4.20"
+    col: 0
+    row: 1
+    shape: box
+    tone: teal
+  - id: r3
+    label: "Harare · 11.00"
+    col: 0
+    row: 2
+    shape: box
+    tone: sky
+  - id: h
+    label: "Harare"
+    col: 1.6
+    row: 0.5
+    shape: round
+    tone: sky
+    sub: "2 rows"
+  - id: b
+    label: "Bulawayo"
+    col: 1.6
+    row: 1.8
+    shape: round
+    tone: teal
+    sub: "1 row"
+  - id: out
+    label: "Result"
+    col: 3.1
+    row: 1.15
+    shape: db
+    tone: gold
+    sub: "Harare 19.50 · Bulawayo 4.20"
+edges:
+  - from: r1
+    to: h
+  - from: r3
+    to: h
+  - from: r2
+    to: b
+  - from: h
+    to: out
+    label: "SUM"
+  - from: b
+    to: out
+```
+
+
 ```sql run title="Customers per province"
 SELECT Province, COUNT(*) AS Customers
 FROM Customers
@@ -227,6 +404,67 @@ ORDER BY o.OrderID;
 ```
 
 ## Types of join
+
+
+```sketch
+title: "INNER JOIN vs LEFT JOIN"
+caption: "INNER JOIN keeps only customers that have orders. LEFT JOIN keeps every customer and fills the order columns with NULL when there is no match."
+cellW: 190
+cellH: 105
+nodes:
+  - id: c
+    label: "Customers"
+    col: 0
+    row: 1
+    shape: db
+    tone: sky
+  - id: o
+    label: "Orders"
+    col: 0
+    row: 2.3
+    shape: db
+    tone: gold
+    sub: "10 rows"
+  - id: inner
+    label: "INNER JOIN"
+    col: 2
+    row: 0.5
+    shape: round
+    tone: teal
+    sub: "matches only"
+  - id: left
+    label: "LEFT JOIN"
+    col: 2
+    row: 2.0
+    shape: round
+    tone: grape
+    sub: "all customers + NULLs"
+  - id: ri
+    label: "Only customers with orders"
+    col: 3.6
+    row: 0.5
+    shape: note
+    tone: teal
+  - id: rl
+    label: "Every customer, NULL if none"
+    col: 3.6
+    row: 2.0
+    shape: note
+    tone: grape
+edges:
+  - from: c
+    to: inner
+  - from: o
+    to: inner
+  - from: c
+    to: left
+  - from: o
+    to: left
+  - from: inner
+    to: ri
+  - from: left
+    to: rl
+```
 
 | Join | Returns |
 |---|---|
@@ -375,6 +613,57 @@ Store each fact **once**. Instead of writing the customer's name and phone in ev
 ## SQL injection
 
 Never build SQL by gluing user input into a string:
+
+```sketch
+title: "Gluing input into SQL vs using parameters"
+caption: "If you paste user input into the SQL text, the input can become SQL. With a parameter, the database treats it only as a value."
+cellW: 200
+cellH: 110
+nodes:
+  - id: in
+    label: "'; DROP TABLE…"
+    col: 0
+    row: 0.7
+    shape: note
+    tone: rose
+    sub: "typed by a user"
+  - id: cat
+    label: "f\"…WHERE name = '{x}'\""
+    col: 1.7
+    row: 0
+    shape: round
+    tone: rose
+    sub: "string building"
+  - id: par
+    label: "\"…WHERE name = ?\", (x,)"
+    col: 1.7
+    row: 1.4
+    shape: round
+    tone: teal
+    sub: "parameter"
+  - id: bad
+    label: "Runs their SQL"
+    col: 3.4
+    row: 0
+    shape: pill
+    tone: rose
+  - id: ok
+    label: "Just a strange name"
+    col: 3.4
+    row: 1.4
+    shape: pill
+    tone: teal
+edges:
+  - from: in
+    to: cat
+  - from: in
+    to: par
+  - from: cat
+    to: bad
+  - from: par
+    to: ok
+```
+
 
 ```python
 # DANGEROUS — a user could type:  '; DROP TABLE Customers; --

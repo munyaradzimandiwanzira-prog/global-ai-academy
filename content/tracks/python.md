@@ -16,6 +16,50 @@ tags: [python, programming, beginner, ai, data, automation]
 
 **Python** is a popular programming language created by Guido van Rossum and first released in 1991. Today it is one of the most used languages in the world.
 
+```sketch
+title: "How Python runs your program"
+caption: "You save instructions in a .py file. The Python interpreter reads it top to bottom, turns each line into bytecode and runs it straight away."
+cellW: 190
+nodes:
+  - id: file
+    label: "hello.py"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+    sub: "your code"
+  - id: py
+    label: "Python interpreter"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "reads line by line"
+  - id: byte
+    label: "Bytecode"
+    col: 3
+    row: 0
+    shape: box
+    sub: "simple steps"
+  - id: out
+    label: "Output"
+    col: 3
+    row: 1.3
+    shape: pill
+    tone: teal
+    sub: "Mhoro, Rudo!"
+edges:
+  - from: file
+    to: py
+    label: "python hello.py"
+  - from: py
+    to: byte
+  - from: byte
+    to: out
+    label: "runs"
+```
+
+
 Python is used for:
 
 - **Artificial intelligence and machine learning** — almost every AI library (PyTorch, scikit-learn, LangChain, Hugging Face) is Python first.
@@ -171,6 +215,58 @@ answers: ["#"]
 
 A **variable** is a name that stores a value. You create one the moment you assign to it with `=`.
 
+```sketch
+title: "A variable is a name tag on a value"
+caption: "The name points at a value stored in memory. Assigning again moves the tag to a new value; the old value is cleaned up when nothing points at it."
+cellW: 190
+cellH: 100
+nodes:
+  - id: price
+    label: "price"
+    col: 0
+    row: 0.6
+    shape: note
+    tone: gold
+  - id: v1
+    label: "8.50"
+    col: 1.6
+    row: 0
+    shape: circle
+    tone: sky
+    sub: "before"
+  - id: v3
+    label: "9.20"
+    col: 1.6
+    row: 1.2
+    shape: circle
+    tone: grape
+    sub: "after price = 9.20"
+  - id: city
+    label: "city"
+    col: 0
+    row: 2.4
+    shape: note
+    tone: gold
+  - id: v2
+    label: "\"Harare\""
+    col: 1.6
+    row: 2.4
+    shape: round
+    tone: teal
+    sub: "str"
+edges:
+  - from: price
+    to: v1
+    label: "was"
+    dashed: true
+  - from: price
+    to: v3
+    label: "now"
+  - from: city
+    to: v2
+```
+
+
 ```python run
 learner = "Tendai"
 age = 17
@@ -246,6 +342,66 @@ tests: |
 # Data Types {#data-types}
 
 Every value in Python has a **type**. The type decides what you can do with it.
+
+```sketch
+title: "Python's built-in types"
+caption: "Every value has a type. Numbers and text hold one value; collections hold many. type(x) tells you which one you have."
+cellW: 205
+nodes:
+  - id: val
+    label: "A value"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: num
+    label: "Numbers"
+    col: 0
+    row: 1.2
+    shape: round
+    tone: sky
+    sub: "int 5 · float 8.5"
+  - id: txt
+    label: "Text"
+    col: 1
+    row: 1.2
+    shape: round
+    tone: teal
+    sub: "str \"maize\""
+  - id: bool
+    label: "Yes / no"
+    col: 2
+    row: 1.2
+    shape: round
+    tone: rose
+    sub: "bool True"
+  - id: col
+    label: "Collections"
+    col: 3
+    row: 1.2
+    shape: round
+    tone: grape
+    sub: "list · tuple · set · dict"
+  - id: none
+    label: "Nothing"
+    col: 1.5
+    row: 2.4
+    shape: pill
+    sub: "None"
+edges:
+  - from: val
+    to: num
+  - from: val
+    to: txt
+  - from: val
+    to: bool
+  - from: val
+    to: col
+  - from: val
+    to: none
+    dashed: true
+```
+
 
 | Category | Types | Example |
 |---|---|---|
@@ -491,6 +647,47 @@ print(bool(5), bool("hi"), bool([0]))
 
 A **list** stores many values in order. Lists use square brackets and can be changed.
 
+```sketch
+title: "Every item has two addresses"
+caption: "Positions count from 0 at the front and from -1 at the back. Slices like crops[1:3] take a run of items and stop before the end index."
+cellW: 170
+nodes:
+  - id: a
+    label: "\"maize\""
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "[0]  ·  [-4]"
+  - id: b
+    label: "\"beans\""
+    col: 1
+    row: 0
+    shape: box
+    tone: teal
+    sub: "[1]  ·  [-3]"
+  - id: c
+    label: "\"rice\""
+    col: 2
+    row: 0
+    shape: box
+    tone: teal
+    sub: "[2]  ·  [-2]"
+  - id: d
+    label: "\"oil\""
+    col: 3
+    row: 0
+    shape: box
+    tone: sky
+    sub: "[3]  ·  [-1]"
+edges: []
+groups:
+  - label: "crops[1:3]"
+    nodes: [b, c]
+    tone: gold
+```
+
+
 ```python run
 cities = ["Harare", "Bulawayo", "Mutare"]
 print(cities)
@@ -601,6 +798,63 @@ print("Only Python:", python_class - web_class)
 
 A **dictionary** stores **key: value** pairs — like a contact list where you look up a name to get a number.
 
+```sketch
+title: "Look values up by key"
+caption: "A dictionary stores pairs. You never search through it: give it a key and it jumps straight to the value. Keys are unique."
+cellW: 170
+cellH: 100
+nodes:
+  - id: k1
+    label: "\"name\""
+    col: 0
+    row: 0
+    shape: pill
+    tone: gold
+  - id: k2
+    label: "\"city\""
+    col: 0
+    row: 1
+    shape: pill
+    tone: gold
+  - id: k3
+    label: "\"age\""
+    col: 0
+    row: 2
+    shape: pill
+    tone: gold
+  - id: v1
+    label: "\"Rudo\""
+    col: 1.6
+    row: 0
+    shape: box
+    tone: sky
+  - id: v2
+    label: "\"Gweru\""
+    col: 1.6
+    row: 1
+    shape: box
+    tone: sky
+  - id: v3
+    label: "19"
+    col: 1.6
+    row: 2
+    shape: box
+    tone: sky
+edges:
+  - from: k1
+    to: v1
+  - from: k2
+    to: v2
+  - from: k3
+    to: v3
+groups:
+  - label: "keys"
+    nodes: [k1, k2, k3]
+  - label: "values"
+    nodes: [v1, v2, v3]
+```
+
+
 ```python run
 learner = {
     "name": "Thandiwe",
@@ -663,6 +917,65 @@ tests: |
 # If ... Else {#if-else}
 
 Programs make decisions with `if`, `elif` (else if) and `else`.
+
+```sketch
+title: "Choosing a path"
+caption: "Python checks each condition in order and runs only the first block whose condition is True. else catches everything left over."
+cellW: 180
+nodes:
+  - id: mark
+    label: "mark = 64"
+    col: 0
+    row: 1
+    shape: note
+    tone: sky
+  - id: c1
+    label: "mark >= 75?"
+    col: 1.4
+    row: 1
+    shape: diamond
+    tone: gold
+  - id: c2
+    label: "mark >= 50?"
+    col: 2.9
+    row: 1
+    shape: diamond
+    tone: gold
+  - id: dist
+    label: "\"Distinction\""
+    col: 1.4
+    row: 0
+    shape: pill
+    tone: grape
+  - id: pass
+    label: "\"Pass\""
+    col: 2.9
+    row: 0
+    shape: pill
+    tone: teal
+  - id: fail
+    label: "\"Try again\""
+    col: 2.9
+    row: 2.2
+    shape: pill
+    tone: rose
+edges:
+  - from: mark
+    to: c1
+  - from: c1
+    to: dist
+    label: "yes"
+  - from: c1
+    to: c2
+    label: "no"
+  - from: c2
+    to: pass
+    label: "yes"
+  - from: c2
+    to: fail
+    label: "else"
+```
+
 
 ```python run
 mark = 67
@@ -789,6 +1102,59 @@ while n < 10:
 
 A `for` loop goes through each item in a sequence.
 
+```sketch
+title: "How a for loop walks a list"
+caption: "The loop takes the next item, gives it a name, runs the indented block, and repeats until the list runs out."
+cellW: 180
+nodes:
+  - id: lst
+    label: "prices"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "[8.5, 4.2, 2.8]"
+  - id: next
+    label: "Take next item"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "p = 8.5"
+  - id: body
+    label: "Run the block"
+    col: 3
+    row: 0
+    shape: round
+    tone: teal
+    sub: "total += p"
+  - id: more
+    label: "More items?"
+    col: 2.25
+    row: 1.3
+    shape: diamond
+  - id: done
+    label: "After the loop"
+    col: 3.6
+    row: 1.3
+    shape: pill
+    tone: grape
+edges:
+  - from: lst
+    to: next
+  - from: next
+    to: body
+  - from: body
+    to: more
+  - from: more
+    to: next
+    label: "yes"
+  - from: more
+    to: done
+    label: "no"
+```
+
+
 ```python run
 for city in ["Harare", "Bulawayo", "Mutare"]:
     print("Hello,", city)
@@ -868,6 +1234,48 @@ expectedOutput: |
 # Functions {#functions}
 
 A **function** is a named block of code you can run whenever you need it. Define it with `def`.
+
+```sketch
+title: "A function is a machine with a name"
+caption: "Arguments go in, the body runs, and return hands one value back to the caller. Define it once with def; call it as often as you like."
+cellW: 190
+nodes:
+  - id: a1
+    label: "usd = 10"
+    col: 0
+    row: 0
+    shape: note
+    tone: sky
+  - id: a2
+    label: "rate = 26.8"
+    col: 0
+    row: 1.2
+    shape: note
+    tone: sky
+  - id: fn
+    label: "to_zig(usd, rate)"
+    col: 1.6
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "def … return usd * rate"
+  - id: out
+    label: "268.0"
+    col: 3.2
+    row: 0.6
+    shape: circle
+    tone: teal
+    sub: "returned"
+edges:
+  - from: a1
+    to: fn
+  - from: a2
+    to: fn
+  - from: fn
+    to: out
+    label: "return"
+```
+
 
 > **Go deeper.** The **[Functions in Depth](/learn/python-functions)** track covers every parameter kind, closures, decorators, generators, recursion, type hints and async; **[Pydantic in Depth](/learn/pydantic)** shows how to validate data at the boundaries of your programs.
 
@@ -982,6 +1390,62 @@ print(learners)
 
 Errors (called **exceptions**) stop your program. You can **catch** them with `try` / `except` so your program can recover.
 
+```sketch
+title: "try, except, else, finally"
+caption: "Python runs the try block. If an error is raised, it jumps to the matching except. else runs only when nothing failed; finally always runs."
+cellW: 190
+cellH: 110
+nodes:
+  - id: try
+    label: "try:"
+    col: 0
+    row: 1
+    shape: round
+    tone: sky
+    sub: "int(user_input)"
+  - id: err
+    label: "Error?"
+    col: 1.4
+    row: 1
+    shape: diamond
+    tone: gold
+  - id: exc
+    label: "except ValueError:"
+    col: 2.8
+    row: 0
+    shape: round
+    tone: rose
+    sub: "show a friendly message"
+  - id: els
+    label: "else:"
+    col: 2.8
+    row: 2
+    shape: round
+    tone: teal
+    sub: "use the number"
+  - id: fin
+    label: "finally:"
+    col: 4
+    row: 1
+    shape: pill
+    tone: grape
+    sub: "always runs"
+edges:
+  - from: try
+    to: err
+  - from: err
+    to: exc
+    label: "yes"
+  - from: err
+    to: els
+    label: "no"
+  - from: exc
+    to: fin
+  - from: els
+    to: fin
+```
+
+
 ```python run
 try:
     number = int("twelve")
@@ -1051,6 +1515,59 @@ tests: |
 # Modules and pip {#modules}
 
 A **module** is a file of Python code you can reuse. Python comes with a large **standard library** of modules.
+
+```sketch
+title: "Where imported code comes from"
+caption: "import looks in the standard library, your own files, and packages installed with pip from the Python Package Index (PyPI)."
+cellW: 180
+nodes:
+  - id: main
+    label: "main.py"
+    col: 2
+    row: 1
+    shape: doc
+    tone: gold
+    sub: "import …"
+  - id: std
+    label: "Standard library"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "math · json · csv"
+  - id: own
+    label: "Your files"
+    col: 0
+    row: 2
+    shape: doc
+    tone: teal
+    sub: "helpers.py"
+  - id: pypi
+    label: "PyPI"
+    col: 4
+    row: 0
+    shape: db
+    tone: grape
+    sub: "500k+ packages"
+  - id: site
+    label: "Installed packages"
+    col: 4
+    row: 2
+    shape: db
+    sub: "requests · pandas"
+edges:
+  - from: std
+    to: main
+    label: "built in"
+  - from: own
+    to: main
+  - from: pypi
+    to: site
+    label: "pip install"
+  - from: site
+    to: main
+```
+
 
 ```python run
 import math
@@ -1155,6 +1672,51 @@ answers: [['"a"', "'a'"]]
 # Classes and Objects {#classes}
 
 Python is **object-oriented**. A **class** is a blueprint; an **object** is something built from it.
+
+```sketch
+title: "One class, many objects"
+caption: "A class is the blueprint: which data each object holds and what it can do. Every object made from it has its own values."
+cellW: 210
+cellH: 100
+nodes:
+  - id: cls
+    label: "class Product"
+    col: 0
+    row: 1
+    shape: doc
+    tone: gold
+    sub: "name · price · discount()"
+  - id: o1
+    label: "maize"
+    col: 1.6
+    row: 0
+    shape: round
+    tone: sky
+    sub: "price 8.50"
+  - id: o2
+    label: "lantern"
+    col: 1.6
+    row: 1
+    shape: round
+    tone: teal
+    sub: "price 15.00"
+  - id: o3
+    label: "basket"
+    col: 1.6
+    row: 2
+    shape: round
+    tone: grape
+    sub: "price 18.00"
+edges:
+  - from: cls
+    to: o1
+    label: "Product(…)"
+  - from: cls
+    to: o2
+  - from: cls
+    to: o3
+```
+
 
 ```python run
 class Learner:

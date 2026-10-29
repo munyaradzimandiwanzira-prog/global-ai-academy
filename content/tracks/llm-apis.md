@@ -16,6 +16,52 @@ tags: [openai, llm, api, python, embeddings, function calling, structured output
 
 Chat apps are built on **APIs** — web services your code calls over HTTPS. You send messages; the API returns the model's reply.
 
+```sketch
+title: "An API call, end to end"
+caption: "Your server sends the conversation and settings with a secret key. The model returns generated text, and you pay for input and output tokens."
+cellW: 190
+nodes:
+  - id: ui
+    label: "Your app"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: srv
+    label: "Your server"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "holds the API key"
+  - id: api
+    label: "Model API"
+    col: 3
+    row: 0
+    shape: db
+    tone: grape
+    sub: "messages · model · settings"
+  - id: tok
+    label: "Tokens in / out"
+    col: 3
+    row: 1.3
+    shape: note
+    tone: teal
+    sub: "this is the bill"
+edges:
+  - from: ui
+    to: srv
+    arrow: both
+  - from: srv
+    to: api
+    label: "HTTPS"
+    arrow: both
+  - from: api
+    to: tok
+    dashed: true
+```
+
+
 > **Go deeper.** The **[OpenAI API for Developers](/learn/openai-platform)** track covers the Responses API, conversation state, structured outputs, built-in tools, reasoning models, embeddings and the Batch API in detail; **[Inference Engineering](/learn/inference-engineering)** explains latency and cost.
 
 Major providers include **OpenAI**, **Anthropic**, **Google**, **Mistral** and **Cohere**, and you can also run **open models** (Llama, Qwen, Gemma, Mistral) yourself with tools like **Ollama** or through Hugging Face. Their APIs look very similar, so what you learn here transfers.
@@ -93,6 +139,52 @@ This uses OpenAI's **Responses API**, the recommended API for new projects. You'
 ## Conversations are stateless
 
 The API doesn't remember previous calls. To continue a conversation you send the **history** each time:
+
+```sketch
+title: "The model remembers nothing between calls"
+caption: "Each request must carry the history you want the model to see. Long chats cost more because the whole history is sent again every turn."
+cellW: 210
+nodes:
+  - id: c1
+    label: "Call 1"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "system · user 1"
+  - id: c2
+    label: "Call 2"
+    col: 1.3
+    row: 0
+    shape: box
+    tone: gold
+    sub: "… + reply 1 · user 2"
+  - id: c3
+    label: "Call 3"
+    col: 2.6
+    row: 0
+    shape: box
+    tone: teal
+    sub: "… + reply 2 · user 3"
+  - id: m
+    label: "Model"
+    col: 1.3
+    row: 1.3
+    shape: circle
+    tone: grape
+    sub: "no memory"
+edges:
+  - from: c1
+    to: m
+    dashed: true
+  - from: c2
+    to: m
+    dashed: true
+  - from: c3
+    to: m
+    dashed: true
+```
+
 
 ```python
 history = []
@@ -189,6 +281,61 @@ print(data["customer"], lines)
 
 **Function calling** lets the model ask your code to run a function — check stock, look up a price, book a slot. The model never runs code itself: it returns a request, **your code** runs the function, and you send the result back.
 
+```sketch
+title: "The tool-calling loop"
+caption: "The model cannot run code. It asks for a tool with arguments; your code runs it and sends the result back; the model then writes the answer."
+cellW: 180
+cellH: 110
+nodes:
+  - id: u
+    label: "User question"
+    col: 0
+    row: 0
+    shape: note
+    tone: sky
+    sub: "ZiG price of maize?"
+  - id: m
+    label: "Model"
+    col: 1.6
+    row: 0
+    shape: circle
+    tone: grape
+  - id: call
+    label: "Tool call"
+    col: 3.2
+    row: 0
+    shape: doc
+    tone: gold
+    sub: "get_rate(\"ZiG\")"
+  - id: run
+    label: "Your code runs it"
+    col: 3.2
+    row: 1.4
+    shape: round
+    tone: teal
+    sub: "returns 26.8"
+  - id: ans
+    label: "Final answer"
+    col: 1.6
+    row: 1.4
+    shape: pill
+    tone: sky
+edges:
+  - from: u
+    to: m
+  - from: m
+    to: call
+  - from: call
+    to: run
+  - from: run
+    to: m
+    label: "result"
+  - from: m
+    to: ans
+    label: "done"
+```
+
+
 ```python
 tools = [{
     "type": "function",
@@ -278,6 +425,63 @@ Embeddings power **semantic search**, **recommendations**, **clustering** and **
 # Errors, Retries and Limits {#errors}
 
 Production code must expect failures.
+
+```sketch
+title: "Retry with exponential backoff"
+caption: "Retry only errors that may pass (429 rate limit, 5xx, timeouts). Wait longer each time, add randomness, and give up after a few tries."
+cellW: 185
+cellH: 110
+nodes:
+  - id: call
+    label: "Call API"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+  - id: ok
+    label: "Status?"
+    col: 1.4
+    row: 0.6
+    shape: diamond
+    tone: gold
+  - id: use
+    label: "Use reply"
+    col: 2.9
+    row: 0
+    shape: pill
+    tone: teal
+    sub: "200"
+  - id: fail
+    label: "Show error"
+    col: 2.9
+    row: 1.2
+    shape: pill
+    tone: rose
+    sub: "400 · 401 · gave up"
+  - id: wait
+    label: "Wait 1s, 2s, 4s…"
+    col: 1.4
+    row: 2.0
+    shape: round
+    tone: grape
+    sub: "+ jitter"
+edges:
+  - from: call
+    to: ok
+  - from: ok
+    to: use
+    label: "ok"
+  - from: ok
+    to: fail
+    label: "no retry"
+  - from: ok
+    to: wait
+    label: "429 · 5xx"
+  - from: wait
+    to: call
+    label: "retry"
+```
+
 
 | Error | Meaning | What to do |
 |---|---|---|

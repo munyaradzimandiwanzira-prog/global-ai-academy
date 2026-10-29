@@ -16,6 +16,59 @@ tags: [backend, api, rest, http, fastapi, express, authentication, databases]
 
 When you open a mobile-money app and check your balance, the app (the **frontend**) asks a **backend** server. The backend:
 
+```sketch
+title: "The parts behind every app"
+caption: "The app sends a request. The backend checks who is asking, applies the business rules, reads or writes the database, and calls other services."
+cellW: 190
+cellH: 105
+nodes:
+  - id: app
+    label: "Web or mobile app"
+    col: 0
+    row: 1
+    shape: round
+    tone: sky
+  - id: api
+    label: "Your API"
+    col: 1.6
+    row: 1
+    shape: round
+    tone: gold
+    sub: "rules · validation"
+  - id: auth
+    label: "Who is this?"
+    col: 1.6
+    row: 0
+    shape: pill
+    tone: grape
+    sub: "auth"
+  - id: db
+    label: "Database"
+    col: 3.2
+    row: 0.4
+    shape: db
+    tone: teal
+  - id: ext
+    label: "Other services"
+    col: 3.2
+    row: 1.8
+    shape: box
+    sub: "payments · email"
+edges:
+  - from: app
+    to: api
+    label: "request"
+    arrow: both
+  - from: api
+    to: auth
+    arrow: both
+  - from: api
+    to: db
+  - from: api
+    to: ext
+```
+
+
 1. **Authenticates** you — are you really you?
 2. **Authorises** the request — may you see this account?
 3. **Reads/writes the database**.
@@ -32,6 +85,49 @@ Backend engineers care about **correctness, security, reliability and performanc
 # HTTP Fundamentals {#http}
 
 Every web request has a **method**, a **URL**, **headers** and sometimes a **body**. Every response has a **status code**, headers and a body.
+
+```sketch
+title: "One request, one response"
+caption: "A request is a method, a path, headers and an optional body. The response is a status code, headers and a body, usually JSON."
+cellW: 200
+cellH: 100
+nodes:
+  - id: cl
+    label: "Client"
+    col: 0
+    row: 0.5
+    shape: person
+  - id: req
+    label: "POST /orders"
+    col: 1.3
+    row: 0
+    shape: doc
+    tone: sky
+    sub: "headers · JSON body"
+  - id: srv
+    label: "Server"
+    col: 2.8
+    row: 0.5
+    shape: db
+    tone: gold
+  - id: res
+    label: "201 Created"
+    col: 1.3
+    row: 1.3
+    shape: doc
+    tone: teal
+    sub: "{ \"id\": 1011 }"
+edges:
+  - from: cl
+    to: req
+  - from: req
+    to: srv
+  - from: srv
+    to: res
+  - from: res
+    to: cl
+```
+
 
 ```text
 POST /api/orders HTTP/1.1
@@ -164,6 +260,68 @@ Other popular choices: **Hono** (runs on Cloudflare Workers — this site's API 
 
 Frameworks map a method + path to a handler. Here's the core idea in plain Python:
 
+```sketch
+title: "What happens inside the server"
+caption: "Middleware runs on every request (logging, auth, parsing). The router matches method and path to one handler, which builds the response."
+cellW: 185
+nodes:
+  - id: req
+    label: "Request"
+    col: 0
+    row: 0
+    shape: pill
+    tone: sky
+    sub: "GET /products/7"
+  - id: mw
+    label: "Middleware"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: grape
+    sub: "log · auth · parse"
+  - id: rt
+    label: "Router"
+    col: 2.6
+    row: 0
+    shape: diamond
+    tone: gold
+    sub: "match path"
+  - id: h
+    label: "Handler"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "get_product(7)"
+  - id: nf
+    label: "404"
+    col: 3.9
+    row: 0
+    shape: pill
+    tone: rose
+    sub: "no match"
+  - id: res
+    label: "Response"
+    col: 1.3
+    row: 1.3
+    shape: pill
+    tone: sky
+    sub: "200 JSON"
+edges:
+  - from: req
+    to: mw
+  - from: mw
+    to: rt
+  - from: rt
+    to: h
+    label: "found"
+  - from: rt
+    to: nf
+  - from: h
+    to: res
+```
+
+
 ```python run title="How web frameworks route requests"
 import json, re
 
@@ -280,6 +438,61 @@ print(verify("Harare2026!", stored), verify("harare2026!", stored))
 
 ## Sessions vs tokens
 
+
+```sketch
+title: "Two ways to remember who logged in"
+caption: "A session keeps the login on the server and gives the browser a random ID in a cookie. A token (such as a JWT) carries signed claims the server can check without a lookup."
+cellW: 190
+cellH: 105
+nodes:
+  - id: login
+    label: "POST /login"
+    col: 0
+    row: 1
+    shape: round
+    tone: sky
+    sub: "password checked"
+  - id: sid
+    label: "Session cookie"
+    col: 1.7
+    row: 0.3
+    shape: note
+    tone: gold
+    sub: "random ID"
+  - id: store
+    label: "Session store"
+    col: 3.3
+    row: 0.3
+    shape: db
+    tone: gold
+    sub: "ID → user"
+  - id: jwt
+    label: "Signed token"
+    col: 1.7
+    row: 1.7
+    shape: note
+    tone: teal
+    sub: "user_id · role · expiry"
+  - id: ver
+    label: "Verify signature"
+    col: 3.3
+    row: 1.7
+    shape: round
+    tone: teal
+    sub: "no lookup needed"
+edges:
+  - from: login
+    to: sid
+  - from: login
+    to: jwt
+  - from: sid
+    to: store
+    label: "look up"
+  - from: jwt
+    to: ver
+    label: "check"
+```
+
 | | Session cookie | Bearer token (e.g. JWT) |
 |---|---|---|
 | Stored | Server-side session; browser holds an HttpOnly cookie | Client holds the token |
@@ -325,6 +538,57 @@ See the [Security](/learn/security) track for the full picture.
 
 Store expensive results so you don't recompute them: in memory, **Redis**, or a CDN for public responses.
 
+```sketch
+title: "Check the cache before the database"
+caption: "A cache keeps recent answers in fast memory. A hit skips the slow work; a miss does the work once and stores the result with an expiry time."
+cellW: 185
+cellH: 110
+nodes:
+  - id: req
+    label: "Request"
+    col: 0
+    row: 0.6
+    shape: pill
+    tone: sky
+  - id: hit
+    label: "In cache?"
+    col: 1.4
+    row: 0.6
+    shape: diamond
+    tone: gold
+  - id: fast
+    label: "Return cached"
+    col: 2.9
+    row: 0
+    shape: pill
+    tone: teal
+    sub: "~1 ms"
+  - id: db
+    label: "Query database"
+    col: 2.9
+    row: 1.4
+    shape: db
+    tone: grape
+    sub: "~50 ms"
+  - id: save
+    label: "Save with TTL"
+    col: 4.2
+    row: 1.4
+    shape: note
+edges:
+  - from: req
+    to: hit
+  - from: hit
+    to: fast
+    label: "hit"
+  - from: hit
+    to: db
+    label: "miss"
+  - from: db
+    to: save
+```
+
+
 ```python run title="A time-limited cache"
 import time
 from functools import wraps
@@ -357,6 +621,55 @@ print("API calls made:", calls["n"])
 ## Background jobs
 
 Slow work (sending emails, generating PDFs, processing uploads, AI calls) shouldn't block the request. Put it on a **queue** (Redis + Celery/RQ, BullMQ, Cloudflare Queues) and let **workers** process it.
+
+```sketch
+title: "Answer fast, do the slow part later"
+caption: "The API puts a job on a queue and replies straight away. A worker picks jobs off the queue and retries the ones that fail."
+cellW: 190
+nodes:
+  - id: api
+    label: "API"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "POST /signup"
+  - id: q
+    label: "Queue"
+    col: 1.5
+    row: 0
+    shape: db
+    tone: gold
+    sub: "send_welcome(17)"
+  - id: w
+    label: "Worker"
+    col: 3
+    row: 0
+    shape: round
+    tone: teal
+    sub: "sends the email"
+  - id: ok
+    label: "201 in 40 ms"
+    col: 0
+    row: 1.3
+    shape: pill
+    tone: grape
+edges:
+  - from: api
+    to: q
+    label: "enqueue"
+  - from: q
+    to: w
+    label: "pick up"
+  - from: api
+    to: ok
+  - from: w
+    to: q
+    label: "retry on failure"
+    dashed: true
+    bend: 40
+```
+
 
 # Testing and Observability {#testing}
 

@@ -28,6 +28,81 @@ Artificial Intelligence
 
 ## Traditional programming vs machine learning
 
+
+```sketch
+title: "Rules in vs rules out"
+caption: "In traditional programming you write the rules. In machine learning you give examples with answers, and training finds the rules."
+cellW: 180
+cellH: 80
+nodes:
+  - id: r
+    label: "Rules"
+    col: 0
+    row: 0
+    shape: note
+    tone: gold
+  - id: d1
+    label: "Data"
+    col: 0
+    row: 0.9
+    shape: note
+    tone: sky
+  - id: p
+    label: "Program"
+    col: 1.5
+    row: 0.45
+    shape: round
+  - id: a1
+    label: "Answers"
+    col: 3
+    row: 0.45
+    shape: pill
+    tone: teal
+  - id: d2
+    label: "Data"
+    col: 0
+    row: 2.4
+    shape: note
+    tone: sky
+  - id: a2
+    label: "Answers"
+    col: 0
+    row: 3.3
+    shape: note
+    tone: teal
+  - id: ml
+    label: "Training"
+    col: 1.5
+    row: 2.85
+    shape: round
+    tone: grape
+  - id: rules
+    label: "Rules (a model)"
+    col: 3
+    row: 2.85
+    shape: pill
+    tone: gold
+edges:
+  - from: r
+    to: p
+  - from: d1
+    to: p
+  - from: p
+    to: a1
+  - from: d2
+    to: ml
+  - from: a2
+    to: ml
+  - from: ml
+    to: rules
+groups:
+  - label: "traditional"
+    nodes: [r, d1, p, a1]
+  - label: "machine learning"
+    nodes: [d2, a2, ml, rules]
+    tone: grape
+```
+
 - **Traditional programming:** you write the **rules**. Data + rules → answers.
 - **Machine learning:** you give **examples** with answers, and the computer finds the rules. Data + answers → rules (a **model**).
 
@@ -62,6 +137,52 @@ Rules like these break easily — spammers just change the words. Machine learni
 # How Machines Learn {#how-machines-learn}
 
 There are three main kinds of machine learning.
+
+```sketch
+title: "The training loop"
+caption: "Guess, measure how wrong the guess was, nudge the knobs (weights) to be a little less wrong, and repeat thousands of times."
+cellW: 200
+nodes:
+  - id: pred
+    label: "Predict"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "model(x)"
+  - id: loss
+    label: "Measure error"
+    col: 1.6
+    row: 0
+    shape: round
+    tone: rose
+    sub: "loss"
+  - id: grad
+    label: "Which way?"
+    col: 1.6
+    row: 1.3
+    shape: round
+    tone: gold
+    sub: "gradient"
+  - id: upd
+    label: "Nudge weights"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "learning rate"
+edges:
+  - from: pred
+    to: loss
+  - from: loss
+    to: grad
+  - from: grad
+    to: upd
+  - from: upd
+    to: pred
+    label: "repeat"
+```
+
 
 | Type | Learns from | Example |
 |---|---|---|
@@ -100,6 +221,49 @@ That loop is the heart of **all** machine learning — including the training of
 
 Always split your data:
 
+```sketch
+title: "Split the data before you start"
+caption: "Train on most of it, tune on the validation set, and touch the test set once at the end to get an honest score."
+cellW: 210
+cellH: 90
+nodes:
+  - id: all
+    label: "All labelled data"
+    col: 0
+    row: 1
+    shape: db
+    tone: sky
+  - id: tr
+    label: "Training 70%"
+    col: 1.6
+    row: 0
+    shape: box
+    tone: teal
+    sub: "learn weights"
+  - id: va
+    label: "Validation 15%"
+    col: 1.6
+    row: 1
+    shape: box
+    tone: gold
+    sub: "pick settings"
+  - id: te
+    label: "Test 15%"
+    col: 1.6
+    row: 2
+    shape: box
+    tone: rose
+    sub: "final score, once"
+edges:
+  - from: all
+    to: tr
+  - from: all
+    to: va
+  - from: all
+    to: te
+```
+
+
 - **Training set** — the model learns from it.
 - **Validation set** — you use it to tune settings.
 - **Test set** — touched only once at the end, to measure real performance.
@@ -118,6 +282,77 @@ If a model does brilliantly on training data but badly on new data, it has **ove
 # Neural Networks and Deep Learning {#neural-networks}
 
 A **neural network** is made of layers of simple units ("neurons"). Each neuron multiplies its inputs by weights, adds them up, and passes the result through an **activation function**.
+
+```sketch
+title: "Layers of simple units"
+caption: "Each unit multiplies its inputs by weights, adds them up and applies an activation. Stacking layers lets the network learn complex patterns."
+cellW: 170
+cellH: 110
+nodes:
+  - id: i1
+    label: "dryness"
+    col: 0
+    row: 0
+    shape: circle
+    tone: sky
+  - id: i2
+    label: "temp"
+    col: 0
+    row: 1
+    shape: circle
+    tone: sky
+  - id: i3
+    label: "rain"
+    col: 0
+    row: 2
+    shape: circle
+    tone: sky
+  - id: h1
+    label: ""
+    col: 1.4
+    row: 0.5
+    shape: circle
+    tone: gold
+  - id: h2
+    label: ""
+    col: 1.4
+    row: 1.5
+    shape: circle
+    tone: gold
+  - id: o
+    label: "irrigate?"
+    col: 2.8
+    row: 1
+    shape: circle
+    tone: teal
+edges:
+  - from: i1
+    to: h1
+  - from: i1
+    to: h2
+  - from: i2
+    to: h1
+  - from: i2
+    to: h2
+  - from: i3
+    to: h1
+  - from: i3
+    to: h2
+  - from: h1
+    to: o
+  - from: h2
+    to: o
+groups:
+  - label: "inputs"
+    nodes: [i1, i2, i3]
+  - label: "hidden layer"
+    nodes: [h1, h2]
+    tone: gold
+  - label: "output"
+    nodes: [o]
+    tone: teal
+```
+
 
 ```python run title="One artificial neuron"
 import math
@@ -141,6 +376,51 @@ Stack thousands of these in many layers and you get **deep learning**, which pow
 # Large Language Models {#llms}
 
 A **large language model** (LLM) is a neural network trained on huge amounts of text to do one thing: **predict the next token** (a word or piece of a word).
+
+```sketch
+title: "One token at a time"
+caption: "An LLM reads the text so far and predicts the most likely next token. That token is added and the whole thing repeats."
+cellW: 200
+cellH: 110
+nodes:
+  - id: ctx
+    label: "\"The capital of Zimbabwe is\""
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+  - id: m
+    label: "LLM"
+    col: 1.8
+    row: 0
+    shape: circle
+    tone: grape
+  - id: p
+    label: "Next-token odds"
+    col: 3.2
+    row: 0
+    shape: note
+    tone: gold
+    sub: "Harare 97% · a 1%"
+  - id: add
+    label: "Append \"Harare\""
+    col: 1.8
+    row: 1.4
+    shape: round
+    tone: teal
+edges:
+  - from: ctx
+    to: m
+  - from: m
+    to: p
+  - from: p
+    to: add
+    label: "pick"
+  - from: add
+    to: ctx
+    label: "repeat"
+```
+
 
 When you chat with an LLM, it generates one token at a time, each time choosing a likely next token given everything before it.
 

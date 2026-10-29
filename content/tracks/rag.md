@@ -16,6 +16,63 @@ tags: [rag, retrieval, embeddings, vector database, llm, search, pgvector]
 
 LLMs only know what was in their training data. They don't know your school's policies, your company's price list or last week's news — and when they don't know, they may **hallucinate**.
 
+```sketch
+title: "Retrieval-augmented generation"
+caption: "Instead of trusting what the model remembers, look up the relevant documents first and give them to the model with the question."
+cellW: 185
+nodes:
+  - id: q
+    label: "Question"
+    col: 0
+    row: 1
+    shape: person
+  - id: ret
+    label: "Retrieve"
+    col: 1.3
+    row: 1
+    shape: round
+    tone: sky
+    sub: "search your documents"
+  - id: docs
+    label: "Your documents"
+    col: 1.3
+    row: 0
+    shape: db
+    tone: teal
+  - id: aug
+    label: "Augment"
+    col: 2.6
+    row: 1
+    shape: round
+    tone: gold
+    sub: "question + passages"
+  - id: gen
+    label: "Generate"
+    col: 3.9
+    row: 1
+    shape: round
+    tone: grape
+    sub: "LLM answers"
+  - id: ans
+    label: "Answer + sources"
+    col: 3.9
+    row: 2.2
+    shape: pill
+    tone: teal
+edges:
+  - from: q
+    to: ret
+  - from: docs
+    to: ret
+  - from: ret
+    to: aug
+  - from: aug
+    to: gen
+  - from: gen
+    to: ans
+```
+
+
 > **Go deeper.** When questions need connected facts (multi-hop, relationships, whole-corpus themes) or an agent that decides what to retrieve, continue with **[GraphRAG & Agentic RAG](/learn/graphrag)**, built on **[Neo4j & Graph Databases](/learn/neo4j)**.
 
 **Retrieval-Augmented Generation (RAG)** fixes this: before asking the LLM, **retrieve** the most relevant pieces of your own documents and put them in the prompt. The model then answers **from those sources**, and can cite them.
@@ -46,6 +103,87 @@ Question → embed → find similar chunks → build prompt with chunks → LLM 
 # A Complete Mini RAG Pipeline {#mini-rag}
 
 Here's a whole RAG pipeline you can run. It uses **TF-IDF** vectors (a classic technique) instead of neural embeddings so it runs instantly in your browser — the structure is identical to production RAG.
+
+```sketch
+title: "Two pipelines: index once, query many times"
+caption: "Indexing happens ahead of time. At question time, the query is embedded the same way and compared against every stored chunk."
+cellW: 180
+cellH: 110
+nodes:
+  - id: docs
+    label: "Documents"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+  - id: chunk
+    label: "Chunk"
+    col: 1
+    row: 0
+    shape: round
+  - id: emb
+    label: "Embed"
+    col: 2
+    row: 0
+    shape: round
+    tone: gold
+  - id: vdb
+    label: "Vector store"
+    col: 3.4
+    row: 0.7
+    shape: db
+    tone: teal
+  - id: q
+    label: "Question"
+    col: 0
+    row: 1.4
+    shape: note
+    tone: grape
+  - id: qe
+    label: "Embed"
+    col: 1
+    row: 1.4
+    shape: round
+    tone: gold
+  - id: top
+    label: "Top-k chunks"
+    col: 3.4
+    row: 2.3
+    shape: round
+    tone: teal
+  - id: llm
+    label: "LLM writes answer"
+    col: 1.7
+    row: 2.3
+    shape: pill
+    tone: grape
+edges:
+  - from: docs
+    to: chunk
+  - from: chunk
+    to: emb
+  - from: emb
+    to: vdb
+  - from: q
+    to: qe
+  - from: qe
+    to: vdb
+    label: "search"
+  - from: vdb
+    to: top
+  - from: top
+    to: llm
+  - from: q
+    to: llm
+    dashed: true
+groups:
+  - label: "offline: index"
+    nodes: [docs, chunk, emb]
+  - label: "online: answer"
+    nodes: [q, qe]
+    tone: grape
+```
+
 
 ```python run title="RAG from scratch"
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -90,6 +228,56 @@ In production you'd swap TF-IDF for neural **embeddings** (which understand syno
 # Chunking {#chunking}
 
 Long documents are split into **chunks** before embedding. Chunking strongly affects quality:
+
+```sketch
+title: "Overlapping chunks keep ideas whole"
+caption: "Split long documents into pieces small enough to embed well. A little overlap means a sentence cut at a border still appears whole in one chunk."
+cellW: 175
+cellH: 105
+nodes:
+  - id: doc
+    label: "Refund policy"
+    col: 0
+    row: 0.5
+    shape: doc
+    tone: sky
+    sub: "3 pages"
+  - id: c1
+    label: "Chunk 1"
+    col: 1.6
+    row: 0
+    shape: box
+    tone: gold
+    sub: "¶1–¶3"
+  - id: c2
+    label: "Chunk 2"
+    col: 2.6
+    row: 0.5
+    shape: box
+    tone: teal
+    sub: "¶3–¶5"
+  - id: c3
+    label: "Chunk 3"
+    col: 3.6
+    row: 1
+    shape: box
+    tone: grape
+    sub: "¶5–¶7"
+  - id: meta
+    label: "Each keeps metadata"
+    col: 1.6
+    row: 1.4
+    shape: note
+    sub: "source · page · date"
+edges:
+  - from: doc
+    to: c1
+  - from: doc
+    to: c2
+  - from: doc
+    to: c3
+```
+
 
 - **Too big** — chunks mix topics; retrieval is fuzzy and prompts get expensive.
 - **Too small** — chunks lose context ("it" no longer says what "it" is).
@@ -158,6 +346,58 @@ Basic vector search is a good start. Production systems add:
 ## Hybrid search
 
 Combine **keyword search** (BM25 — exact terms like product codes, names, "Section 12(3)") with **vector search** (meaning). Merge the rankings, for example with **reciprocal rank fusion**:
+
+```sketch
+title: "Keyword + vector, then re-rank"
+caption: "Keyword search finds exact terms such as product codes; vector search finds meaning. Merge both lists, then let a re-ranker order the best few."
+cellW: 180
+cellH: 105
+nodes:
+  - id: q
+    label: "Query"
+    col: 0
+    row: 0.75
+    shape: note
+    tone: sky
+  - id: kw
+    label: "Keyword (BM25)"
+    col: 1.4
+    row: 0
+    shape: round
+    tone: gold
+    sub: "exact words"
+  - id: vec
+    label: "Vector search"
+    col: 1.4
+    row: 1.5
+    shape: round
+    tone: teal
+    sub: "similar meaning"
+  - id: fuse
+    label: "Merge (RRF)"
+    col: 2.8
+    row: 0.75
+    shape: diamond
+  - id: rr
+    label: "Re-ranker"
+    col: 4.1
+    row: 0.75
+    shape: round
+    tone: grape
+    sub: "top 5"
+edges:
+  - from: q
+    to: kw
+  - from: q
+    to: vec
+  - from: kw
+    to: fuse
+  - from: vec
+    to: fuse
+  - from: fuse
+    to: rr
+```
+
 
 ```python run title="Reciprocal rank fusion"
 keyword_results = ["fees.md", "exams.md", "transport.md"]
@@ -235,6 +475,59 @@ tests: |
 # Evaluating RAG {#evaluation}
 
 Measure retrieval and generation **separately**.
+
+```sketch
+title: "Two things can go wrong"
+caption: "Check retrieval and generation separately. A wrong answer from the right passages is a prompt problem; a wrong answer from the wrong passages is a search problem."
+cellW: 190
+cellH: 100
+nodes:
+  - id: q
+    label: "Test question"
+    col: 0
+    row: 0.75
+    shape: note
+    tone: sky
+    sub: "+ expected answer"
+  - id: ret
+    label: "Retrieval"
+    col: 1.6
+    row: 0
+    shape: round
+    tone: gold
+    sub: "recall@k · precision"
+  - id: gen
+    label: "Generation"
+    col: 1.6
+    row: 1.5
+    shape: round
+    tone: grape
+    sub: "faithful · relevant"
+  - id: fixr
+    label: "Fix chunking, search"
+    col: 3.3
+    row: 0
+    shape: pill
+    tone: gold
+  - id: fixg
+    label: "Fix prompt, model"
+    col: 3.3
+    row: 1.5
+    shape: pill
+    tone: grape
+edges:
+  - from: q
+    to: ret
+  - from: q
+    to: gen
+  - from: ret
+    to: fixr
+    label: "low?"
+  - from: gen
+    to: fixg
+    label: "low?"
+```
+
 
 | Stage | Question | Metric |
 |---|---|---|

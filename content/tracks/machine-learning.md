@@ -16,6 +16,66 @@ tags: [machine learning, scikit-learn, python, regression, classification, ml]
 
 Every ML project follows the same steps:
 
+```sketch
+title: "From question to deployed model"
+caption: "Most of the time goes into data. Evaluation often sends you back a step or two before a model is good enough to use."
+cellW: 190
+nodes:
+  - id: q
+    label: "Define the question"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: d
+    label: "Collect & clean data"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+  - id: f
+    label: "Features"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: gold
+  - id: t
+    label: "Train"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: grape
+  - id: ev
+    label: "Evaluate"
+    col: 1.3
+    row: 1.3
+    shape: diamond
+    tone: rose
+  - id: dep
+    label: "Deploy & monitor"
+    col: 0
+    row: 1.3
+    shape: pill
+    tone: teal
+edges:
+  - from: q
+    to: d
+  - from: d
+    to: f
+  - from: f
+    to: t
+  - from: t
+    to: ev
+  - from: ev
+    to: dep
+    label: "good"
+  - from: ev
+    to: d
+    label: "not yet"
+    dashed: true
+```
+
+
 > **Foundations.** Want to know *why* these algorithms work? **[Statistics for AI](/learn/statistics)** and **[Mathematics & First Principles of ML](/learn/ml-math)** build the maths (probability, distributions, hypothesis tests, linear algebra, calculus, gradient descent, backpropagation) from scratch in code.
 
 1. **Define the problem** — what will you predict, and how will you know it's good?
@@ -131,6 +191,54 @@ print("Chance of passing with 6 h study, 70% attendance:", round(clf.predict_pro
 
 Accuracy alone can mislead, especially with **imbalanced** data like fraud or disease.
 
+```sketch
+title: "The confusion matrix"
+caption: "Rows are what really happened, columns what the model said. Precision asks how many flagged cases were real; recall asks how many real cases were caught."
+cellW: 190
+cellH: 95
+nodes:
+  - id: tp
+    label: "True positive"
+    col: 1
+    row: 0
+    shape: box
+    tone: teal
+    sub: "said yes · was yes"
+  - id: fn
+    label: "False negative"
+    col: 2
+    row: 0
+    shape: box
+    tone: rose
+    sub: "said no · was yes"
+  - id: fp
+    label: "False positive"
+    col: 1
+    row: 1
+    shape: box
+    tone: rose
+    sub: "said yes · was no"
+  - id: tn
+    label: "True negative"
+    col: 2
+    row: 1
+    shape: box
+    tone: teal
+    sub: "said no · was no"
+  - id: ay
+    label: "Actually yes"
+    col: 0
+    row: 0
+    shape: note
+  - id: an
+    label: "Actually no"
+    col: 0
+    row: 1
+    shape: note
+edges: []
+```
+
+
 ```python run title="The confusion matrix"
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
@@ -175,6 +283,59 @@ print(f"Mean {scores.mean():.3f} ± {scores.std():.3f}")
 
 Models need numbers. **Feature engineering** turns raw data into good inputs.
 
+```sketch
+title: "A pipeline keeps every step together"
+caption: "Fit the scaler and encoder on training data only, then apply the same fitted steps to new data. A Pipeline makes that automatic."
+cellW: 180
+nodes:
+  - id: raw
+    label: "Raw columns"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "rain · soil · district"
+  - id: imp
+    label: "Fill gaps"
+    col: 1.3
+    row: 0
+    shape: round
+  - id: sc
+    label: "Scale / encode"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: gold
+  - id: mdl
+    label: "Model"
+    col: 3.9
+    row: 0
+    shape: circle
+    tone: grape
+  - id: new
+    label: "New farm data"
+    col: 0
+    row: 1.3
+    shape: note
+    tone: teal
+edges:
+  - from: raw
+    to: imp
+  - from: imp
+    to: sc
+  - from: sc
+    to: mdl
+  - from: new
+    to: imp
+    label: "same steps"
+    dashed: true
+groups:
+  - label: "Pipeline"
+    nodes: [imp, sc, mdl]
+    tone: gold
+```
+
+
 - **Scaling** — put numbers on similar ranges (`StandardScaler`).
 - **Encoding** — turn categories like province into numbers (`OneHotEncoder`).
 - **Missing values** — fill them (`SimpleImputer`) rather than dropping rows.
@@ -213,6 +374,58 @@ print(f"Estimated price: ${model.predict(new_house)[0]:.0f}k")
 # Unsupervised Learning: Clustering {#clustering}
 
 **Clustering** finds groups without labels — useful for customer segments, grouping farms by soil type, or spotting unusual behaviour.
+
+```sketch
+title: "k-means in three steps"
+caption: "Pick k centres, assign every point to its nearest centre, move each centre to the middle of its points, and repeat until nothing changes."
+cellW: 180
+nodes:
+  - id: init
+    label: "Place k centres"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: asg
+    label: "Assign points"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "nearest centre"
+  - id: mv
+    label: "Move centres"
+    col: 3
+    row: 0
+    shape: round
+    tone: teal
+    sub: "to the mean"
+  - id: chg
+    label: "Changed?"
+    col: 2.25
+    row: 1.3
+    shape: diamond
+  - id: done
+    label: "Clusters"
+    col: 3.6
+    row: 1.3
+    shape: pill
+    tone: grape
+edges:
+  - from: init
+    to: asg
+  - from: asg
+    to: mv
+  - from: mv
+    to: chg
+  - from: chg
+    to: asg
+    label: "yes"
+  - from: chg
+    to: done
+    label: "no"
+```
+
 
 ```python run title="Segmenting mobile-money customers"
 import numpy as np
