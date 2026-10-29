@@ -16,6 +16,60 @@ tags: [javascript, js, web, frontend, programming]
 
 **JavaScript** (JS) is the programming language of the web. Every modern browser runs it. With JavaScript you can:
 
+```sketch
+title: "Three languages, three jobs"
+caption: "HTML gives a page structure, CSS its look and JavaScript its behaviour. JavaScript changes the page by changing the DOM."
+cellW: 180
+cellH: 100
+nodes:
+  - id: html
+    label: "HTML"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+    sub: "structure"
+  - id: css
+    label: "CSS"
+    col: 0
+    row: 1
+    shape: doc
+    tone: gold
+    sub: "appearance"
+  - id: js
+    label: "JavaScript"
+    col: 0
+    row: 2
+    shape: doc
+    tone: teal
+    sub: "behaviour"
+  - id: dom
+    label: "DOM"
+    col: 1.4
+    row: 1
+    shape: circle
+    tone: grape
+    sub: "the live page"
+  - id: page
+    label: "What you see"
+    col: 2.7
+    row: 1
+    shape: pill
+edges:
+  - from: html
+    to: dom
+    label: "builds"
+  - from: css
+    to: dom
+    label: "styles"
+  - from: js
+    to: dom
+    label: "changes"
+  - from: dom
+    to: page
+```
+
+
 - Change a page after it loads (show menus, validate forms, update scores).
 - Talk to servers and APIs (load prices, send messages).
 - Build servers (Node.js), mobile apps (React Native) and desktop apps (Electron).
@@ -204,6 +258,59 @@ console.log(marks.includes(88), marks.indexOf(91));
 
 These are used everywhere in modern JavaScript:
 
+```sketch
+title: "A data pipeline with filter, map and reduce"
+caption: "Each step returns a new array (or, for reduce, one value) and leaves the original untouched."
+cellW: 200
+nodes:
+  - id: a
+    label: "[2, 8, 12, 5]"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "prices"
+  - id: f
+    label: "filter(p => p > 4)"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+  - id: m
+    label: "map(p => p * 1.15)"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: teal
+    sub: "add 15% VAT"
+  - id: r
+    label: "reduce((s, p) => s + p, 0)"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: grape
+  - id: t
+    label: "28.75"
+    col: 1.3
+    row: 1.3
+    shape: circle
+    sub: "total"
+    w: 0.6
+    h: 0.8
+edges:
+  - from: a
+    to: f
+  - from: f
+    to: m
+    label: "[8, 12, 5]"
+  - from: m
+    to: r
+    label: "[9.2, 13.8, 5.75]"
+  - from: r
+    to: t
+```
+
+
 ```javascript run
 const prices = [1.0, 2.5, 4.2, 8.5];
 const withVat = prices.map((p) => +(p * 1.15).toFixed(2));
@@ -299,6 +406,63 @@ console.log(acc.owner, acc.balance);
 
 The **DOM** (Document Object Model) is the browser's live model of your page. JavaScript can read and change it.
 
+```sketch
+title: "JavaScript and the DOM"
+caption: "document.querySelector finds a node in the tree; changing its properties updates the page immediately."
+cellW: 160
+cellH: 100
+nodes:
+  - id: doc
+    label: "document"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+  - id: body
+    label: "body"
+    col: 1.3
+    row: 1
+    shape: round
+    tone: sky
+  - id: h1
+    label: "h1#title"
+    col: 0.3
+    row: 2
+    shape: box
+  - id: btn
+    label: "button"
+    col: 1.3
+    row: 2
+    shape: box
+    tone: teal
+  - id: ul
+    label: "ul.list"
+    col: 2.3
+    row: 2
+    shape: box
+  - id: js
+    label: "JavaScript"
+    col: 3.6
+    row: 1
+    shape: doc
+    tone: grape
+    sub: "querySelector · textContent"
+edges:
+  - from: doc
+    to: body
+  - from: body
+    to: h1
+  - from: body
+    to: btn
+  - from: body
+    to: ul
+  - from: js
+    to: ul
+    label: "append item"
+    dashed: true
+```
+
+
 ```html run
 <h2 id="title">Market prices</h2>
 <ul id="list"></ul>
@@ -329,6 +493,56 @@ The **DOM** (Document Object Model) is the browser's live model of your page. Ja
 > Use `textContent`, not `innerHTML`, when showing user input — `innerHTML` can run malicious code (XSS).
 
 # Events {#events}
+
+
+```sketch
+title: "From a click to a changed page"
+caption: "An event listener waits for something to happen; its handler runs, changes data and updates the DOM. Events also bubble up to parent elements."
+cellW: 170
+nodes:
+  - id: click
+    label: "User clicks"
+    col: 0
+    row: 0
+    shape: person
+  - id: btn
+    label: "button"
+    col: 1.2
+    row: 0
+    shape: box
+    tone: teal
+  - id: h
+    label: "handler()"
+    col: 2.4
+    row: 0
+    shape: round
+    tone: gold
+    sub: "addEventListener"
+  - id: dom
+    label: "Update DOM"
+    col: 3.6
+    row: 0
+    shape: pill
+    tone: sky
+  - id: parent
+    label: "parent <ul>"
+    col: 1.2
+    row: 1.3
+    shape: box
+    sub: "hears it too"
+edges:
+  - from: click
+    to: btn
+    label: "click"
+  - from: btn
+    to: h
+  - from: h
+    to: dom
+  - from: btn
+    to: parent
+    label: "bubbles"
+    dashed: true
+```
 
 ```html run
 <button id="btn">Clicked 0 times</button>
@@ -377,6 +591,54 @@ tests: |
 
 Some things take time — loading data, waiting for a timer. JavaScript handles these **asynchronously** so the page doesn't freeze.
 
+```sketch
+title: "The event loop"
+caption: "JavaScript runs one thing at a time. Slow work (timers, fetch) is handed to the browser; when it finishes, its callback waits in a queue until the call stack is empty."
+cellW: 185
+cellH: 105
+nodes:
+  - id: stack
+    label: "Call stack"
+    col: 0
+    row: 1
+    shape: db
+    tone: gold
+    sub: "running now"
+  - id: apis
+    label: "Browser APIs"
+    col: 1.4
+    row: 0
+    shape: round
+    tone: sky
+    sub: "fetch · setTimeout"
+  - id: queue
+    label: "Task queue"
+    col: 2.8
+    row: 1
+    shape: db
+    tone: teal
+    sub: "finished callbacks"
+  - id: loop
+    label: "Event loop"
+    col: 1.4
+    row: 2.1
+    shape: circle
+    tone: grape
+edges:
+  - from: stack
+    to: apis
+    label: "hand off"
+  - from: apis
+    to: queue
+    label: "done"
+  - from: queue
+    to: loop
+  - from: loop
+    to: stack
+    label: "stack empty? run next"
+```
+
+
 ```javascript run
 console.log("1. Order placed");
 setTimeout(() => console.log("3. Food delivered (after 1 second)"), 1000);
@@ -410,6 +672,55 @@ async function sendMoney(amount) {
 # Fetch and APIs {#fetch}
 
 `fetch()` requests data from a server. Most APIs return JSON.
+
+```sketch
+title: "A fetch round trip"
+caption: "fetch returns a promise; await it, check response.ok, parse the JSON (another promise), then update the page. Handle errors at every step."
+cellW: 200
+nodes:
+  - id: js
+    label: "await fetch(url)"
+    col: 0
+    row: 0
+    shape: round
+    tone: teal
+  - id: api
+    label: "API server"
+    col: 1.5
+    row: 0
+    shape: db
+    tone: sky
+  - id: res
+    label: "Response"
+    col: 1.5
+    row: 1.3
+    shape: doc
+    sub: "status · headers · body"
+  - id: json
+    label: "await res.json()"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: gold
+  - id: ui
+    label: "Render data"
+    col: 0
+    row: 2.5
+    shape: pill
+    tone: grape
+edges:
+  - from: js
+    to: api
+    label: "HTTP GET"
+  - from: api
+    to: res
+  - from: res
+    to: json
+    label: "res.ok?"
+  - from: json
+    to: ui
+```
+
 
 ```javascript
 async function loadLearners() {

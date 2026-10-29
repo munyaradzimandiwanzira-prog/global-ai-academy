@@ -56,6 +56,57 @@ Now change the words inside the quotes and run it again. Congratulations — you
 
 A **program** is a list of instructions that a computer follows exactly, one after another. **Programming** (or **coding**) is writing those instructions.
 
+```sketch
+title: "From your code to a result"
+caption: "You write instructions in a language people can read. An interpreter or compiler turns them into the simple steps a processor can carry out, one after another."
+cellW: 175
+nodes:
+  - id: code
+    label: "Your code"
+    col: 0
+    row: 1
+    shape: doc
+    tone: sky
+    sub: "print(\"Mhoro\")"
+  - id: tr
+    label: "Interpreter / compiler"
+    col: 1.3
+    row: 1
+    shape: round
+    tone: grape
+    sub: "translates"
+  - id: mc
+    label: "Machine instructions"
+    col: 2.6
+    row: 1
+    shape: box
+    sub: "tiny numbered steps"
+  - id: cpu
+    label: "CPU"
+    col: 3.8
+    row: 1
+    shape: circle
+    tone: gold
+  - id: out
+    label: "Output"
+    col: 3.8
+    row: 2.3
+    shape: pill
+    tone: teal
+    sub: "Mhoro"
+edges:
+  - from: code
+    to: tr
+  - from: tr
+    to: mc
+  - from: mc
+    to: cpu
+    label: "runs"
+  - from: cpu
+    to: out
+```
+
+
 Computers are very fast but not clever on their own: they do *exactly* what you say, even when it is silly. If a recipe for sadza said "add water" but forgot "boil it", a computer would serve you cold maize meal.
 
 ## Instructions run in order
@@ -103,6 +154,61 @@ hint: The command that shows text on the screen starts with "p".
 
 Every computer — a laptop, a phone, even a smart TV — has the same main parts:
 
+```sketch
+title: "Every computer, from a phone to a server"
+caption: "Input goes in, the CPU works on data held in fast memory (RAM), slow storage keeps it when the power is off, and results come out."
+cellW: 180
+nodes:
+  - id: in
+    label: "Input"
+    col: 0
+    row: 1
+    shape: pill
+    tone: sky
+    sub: "keyboard · touch · mic"
+  - id: cpu
+    label: "CPU"
+    col: 1.4
+    row: 1
+    shape: circle
+    tone: gold
+    sub: "does the work"
+  - id: ram
+    label: "Memory (RAM)"
+    col: 1.4
+    row: 0
+    shape: db
+    tone: teal
+    sub: "fast, forgets"
+  - id: disk
+    label: "Storage"
+    col: 1.4
+    row: 2.2
+    shape: db
+    sub: "SSD · keeps files"
+  - id: out
+    label: "Output"
+    col: 2.8
+    row: 1
+    shape: pill
+    tone: sky
+    sub: "screen · speaker"
+edges:
+  - from: in
+    to: cpu
+  - from: cpu
+    to: ram
+    label: "read / write"
+    arrow: both
+  - from: disk
+    to: cpu
+    label: "load"
+    arrow: both
+  - from: cpu
+    to: out
+```
+
+
 | Part | Job | Everyday comparison |
 |---|---|---|
 | **CPU** (processor) | Follows instructions, billions per second | The cook |
@@ -114,6 +220,45 @@ Every computer — a laptop, a phone, even a smart TV — has the same main part
 ## Everything is numbers
 
 Inside, computers store everything — text, photos, music — as numbers made of **bits**: tiny switches that are either **0 (off)** or **1 (on)**. Eight bits make a **byte**.
+
+```sketch
+title: "One letter, three ways"
+caption: "The computer only stores numbers. A standard table (ASCII, then Unicode) says which number means which character, and every number is stored as bits."
+cellW: 190
+nodes:
+  - id: ch
+    label: "\"A\""
+    col: 0
+    row: 0
+    shape: circle
+    tone: sky
+    w: 0.6
+    h: 0.75
+  - id: num
+    label: "65"
+    col: 1.2
+    row: 0
+    shape: circle
+    tone: gold
+    sub: "its code"
+    w: 0.6
+    h: 0.75
+  - id: bits
+    label: "01000001"
+    col: 2.5
+    row: 0
+    shape: box
+    tone: teal
+    sub: "8 bits = 1 byte"
+edges:
+  - from: ch
+    to: num
+    label: "Unicode table"
+  - from: num
+    to: bits
+    label: "in binary"
+```
+
 
 ```python run title="Letters are numbers"
 for letter in "ZIM":
@@ -134,6 +279,55 @@ for letter in "ZIM":
 # How the internet works {#how-the-internet-works}
 
 The internet is a giant network of computers that send messages to each other.
+
+```sketch
+title: "What happens when you open a website"
+caption: "Your browser asks DNS for the server's address, then sends an HTTP request across many networks. The server answers with HTML, CSS, JavaScript and images."
+cellW: 190
+cellH: 112
+nodes:
+  - id: you
+    label: "Your browser"
+    col: 0
+    row: 1
+    shape: round
+    tone: sky
+  - id: dns
+    label: "DNS"
+    col: 1.3
+    row: 0
+    shape: db
+    tone: gold
+    sub: "name → IP address"
+  - id: net
+    label: "Routers & networks"
+    col: 1.3
+    row: 1.6
+    shape: round
+    sub: "ISP · undersea cables"
+  - id: srv
+    label: "Web server"
+    col: 2.7
+    row: 1
+    shape: db
+    tone: teal
+    sub: "skurulearning.com"
+edges:
+  - from: you
+    to: dns
+    label: "1. where is it?"
+  - from: you
+    to: net
+    label: "2. request"
+  - from: net
+    to: srv
+  - from: srv
+    to: you
+    label: "3. HTML, CSS, JS"
+    dashed: true
+    bend: 45
+```
+
 
 When you open a website:
 
@@ -219,6 +413,57 @@ expectedOutput: |
 # How to learn effectively {#how-to-learn}
 
 Learning to code is a skill, and there are proven ways to get better faster.
+
+```sketch
+title: "The learning loop"
+caption: "Reading is the smallest part. Real learning happens when you run code, break it on purpose, fix it, and then use it in something of your own."
+cellW: 180
+nodes:
+  - id: read
+    label: "Read a little"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: run
+    label: "Run the example"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: teal
+  - id: brk
+    label: "Change & break it"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: rose
+  - id: fix
+    label: "Fix it"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: gold
+  - id: build
+    label: "Build something"
+    col: 1.3
+    row: 1.3
+    shape: round
+    tone: grape
+edges:
+  - from: read
+    to: run
+  - from: run
+    to: brk
+  - from: brk
+    to: fix
+  - from: fix
+    to: build
+  - from: build
+    to: read
+    label: "next lesson"
+    dashed: true
+```
+
 
 ## 1. Little and often
 

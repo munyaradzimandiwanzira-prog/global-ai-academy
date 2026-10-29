@@ -16,6 +16,54 @@ tags: [css, web, design, flexbox, grid, responsive]
 
 **CSS** (Cascading Style Sheets) controls how HTML looks: colours, fonts, spacing, layout and animation.
 
+```sketch
+title: "How a style reaches an element"
+caption: "The browser matches every rule's selector against the HTML, resolves conflicts with the cascade, and paints the result."
+cellW: 180
+nodes:
+  - id: html
+    label: "HTML"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+  - id: css
+    label: "CSS rules"
+    col: 0
+    row: 1.3
+    shape: doc
+    tone: gold
+  - id: match
+    label: "Match selectors"
+    col: 1.3
+    row: 0.65
+    shape: round
+  - id: cascade
+    label: "Cascade"
+    col: 2.6
+    row: 0.65
+    shape: diamond
+    tone: rose
+    sub: "specificity · order"
+  - id: paint
+    label: "Painted page"
+    col: 4.3
+    row: 0.65
+    shape: pill
+    tone: teal
+edges:
+  - from: html
+    to: match
+  - from: css
+    to: match
+  - from: match
+    to: cascade
+  - from: cascade
+    to: paint
+    label: "winning values"
+```
+
+
 A CSS **rule** has a **selector** and **declarations**:
 
 ```css
@@ -84,6 +132,51 @@ Selectors choose which elements a rule applies to.
 
 When two rules clash, the more **specific** one wins: **id** beats **class**, and **class** beats **element**. If they are equally specific, the **later** rule wins. That's the "cascade" in CSS.
 
+```sketch
+title: "Which rule wins?"
+caption: "When two rules set the same property, the more specific selector wins. Only if they tie does the later rule win."
+cellW: 175
+nodes:
+  - id: el
+    label: "p"
+    col: 0
+    row: 1
+    shape: round
+    sub: "element · 0-0-1"
+  - id: cls
+    label: ".intro"
+    col: 1.2
+    row: 1
+    shape: round
+    tone: sky
+    sub: "class · 0-1-0"
+  - id: id
+    label: "#hero"
+    col: 2.4
+    row: 1
+    shape: round
+    tone: gold
+    sub: "id · 1-0-0"
+  - id: inl
+    label: "style=\"…\""
+    col: 3.6
+    row: 1
+    shape: round
+    tone: rose
+    sub: "inline"
+edges:
+  - from: el
+    to: cls
+    label: "beaten by"
+  - from: cls
+    to: id
+    label: "beaten by"
+  - from: id
+    to: inl
+    label: "beaten by"
+```
+
+
 ```exercise
 prompt: Complete the selector for elements with class="card".
 lang: css
@@ -124,6 +217,59 @@ Text must stand out from its background so everyone can read it — including pe
 # The Box Model {#box-model}
 
 Every element is a box made of four layers:
+
+```sketch
+title: "Every element is a box of boxes"
+caption: "From the inside out: content, then padding, then border, then margin. With box-sizing: border-box, width includes padding and border."
+cellW: 130
+cellH: 100
+nodes:
+  - id: m1
+    label: "margin"
+    col: 0
+    row: 0
+    shape: box
+    sub: "space outside"
+  - id: b1
+    label: "border"
+    col: 1
+    row: 0
+    shape: box
+    tone: ink
+  - id: p1
+    label: "padding"
+    col: 2
+    row: 0
+    shape: box
+    tone: sky
+    sub: "space inside"
+  - id: c
+    label: "content"
+    col: 3
+    row: 0
+    shape: box
+    tone: teal
+    sub: "text · images"
+  - id: p2
+    label: "padding"
+    col: 4
+    row: 0
+    shape: box
+    tone: sky
+  - id: b2
+    label: "border"
+    col: 5
+    row: 0
+    shape: box
+    tone: ink
+  - id: m2
+    label: "margin"
+    col: 6
+    row: 0
+    shape: box
+edges: []
+```
+
 
 ```text
 +-------------------- margin --------------------+
@@ -215,6 +361,58 @@ Useful properties: `font-family`, `font-size`, `font-weight`, `line-height`, `te
 
 **Flexbox** lays out items in a **row** or **column** and handles spacing and alignment.
 
+```sketch
+title: "The two axes of flexbox"
+caption: "justify-content places items along the main axis (a row by default); align-items places them across it. flex-direction: column swaps the axes."
+cellW: 150
+cellH: 100
+nodes:
+  - id: i1
+    label: "item 1"
+    col: 0
+    row: 0
+    shape: box
+    tone: teal
+  - id: i2
+    label: "item 2"
+    col: 1
+    row: 0
+    shape: box
+    tone: teal
+  - id: i3
+    label: "item 3"
+    col: 2
+    row: 0
+    shape: box
+    tone: teal
+  - id: mx
+    label: "main axis →"
+    col: 1
+    row: 1.15
+    shape: note
+    tone: gold
+    sub: "justify-content"
+  - id: cx
+    label: "cross axis ↓"
+    col: 3.2
+    row: 0
+    shape: note
+    tone: sky
+    sub: "align-items"
+edges:
+  - from: i1
+    to: i2
+    arrow: none
+  - from: i2
+    to: i3
+    arrow: none
+groups:
+  - label: "display: flex"
+    nodes: [i1, i2, i3]
+    tone: gold
+```
+
+
 ```html run
 <style>
   .row { display: flex; gap: 12px; justify-content: space-between; align-items: center; background: #142B52; padding: 12px; }
@@ -261,6 +459,45 @@ tests: |
 
 **Grid** lays out items in rows **and** columns at the same time — ideal for page layouts and galleries.
 
+```sketch
+title: "A page layout with grid areas"
+caption: "grid-template-areas draws the layout in text; each child names the area it fills, and the grid sizes the rows and columns."
+cellW: 165
+cellH: 95
+nodes:
+  - id: hd
+    label: "header"
+    col: 1
+    row: 0
+    shape: box
+    tone: gold
+    w: 3
+  - id: sb
+    label: "sidebar"
+    col: 0
+    row: 1
+    shape: box
+    tone: sky
+    h: 1.6
+  - id: mn
+    label: "main"
+    col: 1.5
+    row: 1
+    shape: box
+    tone: teal
+    w: 2
+    h: 1.6
+  - id: ft
+    label: "footer"
+    col: 1
+    row: 2.2
+    shape: box
+    tone: gold
+    w: 3
+edges: []
+```
+
+
 ```html run
 <style>
   .layout {
@@ -293,6 +530,46 @@ tests: |
 # Responsive Design {#responsive}
 
 Most Zimbabwean internet users browse on phones. **Responsive** pages adapt to any screen.
+
+```sketch
+title: "One page, three widths"
+caption: "Start with the phone layout, then add columns with min-width media queries as the screen grows."
+cellW: 190
+cellH: 110
+nodes:
+  - id: ph
+    label: "Phone"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "1 column"
+    h: 1.3
+  - id: tb
+    label: "Tablet"
+    col: 1.3
+    row: 0
+    shape: box
+    tone: teal
+    sub: "2 columns"
+    h: 1.3
+  - id: dt
+    label: "Desktop"
+    col: 2.6
+    row: 0
+    shape: box
+    tone: gold
+    sub: "3 columns"
+    h: 1.3
+edges:
+  - from: ph
+    to: tb
+    label: "≥ 768px"
+  - from: tb
+    to: dt
+    label: "≥ 1024px"
+```
+
 
 1. Always include the viewport meta tag.
 2. Use flexible units: `%`, `rem`, `fr`, `vw`.

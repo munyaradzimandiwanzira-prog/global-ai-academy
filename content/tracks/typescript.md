@@ -16,6 +16,57 @@ tags: [typescript, javascript, types, web, frontend, backend]
 
 **TypeScript** is JavaScript plus **types**. You describe what shape your data has, and the TypeScript compiler warns you about mistakes **before** the code runs.
 
+```sketch
+title: "Types are checked, then erased"
+caption: "tsc checks your types before the code runs and removes them, leaving plain JavaScript. Mistakes are caught in the editor, not by users."
+cellW: 175
+nodes:
+  - id: ts
+    label: "app.ts"
+    col: 0
+    row: 1
+    shape: doc
+    tone: sky
+    sub: "code + types"
+  - id: tsc
+    label: "tsc"
+    col: 1.3
+    row: 1
+    shape: diamond
+    tone: gold
+    sub: "type check"
+  - id: err
+    label: "Errors in editor"
+    col: 1.3
+    row: 2.4
+    shape: pill
+    tone: rose
+  - id: js
+    label: "app.js"
+    col: 2.6
+    row: 1
+    shape: doc
+    tone: teal
+    sub: "types removed"
+  - id: run
+    label: "Runs anywhere"
+    col: 3.9
+    row: 1
+    shape: pill
+edges:
+  - from: ts
+    to: tsc
+  - from: tsc
+    to: err
+    label: "problem"
+  - from: tsc
+    to: js
+    label: "ok"
+  - from: js
+    to: run
+```
+
+
 ```typescript run title="Types catch mistakes"
 function total(prices: number[]): number {
   return prices.reduce((sum, p) => sum + p, 0);
@@ -94,6 +145,49 @@ type Point = { lat: number; lng: number };
 
 A **union** says a value can be one of several types. **Narrowing** checks which one you have.
 
+```sketch
+title: "Narrowing a union"
+caption: "A value of type string | number could be either. A check like typeof tells TypeScript which one you have inside each branch."
+cellW: 180
+nodes:
+  - id: v
+    label: "id: string | number"
+    col: 0
+    row: 1
+    shape: box
+    tone: sky
+  - id: chk
+    label: "typeof id === \"string\"?"
+    col: 1.5
+    row: 1
+    shape: diamond
+    tone: gold
+  - id: s
+    label: "id.toUpperCase()"
+    col: 3
+    row: 0.3
+    shape: round
+    tone: teal
+    sub: "here id is string"
+  - id: nm
+    label: "id.toFixed(0)"
+    col: 3
+    row: 1.7
+    shape: round
+    tone: grape
+    sub: "here id is number"
+edges:
+  - from: v
+    to: chk
+  - from: chk
+    to: s
+    label: "yes"
+  - from: chk
+    to: nm
+    label: "no"
+```
+
+
 ```typescript run
 type PaymentMethod =
   | { kind: "ecocash"; phone: string }
@@ -117,6 +211,40 @@ This pattern — a **discriminated union** with a `kind` field — is one of the
 # Generics {#generics}
 
 **Generics** write code that works with many types while keeping type safety.
+
+```sketch
+title: "One generic, many types"
+caption: "A generic is a type with a blank to fill in. ApiResult<T> describes any result; T is decided where you use it."
+cellW: 200
+nodes:
+  - id: gen
+    label: "ApiResult<T>"
+    col: 0
+    row: 1
+    shape: round
+    tone: gold
+    sub: "{ ok: boolean; data: T }"
+  - id: a
+    label: "ApiResult<Product>"
+    col: 1.6
+    row: 0.3
+    shape: box
+    tone: teal
+  - id: b
+    label: "ApiResult<User[]>"
+    col: 1.6
+    row: 1.7
+    shape: box
+    tone: sky
+edges:
+  - from: gen
+    to: a
+    label: "T = Product"
+  - from: gen
+    to: b
+    label: "T = User[]"
+```
+
 
 ```typescript run
 function first<T>(items: T[]): T | undefined {
@@ -164,6 +292,50 @@ console.log(update, prices, preview);
 ## Typing API responses — and validating them
 
 Types disappear at run time, so data from APIs and users must be **validated**. Libraries like **Zod** give you both a validator and a type from one definition:
+
+```sketch
+title: "Types end at the network"
+caption: "TypeScript cannot check data that arrives at run time. Validate it at the boundary (for example with zod); after that, your types are true."
+cellW: 190
+nodes:
+  - id: net
+    label: "JSON from API"
+    col: 0
+    row: 1
+    shape: doc
+    tone: rose
+    sub: "type: unknown"
+  - id: val
+    label: "Validate"
+    col: 1.4
+    row: 1
+    shape: diamond
+    tone: gold
+    sub: "schema.parse()"
+  - id: typed
+    label: "Typed object"
+    col: 2.8
+    row: 0.3
+    shape: round
+    tone: teal
+    sub: "safe to use"
+  - id: bad
+    label: "Clear error"
+    col: 2.8
+    row: 1.7
+    shape: pill
+    tone: rose
+edges:
+  - from: net
+    to: val
+  - from: val
+    to: typed
+    label: "valid"
+  - from: val
+    to: bad
+    label: "invalid"
+```
+
 
 ```typescript
 import { z } from "zod";

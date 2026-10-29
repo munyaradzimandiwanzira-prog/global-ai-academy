@@ -16,6 +16,60 @@ tags: [react, javascript, frontend, components, ui, web]
 
 **React** is a JavaScript library for building user interfaces from **components** — reusable pieces like `<Button>`, `<LessonCard>` or `<Navbar>`. It's used by Meta, Netflix, Airbnb and thousands of companies; Global AI Academy's own interface is built with React.
 
+```sketch
+title: "An app is a tree of components"
+caption: "Each component is a function that returns what a part of the screen should look like. Big apps are small components composed together."
+cellW: 165
+cellH: 100
+nodes:
+  - id: app
+    label: "App"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: hd
+    label: "Header"
+    col: 0.3
+    row: 1
+    shape: round
+    tone: sky
+  - id: list
+    label: "ProductList"
+    col: 1.5
+    row: 1
+    shape: round
+    tone: teal
+  - id: cart
+    label: "Cart"
+    col: 2.7
+    row: 1
+    shape: round
+    tone: grape
+  - id: c1
+    label: "ProductCard"
+    col: 0.9
+    row: 2.1
+    shape: box
+  - id: c2
+    label: "ProductCard"
+    col: 2.1
+    row: 2.1
+    shape: box
+edges:
+  - from: app
+    to: hd
+  - from: app
+    to: list
+  - from: app
+    to: cart
+  - from: list
+    to: c1
+  - from: list
+    to: c2
+```
+
+
 Key ideas:
 
 1. **Components** — UI is built from small, reusable functions.
@@ -62,6 +116,38 @@ cd my-app && npm install && npm run dev
 
 **Props** pass data into a component, like function arguments.
 
+```sketch
+title: "Data down, events up"
+caption: "A parent passes data to children as props. Children never change props; they call a function the parent gave them, and the parent updates its state."
+cellW: 220
+cellH: 110
+nodes:
+  - id: p
+    label: "ProductList"
+    col: 1
+    row: 0
+    shape: round
+    tone: gold
+    sub: "state: cart"
+  - id: c
+    label: "ProductCard"
+    col: 1
+    row: 1.5
+    shape: round
+    tone: teal
+edges:
+  - from: p
+    to: c
+    label: "props: product, onAdd"
+    bend: -30
+  - from: c
+    to: p
+    label: "onAdd(product)"
+    dashed: true
+    bend: -30
+```
+
+
 ```html run
 <div id="root"></div>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
@@ -93,6 +179,53 @@ Props flow **down** from parent to child and are **read-only**.
 # State and Events {#state}
 
 **State** is data that changes over time. `useState` returns the current value and a function to update it. Updating state re-renders the component.
+
+```sketch
+title: "Why the screen updates"
+caption: "Calling the setter stores a new value and asks React to run the component again. React compares the new output with the old and changes only what differs."
+cellW: 180
+nodes:
+  - id: ev
+    label: "Click"
+    col: 0
+    row: 0
+    shape: person
+  - id: set
+    label: "setCount(c + 1)"
+    col: 1.2
+    row: 0
+    shape: round
+    tone: gold
+  - id: render
+    label: "Component runs again"
+    col: 2.5
+    row: 0
+    shape: round
+    tone: teal
+  - id: diff
+    label: "Compare old vs new"
+    col: 2.5
+    row: 1.3
+    shape: diamond
+    tone: grape
+    sub: "virtual DOM"
+  - id: dom
+    label: "Update only changes"
+    col: 1.2
+    row: 1.3
+    shape: pill
+    tone: sky
+edges:
+  - from: ev
+    to: set
+  - from: set
+    to: render
+  - from: render
+    to: diff
+  - from: diff
+    to: dom
+```
+
 
 ```html run
 <div id="root"></div>
@@ -182,6 +315,60 @@ Every item in a list needs a stable, unique **`key`** (usually an ID — not the
 # Effects and Fetching Data {#effects}
 
 `useEffect` runs code **after** render — for fetching data, timers and subscriptions.
+
+```sketch
+title: "The life of an effect"
+caption: "React renders first, then runs your effect. When the effect sets state, React renders again. The cleanup runs before the next effect or when the component leaves."
+cellW: 185
+nodes:
+  - id: r1
+    label: "Render"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "loading…"
+  - id: eff
+    label: "useEffect runs"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "fetch(url)"
+  - id: set
+    label: "setData(json)"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: teal
+  - id: r2
+    label: "Render again"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: sky
+    sub: "shows data"
+  - id: clean
+    label: "Cleanup"
+    col: 1.3
+    row: 1.3
+    shape: pill
+    tone: rose
+    sub: "abort · unsubscribe"
+edges:
+  - from: r1
+    to: eff
+  - from: eff
+    to: set
+    label: "response"
+  - from: set
+    to: r2
+  - from: r2
+    to: clean
+    label: "deps change\nor unmount"
+    dashed: true
+```
+
 
 ```jsx
 function Leaderboard() {

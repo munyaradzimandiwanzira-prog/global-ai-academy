@@ -16,6 +16,73 @@ tags: [html, web, beginner, frontend]
 
 **HTML** (HyperText Markup Language) describes the **structure** of a web page. It tells the browser "this is a heading", "this is a paragraph", "this is an image".
 
+```sketch
+title: "A web page is a tree of elements"
+caption: "The browser reads your HTML and builds a tree: html at the root, head for information about the page, body for everything you see."
+cellW: 150
+cellH: 100
+nodes:
+  - id: html
+    label: "<html>"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: head
+    label: "<head>"
+    col: 0.5
+    row: 1
+    shape: round
+    tone: sky
+  - id: body
+    label: "<body>"
+    col: 2.5
+    row: 1
+    shape: round
+    tone: teal
+  - id: title
+    label: "<title>"
+    col: 0
+    row: 2
+    shape: box
+  - id: meta
+    label: "<meta>"
+    col: 1
+    row: 2
+    shape: box
+  - id: h1
+    label: "<h1>"
+    col: 2
+    row: 2
+    shape: box
+  - id: p
+    label: "<p>"
+    col: 3
+    row: 2
+    shape: box
+  - id: img
+    label: "<img>"
+    col: 4
+    row: 2
+    shape: box
+edges:
+  - from: html
+    to: head
+  - from: html
+    to: body
+  - from: head
+    to: title
+  - from: head
+    to: meta
+  - from: body
+    to: h1
+  - from: body
+    to: p
+  - from: body
+    to: img
+```
+
+
 HTML is made of **elements**, written with **tags** in angle brackets:
 
 ```html run title="A simple HTML document"
@@ -111,6 +178,52 @@ answers: [h1]
 # Attributes {#attributes}
 
 **Attributes** give extra information about an element. They go in the opening tag as `name="value"`.
+
+```sketch
+title: "Anatomy of an element"
+caption: "An element is an opening tag, its content and a closing tag. Attributes sit inside the opening tag as name=\"value\" pairs."
+cellW: 190
+nodes:
+  - id: open
+    label: "<a href=\"/learn\">"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+    sub: "opening tag"
+  - id: attr
+    label: "href=\"/learn\""
+    col: 0
+    row: 1.3
+    shape: note
+    tone: gold
+    sub: "attribute: name=\"value\""
+  - id: content
+    label: "Start learning"
+    col: 1.5
+    row: 0
+    shape: box
+    tone: teal
+    sub: "content"
+  - id: close
+    label: "</a>"
+    col: 2.8
+    row: 0
+    shape: box
+    tone: sky
+    sub: "closing tag"
+edges:
+  - from: attr
+    to: open
+    label: "lives inside"
+  - from: open
+    to: content
+    arrow: none
+  - from: content
+    to: close
+    arrow: none
+```
+
 
 ```html run
 <a href="https://www.zimparks.org.zw" title="Zimbabwe Parks">Visit ZimParks</a>
@@ -275,6 +388,59 @@ answers: [th]
 
 Forms collect input from users — sign-ups, searches, orders.
 
+```sketch
+title: "What happens when a form is sent"
+caption: "The browser collects every named field into name=value pairs and sends them to the action URL. The server must check everything again; never trust the browser."
+cellW: 190
+nodes:
+  - id: form
+    label: "Form"
+    col: 0
+    row: 1
+    shape: doc
+    tone: sky
+    sub: "<form action=\"/join\">"
+  - id: pairs
+    label: "name=Rudo&city=Gweru"
+    col: 1.4
+    row: 1
+    shape: note
+    sub: "collected fields"
+  - id: srv
+    label: "Server"
+    col: 2.8
+    row: 1
+    shape: round
+    tone: teal
+    sub: "validate · save"
+  - id: ok
+    label: "Thank-you page"
+    col: 2.8
+    row: 2.3
+    shape: pill
+    tone: gold
+  - id: err
+    label: "Show errors"
+    col: 1.4
+    row: 2.3
+    shape: pill
+    tone: rose
+edges:
+  - from: form
+    to: pairs
+    label: "submit"
+  - from: pairs
+    to: srv
+    label: "POST"
+  - from: srv
+    to: ok
+    label: "valid"
+  - from: srv
+    to: err
+    label: "invalid"
+```
+
+
 ```html run
 <form>
   <label for="name">Full name</label><br>
@@ -335,6 +501,51 @@ tests: |
 
 **Semantic** elements describe their meaning. They help search engines, screen readers and other developers understand your page.
 
+```sketch
+title: "A semantic page layout"
+caption: "Tags that say what each part is for help screen readers, search engines and your teammates. Use div only when nothing more specific fits."
+cellW: 170
+cellH: 95
+nodes:
+  - id: header
+    label: "<header>"
+    col: 0
+    row: 0
+    shape: box
+    tone: gold
+    w: 3
+  - id: nav
+    label: "<nav>"
+    col: 0
+    row: 1
+    shape: box
+    tone: sky
+    w: 3
+  - id: main
+    label: "<main> · <article>"
+    col: -0.5
+    row: 2.1
+    shape: box
+    tone: teal
+    w: 2
+    h: 1.2
+  - id: aside
+    label: "<aside>"
+    col: 1.5
+    row: 2.1
+    shape: box
+    h: 1.2
+  - id: footer
+    label: "<footer>"
+    col: 0
+    row: 3.2
+    shape: box
+    tone: gold
+    w: 3
+edges: []
+```
+
+
 ```html run
 <header>
   <h1>Bulawayo Bakers</h1>
@@ -375,6 +586,47 @@ tests: |
 # Head, Meta and SEO {#head-meta}
 
 The `<head>` holds information for browsers, search engines and social media.
+
+```sketch
+title: "Who reads your <head>"
+caption: "People never see the head, but search engines, WhatsApp link previews and phones all read it."
+cellW: 200
+nodes:
+  - id: head
+    label: "<head>"
+    col: 0
+    row: 1
+    shape: doc
+    tone: sky
+  - id: google
+    label: "Search results"
+    col: 1.4
+    row: 0
+    shape: round
+    tone: teal
+    sub: "<title> · description"
+  - id: wa
+    label: "Link previews"
+    col: 1.4
+    row: 1
+    shape: round
+    tone: gold
+    sub: "og:title · og:image"
+  - id: phone
+    label: "Phones"
+    col: 1.4
+    row: 2
+    shape: round
+    sub: "viewport · icons"
+edges:
+  - from: head
+    to: google
+  - from: head
+    to: wa
+  - from: head
+    to: phone
+```
+
 
 ```html
 <head>
