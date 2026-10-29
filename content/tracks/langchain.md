@@ -80,6 +80,54 @@ except KeyError as e:
 
 The **LangChain Expression Language** (LCEL) connects components with the `|` operator: the output of one becomes the input of the next.
 
+```sketch
+title: "prompt | model | parser"
+caption: "The pipe joins runnables: each one's output is the next one's input. Every chain gets invoke, stream and batch for free."
+cellW: 185
+nodes:
+  - id: in
+    label: "{\"topic\": …}"
+    col: 0
+    row: 0
+    shape: note
+    tone: sky
+  - id: p
+    label: "Prompt template"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+  - id: m
+    label: "Chat model"
+    col: 2.6
+    row: 0
+    shape: circle
+    tone: grape
+  - id: o
+    label: "Output parser"
+    col: 3.9
+    row: 0
+    shape: round
+    tone: gold
+  - id: out
+    label: "Python object"
+    col: 3.9
+    row: 1.3
+    shape: pill
+    tone: teal
+edges:
+  - from: in
+    to: p
+  - from: p
+    to: m
+    label: "messages"
+  - from: m
+    to: o
+  - from: o
+    to: out
+```
+
+
 ```python
 from langchain_core.output_parsers import StrOutputParser
 
@@ -126,6 +174,59 @@ print(lead.model_dump())
 `with_structured_output` uses the provider's native structured-output or tool-calling features, so you get validated Python objects instead of free text.
 
 # Retrievers and RAG Chains {#retrievers}
+
+
+```sketch
+title: "A RAG chain in LangChain"
+caption: "The question goes two ways: to the retriever for context and straight through to the prompt. Both meet in the template."
+cellW: 180
+cellH: 100
+nodes:
+  - id: q
+    label: "Question"
+    col: 0
+    row: 0.6
+    shape: note
+    tone: sky
+  - id: ret
+    label: "Retriever"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: teal
+    sub: "vector store"
+  - id: pass
+    label: "Passthrough"
+    col: 1.5
+    row: 1.2
+    shape: round
+  - id: p
+    label: "Prompt"
+    col: 3
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "{context} {question}"
+  - id: m
+    label: "Model"
+    col: 4.3
+    row: 0.6
+    shape: circle
+    tone: grape
+edges:
+  - from: q
+    to: ret
+  - from: q
+    to: pass
+  - from: ret
+    to: p
+    label: "context"
+  - from: pass
+    to: p
+    label: "question"
+  - from: p
+    to: m
+```
 
 ```python
 from langchain_community.document_loaders import PyPDFLoader
@@ -232,6 +333,61 @@ for chunk in agent.stream({"messages": [{"role": "user", "content": "Compare PY1
 # Middleware: Guardrails, Summaries and Approval {#middleware}
 
 **Middleware** wraps the agent loop with hooks that run **before and after model calls** and **around tool calls**. It's where production concerns live, without rewriting the agent.
+
+```sketch
+title: "Middleware wraps the agent loop"
+caption: "Hooks run before and after each model call and around each tool call: redact data, trim history, or pause for human approval."
+cellW: 185
+cellH: 100
+nodes:
+  - id: before
+    label: "before_model"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: sky
+    sub: "trim · redact"
+  - id: m
+    label: "Model"
+    col: 1.5
+    row: 0.6
+    shape: circle
+    tone: grape
+  - id: after
+    label: "after_model"
+    col: 3
+    row: 0.6
+    shape: round
+    tone: sky
+    sub: "check output"
+  - id: tool
+    label: "wrap_tool_call"
+    col: 3
+    row: 1.8
+    shape: round
+    tone: gold
+    sub: "approve · retry"
+  - id: t
+    label: "Tool"
+    col: 1.5
+    row: 1.8
+    shape: db
+    tone: teal
+edges:
+  - from: before
+    to: m
+  - from: m
+    to: after
+  - from: after
+    to: tool
+  - from: tool
+    to: t
+  - from: t
+    to: before
+    label: "next turn"
+    dashed: true
+```
+
 
 | Prebuilt middleware | Purpose |
 |---|---|
@@ -346,6 +502,65 @@ agent.invoke({"messages": [{"role": "user", "content": "What's my name?"}]}, con
 # LangGraph: Stateful Agents {#langgraph}
 
 **LangGraph** models an application as a **graph**: nodes are steps (call the LLM, run a tool, ask a human), edges decide what happens next. Unlike a straight chain, graphs can **loop** and **branch** — what agents need.
+
+```sketch
+title: "A graph of steps sharing one state"
+caption: "Nodes are functions that update a shared state; edges, including conditional ones, decide what runs next. Checkpoints let a run pause and resume."
+cellW: 180
+cellH: 100
+nodes:
+  - id: s
+    label: "START"
+    col: 0
+    row: 0.6
+    shape: dot
+  - id: cl
+    label: "classify"
+    col: 1
+    row: 0.6
+    shape: round
+    tone: gold
+  - id: ref
+    label: "refund"
+    col: 2.5
+    row: 0
+    shape: round
+    tone: sky
+  - id: faq
+    label: "answer_faq"
+    col: 2.5
+    row: 1.2
+    shape: round
+    tone: teal
+  - id: rev
+    label: "human_review"
+    col: 3.9
+    row: 0
+    shape: round
+    tone: rose
+    sub: "interrupt"
+  - id: end
+    label: "END"
+    col: 3.9
+    row: 1.2
+    shape: dot
+edges:
+  - from: s
+    to: cl
+  - from: cl
+    to: ref
+    label: "refund"
+  - from: cl
+    to: faq
+    label: "question"
+  - from: ref
+    to: rev
+  - from: rev
+    to: end
+  - from: faq
+    to: end
+```
+
 
 ```python
 from typing import TypedDict

@@ -16,6 +16,59 @@ tags: [data science, pandas, numpy, matplotlib, analytics, python]
 
 **Data science** uses programming, statistics and domain knowledge to answer questions with data:
 
+```sketch
+title: "The data science loop"
+caption: "Start from a question, not a dataset. Most of the work is getting and cleaning data; the answer usually raises the next question."
+cellW: 190
+nodes:
+  - id: q
+    label: "Ask a question"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: get
+    label: "Get data"
+    col: 1.3
+    row: 0
+    shape: db
+    tone: gold
+  - id: clean
+    label: "Clean & explore"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: gold
+    sub: "most of the time"
+  - id: model
+    label: "Analyse / model"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: grape
+  - id: tell
+    label: "Communicate"
+    col: 1.3
+    row: 1.3
+    shape: pill
+    tone: teal
+    sub: "chart · report"
+edges:
+  - from: q
+    to: get
+  - from: get
+    to: clean
+  - from: clean
+    to: model
+  - from: model
+    to: tell
+  - from: tell
+    to: q
+    label: "new question"
+    dashed: true
+```
+
+
 - Which provinces had the highest maize yields, and why?
 - Which products sell best in December?
 - Is a new clinic reducing waiting times?
@@ -115,6 +168,65 @@ print(df.iloc[0])                       # first row by position
 
 Real data is messy. Cleaning often takes most of a data scientist's time.
 
+```sketch
+title: "A cleaning pipeline"
+caption: "Fix types first, then deal with missing values and duplicates, then check that every value is in a sensible range before analysing anything."
+cellW: 195
+nodes:
+  - id: raw
+    label: "Raw CSV"
+    col: 0
+    row: 0
+    shape: doc
+    tone: rose
+    sub: "\"8,50\" · blanks · dupes"
+  - id: types
+    label: "Fix types"
+    col: 1.3
+    row: 0
+    shape: round
+    sub: "to_numeric · dates"
+  - id: miss
+    label: "Missing values"
+    col: 2.6
+    row: 0
+    shape: round
+    tone: gold
+    sub: "drop or fill"
+  - id: dup
+    label: "Duplicates"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: gold
+    sub: "drop_duplicates"
+  - id: chk
+    label: "Sanity checks"
+    col: 1.3
+    row: 1.3
+    shape: diamond
+    tone: sky
+    sub: "ranges · counts"
+  - id: ok
+    label: "Clean DataFrame"
+    col: 0
+    row: 1.3
+    shape: db
+    tone: teal
+edges:
+  - from: raw
+    to: types
+  - from: types
+    to: miss
+  - from: miss
+    to: dup
+  - from: dup
+    to: chk
+  - from: chk
+    to: ok
+```
+
+
 ```python run
 import pandas as pd
 import numpy as np
@@ -178,6 +290,62 @@ tests: |
 
 `groupby` splits data into groups, applies a calculation, and combines the results — like SQL's GROUP BY.
 
+```sketch
+title: "Split, apply, combine"
+caption: "groupby splits the rows by a column, applies a calculation to each group, and combines the answers into a new, smaller table."
+cellW: 195
+cellH: 90
+nodes:
+  - id: df
+    label: "All prices"
+    col: 0
+    row: 1
+    shape: db
+    tone: sky
+    sub: "market · crop · price"
+  - id: m1
+    label: "Mbare rows"
+    col: 1.4
+    row: 0
+    shape: box
+    tone: gold
+  - id: m2
+    label: "Sakubva rows"
+    col: 1.4
+    row: 1
+    shape: box
+    tone: gold
+  - id: m3
+    label: "Renkini rows"
+    col: 1.4
+    row: 2
+    shape: box
+    tone: gold
+  - id: out
+    label: "Mean per market"
+    col: 2.9
+    row: 1
+    shape: db
+    tone: teal
+    sub: "3 rows"
+edges:
+  - from: df
+    to: m1
+    label: "split"
+  - from: df
+    to: m2
+  - from: df
+    to: m3
+  - from: m1
+    to: out
+    label: "mean()"
+  - from: m2
+    to: out
+  - from: m3
+    to: out
+```
+
+
 ```python run
 import pandas as pd
 sales = pd.DataFrame({
@@ -195,6 +363,49 @@ print(sales.pivot_table(index="branch", columns="product", values="units", aggfu
 # Joining Data {#merging}
 
 Combine tables that share a key:
+
+```sketch
+title: "merge() matches rows on a key"
+caption: "Two tables share a column. merge lines up rows with the same key; how= decides what happens to rows that have no partner."
+cellW: 200
+cellH: 100
+nodes:
+  - id: a
+    label: "prices"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "market_id · price"
+  - id: b
+    label: "markets"
+    col: 0
+    row: 1.4
+    shape: db
+    tone: gold
+    sub: "market_id · city"
+  - id: m
+    label: "pd.merge(on=\"market_id\")"
+    col: 1.7
+    row: 0.7
+    shape: round
+    tone: grape
+    sub: "how=\"left\""
+  - id: out
+    label: "price + city"
+    col: 3.4
+    row: 0.7
+    shape: db
+    tone: teal
+edges:
+  - from: a
+    to: m
+  - from: b
+    to: m
+  - from: m
+    to: out
+```
+
 
 ```python run
 import pandas as pd

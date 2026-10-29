@@ -18,6 +18,61 @@ Every system you build will be attacked — usually not by a genius, but by auto
 
 ## The CIA triad
 
+
+```sketch
+title: "Confidentiality, integrity, availability"
+caption: "Every security control protects at least one of these. Name which one is at risk and the right defence becomes clearer."
+cellW: 230
+cellH: 95
+nodes:
+  - id: c
+    label: "Confidentiality"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "only the right people see it"
+  - id: i
+    label: "Integrity"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "nobody changes it secretly"
+  - id: a
+    label: "Availability"
+    col: 3
+    row: 0
+    shape: round
+    tone: teal
+    sub: "it works when needed"
+  - id: ex1
+    label: "encryption · access control"
+    col: 0
+    row: 1.2
+    shape: note
+  - id: ex2
+    label: "hashes · signatures · logs"
+    col: 1.5
+    row: 1.2
+    shape: note
+  - id: ex3
+    label: "backups · rate limits"
+    col: 3
+    row: 1.2
+    shape: note
+edges:
+  - from: c
+    to: ex1
+    dashed: true
+  - from: i
+    to: ex2
+    dashed: true
+  - from: a
+    to: ex3
+    dashed: true
+```
+
 | Goal | Meaning | Example failure |
 |---|---|---|
 | **Confidentiality** | Only the right people see data | Learner records leaked online |
@@ -32,6 +87,56 @@ Every system you build will be attacked — usually not by a genius, but by auto
 - **Opportunists** — scanning the internet for weak systems.
 
 # Passwords and MFA {#passwords}
+
+
+```sketch
+title: "How a site should check your password"
+caption: "The server never stores your password. It stores a slow, salted hash and compares hashes at login. A second factor stops stolen passwords working."
+cellW: 190
+nodes:
+  - id: pw
+    label: "Password typed"
+    col: 0
+    row: 0
+    shape: note
+    tone: sky
+  - id: h
+    label: "Slow hash + salt"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "argon2 · bcrypt"
+  - id: cmp
+    label: "Same as stored?"
+    col: 3
+    row: 0
+    shape: diamond
+    tone: grape
+  - id: mfa
+    label: "Second factor"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "app code · passkey"
+  - id: in
+    label: "Signed in"
+    col: 1.5
+    row: 1.3
+    shape: pill
+    tone: teal
+edges:
+  - from: pw
+    to: h
+  - from: h
+    to: cmp
+  - from: cmp
+    to: mfa
+    label: "yes"
+  - from: mfa
+    to: in
+```
 
 - Use **long passphrases** (4+ random words) — length beats complexity.
 - Use a **password manager** (Bitwarden, 1Password, KeePassXC) — a unique password everywhere.
@@ -63,6 +168,61 @@ for name, bits in examples.items():
 > These estimates assume an offline attack on a fast hash. That's why sites must store passwords with **slow** hashes like bcrypt, Argon2 or PBKDF2.
 
 # Cryptography Basics {#crypto}
+
+
+```sketch
+title: "Three tools, three jobs"
+caption: "Hashing proves data is unchanged, symmetric encryption hides data with one shared key, and public-key cryptography lets strangers set up that key safely."
+cellW: 200
+cellH: 100
+nodes:
+  - id: h
+    label: "Hashing"
+    col: 0
+    row: 0
+    shape: round
+    tone: gold
+    sub: "one way · SHA-256"
+  - id: s
+    label: "Symmetric"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: sky
+    sub: "one key · AES"
+  - id: p
+    label: "Public key"
+    col: 3
+    row: 0
+    shape: round
+    tone: grape
+    sub: "key pair · TLS, signing"
+  - id: hu
+    label: "Is the file intact?"
+    col: 0
+    row: 1.2
+    shape: note
+  - id: su
+    label: "Encrypt the disk"
+    col: 1.5
+    row: 1.2
+    shape: note
+  - id: pu
+    label: "HTTPS handshake"
+    col: 3
+    row: 1.2
+    shape: note
+edges:
+  - from: h
+    to: hu
+    dashed: true
+  - from: s
+    to: su
+    dashed: true
+  - from: p
+    to: pu
+    dashed: true
+```
 
 | Tool | What it does | Use for |
 |---|---|---|
@@ -142,6 +302,58 @@ print("Escaped (safe): ", html.escape(comment))
 # Phishing and Social Engineering {#phishing}
 
 Most breaches start with a person being tricked, not a technical hack.
+
+```sketch
+title: "Stop, check, then act"
+caption: "Phishing works by creating urgency. Pause, check the sender and link through a channel you already trust, and report it if it is fake."
+cellW: 180
+cellH: 100
+nodes:
+  - id: msg
+    label: "Urgent message"
+    col: 0
+    row: 0.6
+    shape: doc
+    tone: rose
+    sub: "\"account blocked!\""
+  - id: stop
+    label: "Pause"
+    col: 1.4
+    row: 0.6
+    shape: pill
+    tone: gold
+  - id: chk
+    label: "Verify another way?"
+    col: 2.8
+    row: 0.6
+    shape: diamond
+    tone: sky
+    sub: "call the real number"
+  - id: ok
+    label: "Act on it"
+    col: 4.2
+    row: 0
+    shape: pill
+    tone: teal
+  - id: rep
+    label: "Report & delete"
+    col: 4.2
+    row: 1.2
+    shape: pill
+    tone: rose
+edges:
+  - from: msg
+    to: stop
+  - from: stop
+    to: chk
+  - from: chk
+    to: ok
+    label: "real"
+  - from: chk
+    to: rep
+    label: "fake"
+```
+
 
 ## Common local scams
 

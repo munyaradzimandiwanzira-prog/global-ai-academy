@@ -16,6 +16,47 @@ tags: [automation, workflows, n8n, webhooks, apis, ai, business]
 
 Many businesses lose hours every day to repetitive work: copying orders from WhatsApp into a spreadsheet, typing invoice details into accounting software, answering the same questions, chasing payments.
 
+```sketch
+title: "Trigger, steps, action"
+caption: "Something happens, a fixed series of steps runs (some of them AI), and the result lands somewhere useful. No person has to copy and paste."
+cellW: 180
+nodes:
+  - id: t
+    label: "Trigger"
+    col: 0
+    row: 0
+    shape: pill
+    tone: sky
+    sub: "new email · form · 8 am"
+  - id: s1
+    label: "Fetch data"
+    col: 1.4
+    row: 0
+    shape: round
+  - id: s2
+    label: "AI step"
+    col: 2.8
+    row: 0
+    shape: round
+    tone: grape
+    sub: "extract · classify"
+  - id: a
+    label: "Action"
+    col: 4.2
+    row: 0
+    shape: pill
+    tone: teal
+    sub: "sheet · WhatsApp · CRM"
+edges:
+  - from: t
+    to: s1
+  - from: s1
+    to: s2
+  - from: s2
+    to: a
+```
+
+
 A **workflow** connects apps so work flows automatically:
 
 ```text
@@ -45,6 +86,44 @@ The ideas are the same in every tool; this track teaches them with Python you ca
 ```
 
 # Triggers and Webhooks {#triggers}
+
+
+```sketch
+title: "Polling vs webhooks"
+caption: "Polling asks \"anything new?\" on a timer and wastes most calls. A webhook lets the other system call you the moment something happens."
+cellW: 210
+cellH: 100
+nodes:
+  - id: you1
+    label: "Your workflow"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: app1
+    label: "Other app"
+    col: 2
+    row: 0
+    shape: db
+  - id: app2
+    label: "Other app"
+    col: 0
+    row: 1.4
+    shape: db
+  - id: you2
+    label: "Your webhook URL"
+    col: 2
+    row: 1.4
+    shape: round
+    tone: teal
+edges:
+  - from: you1
+    to: app1
+    label: "every 5 min: new?"
+  - from: app2
+    to: you2
+    label: "POST when it happens"
+```
 
 | Trigger | Example |
 |---|---|
@@ -124,6 +203,59 @@ Always **validate** the AI's output against your real data (price list, customer
 
 Real processes have decisions:
 
+```sketch
+title: "Let confidence decide"
+caption: "Route clear cases straight through and send unsure ones to a person. Their corrections become test cases for the next version."
+cellW: 180
+cellH: 100
+nodes:
+  - id: in
+    label: "Order message"
+    col: 0
+    row: 0.6
+    shape: doc
+    tone: sky
+  - id: ai
+    label: "AI extracts order"
+    col: 1.4
+    row: 0.6
+    shape: round
+    tone: grape
+  - id: c
+    label: "Confident?"
+    col: 2.8
+    row: 0.6
+    shape: diamond
+    tone: gold
+  - id: auto
+    label: "Create order"
+    col: 4.2
+    row: 0
+    shape: pill
+    tone: teal
+  - id: hum
+    label: "Human review"
+    col: 4.2
+    row: 1.2
+    shape: round
+    tone: rose
+edges:
+  - from: in
+    to: ai
+  - from: ai
+    to: c
+  - from: c
+    to: auto
+    label: "yes"
+  - from: c
+    to: hum
+    label: "no"
+  - from: hum
+    to: auto
+    dashed: true
+```
+
+
 ```text
                      ┌─ total ≤ $500 ─▶ auto-confirm ─▶ send confirmation
  extract order ─▶ IF ┤
@@ -160,6 +292,50 @@ for o in orders:
 # Error Handling and Reliability {#reliability}
 
 Workflows run unattended, so plan for failure:
+
+```sketch
+title: "Retries, then a dead-letter queue"
+caption: "Retry temporary failures with backoff. After the last try, park the item in a dead-letter queue and alert someone instead of losing it."
+cellW: 190
+cellH: 100
+nodes:
+  - id: step
+    label: "Step fails"
+    col: 0
+    row: 0.6
+    shape: round
+    tone: rose
+  - id: r
+    label: "Retry with backoff"
+    col: 1.6
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "3 tries"
+  - id: ok
+    label: "Continue"
+    col: 3.2
+    row: 0
+    shape: pill
+    tone: teal
+  - id: dlq
+    label: "Dead-letter queue"
+    col: 3.2
+    row: 1.2
+    shape: db
+    tone: grape
+    sub: "+ alert a person"
+edges:
+  - from: step
+    to: r
+  - from: r
+    to: ok
+    label: "worked"
+  - from: r
+    to: dlq
+    label: "gave up"
+```
+
 
 | Practice | Why |
 |---|---|

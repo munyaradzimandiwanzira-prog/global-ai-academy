@@ -16,6 +16,70 @@ tags: [mlops, llmops, platform engineering, deployment, monitoring, mlflow, kube
 
 Most ML projects never reach users. **MLOps** is the set of practices that makes models **reproducible, deployable, observable and maintainable** — and **AI platform engineering** builds the shared systems that let every team do this easily.
 
+```sketch
+title: "The MLOps loop"
+caption: "A model in production is never finished. Monitoring finds drift, which triggers retraining, evaluation and a safe release."
+cellW: 180
+nodes:
+  - id: data
+    label: "Data"
+    col: 0
+    row: 0
+    shape: db
+    tone: sky
+    sub: "versioned"
+  - id: train
+    label: "Train"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "tracked runs"
+  - id: eval
+    label: "Evaluate"
+    col: 2.6
+    row: 0
+    shape: diamond
+    tone: grape
+  - id: reg
+    label: "Registry"
+    col: 3.9
+    row: 0
+    shape: db
+    tone: teal
+    sub: "v7 → production"
+  - id: serve
+    label: "Serve"
+    col: 3.9
+    row: 1.3
+    shape: round
+    tone: teal
+  - id: mon
+    label: "Monitor"
+    col: 1.95
+    row: 1.3
+    shape: round
+    tone: rose
+    sub: "drift · latency · cost"
+edges:
+  - from: data
+    to: train
+  - from: train
+    to: eval
+  - from: eval
+    to: reg
+    label: "pass"
+  - from: reg
+    to: serve
+  - from: serve
+    to: mon
+  - from: mon
+    to: data
+    label: "retrain"
+    dashed: true
+```
+
+
 > **On AWS?** The **[AWS SageMaker AI](/learn/sagemaker)** track shows managed versions of these practices: training jobs, endpoints, Pipelines, Model Registry and Model Monitor. For serving large models efficiently, see **[Inference Engineering](/learn/inference-engineering)**.
 
 ```text
@@ -135,6 +199,64 @@ LLM apps add new operational concerns:
 
 Platforms usually put an **LLM gateway** between apps and model providers:
 
+```sketch
+title: "One gateway in front of every model"
+caption: "All apps call one internal endpoint. The gateway handles keys, routing, fallbacks, caching, budgets and logging, so apps stay simple."
+cellW: 190
+cellH: 95
+nodes:
+  - id: a1
+    label: "Chat app"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: a2
+    label: "Batch jobs"
+    col: 0
+    row: 1.2
+    shape: round
+    tone: sky
+  - id: gw
+    label: "LLM gateway"
+    col: 1.6
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: "keys · cache · budgets · logs"
+  - id: p1
+    label: "Provider A"
+    col: 3.4
+    row: 0
+    shape: db
+    tone: grape
+  - id: p2
+    label: "Provider B"
+    col: 3.4
+    row: 1.2
+    shape: db
+    tone: grape
+    sub: "fallback"
+  - id: loc
+    label: "Self-hosted"
+    col: 3.4
+    row: 2.3
+    shape: db
+    tone: teal
+edges:
+  - from: a1
+    to: gw
+  - from: a2
+    to: gw
+  - from: gw
+    to: p1
+  - from: gw
+    to: p2
+  - from: gw
+    to: loc
+```
+
+
 ```text
  App A ─┐                         ┌─▶ Provider 1 (primary)
  App B ─┼─▶  LLM GATEWAY  ────────┼─▶ Provider 2 (fallback)
@@ -217,6 +339,54 @@ Combine **deterministic checks** (contains facts, valid JSON, latency budget), *
 # Monitoring and Drift {#monitoring}
 
 After launch, watch:
+
+```sketch
+title: "Two kinds of drift"
+caption: "Data drift: the inputs change (new markets, new phones). Concept drift: the link between inputs and answers changes. Both quietly lower accuracy."
+cellW: 190
+cellH: 100
+nodes:
+  - id: tr
+    label: "Training data"
+    col: 0
+    row: 0.6
+    shape: db
+    tone: sky
+    sub: "2025 prices"
+  - id: live
+    label: "Live inputs"
+    col: 1.6
+    row: 0
+    shape: db
+    tone: gold
+    sub: "2026: new currency"
+  - id: lab
+    label: "Live outcomes"
+    col: 1.6
+    row: 1.2
+    shape: db
+    tone: grape
+    sub: "buyers behave differently"
+  - id: al
+    label: "Alert + retrain"
+    col: 3.2
+    row: 0.6
+    shape: pill
+    tone: rose
+edges:
+  - from: tr
+    to: live
+    label: "compare"
+  - from: tr
+    to: lab
+  - from: live
+    to: al
+    label: "data drift"
+  - from: lab
+    to: al
+    label: "concept drift"
+```
+
 
 | Signal | Example metric |
 |---|---|

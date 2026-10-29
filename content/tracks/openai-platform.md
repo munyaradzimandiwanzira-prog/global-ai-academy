@@ -69,6 +69,49 @@ export OPENAI_API_KEY="sk-...your key..."      # PowerShell: $Env:OPENAI_API_KEY
 
 # Responses API Fundamentals {#responses}
 
+
+```sketch
+title: "Request and response"
+caption: "You send a model name, input and optional tools. The response holds an output list (messages, tool calls, reasoning) plus token usage."
+cellW: 190
+cellH: 100
+nodes:
+  - id: req
+    label: "POST /v1/responses"
+    col: 0
+    row: 0.6
+    shape: doc
+    tone: sky
+    sub: "model · input · tools"
+  - id: m
+    label: "Model"
+    col: 1.7
+    row: 0.6
+    shape: circle
+    tone: grape
+  - id: out
+    label: "output[]"
+    col: 3.3
+    row: 0
+    shape: doc
+    tone: teal
+    sub: "message · function_call"
+  - id: use
+    label: "usage"
+    col: 3.3
+    row: 1.2
+    shape: note
+    tone: gold
+    sub: "input · output tokens"
+edges:
+  - from: req
+    to: m
+  - from: m
+    to: out
+  - from: m
+    to: use
+```
+
 ## The smallest call
 
 ```python
@@ -179,6 +222,36 @@ answers: [max_output_tokens]
 # Conversation State {#state}
 
 Each request is independent unless you carry context forward. Three ways:
+
+```sketch
+title: "Three ways to keep a conversation"
+caption: "Resend the history yourself, point at the previous response with previous_response_id, or keep a durable Conversation object on the platform."
+cellW: 210
+nodes:
+  - id: m
+    label: "Manual history"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "you send every turn"
+  - id: p
+    label: "previous_response_id"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "platform links turns"
+  - id: c
+    label: "Conversation"
+    col: 3
+    row: 0
+    shape: round
+    tone: teal
+    sub: "durable thread"
+edges: []
+```
+
 
 | Approach | How | Trade-offs |
 |---|---|---|
@@ -334,6 +407,53 @@ The **Pydantic in Depth** track covers models, validators and serialization full
 # Function Calling and Built-in Tools {#tools}
 
 **Function calling** lets the model ask your code to run a function (the full loop is in the **Agentic AI Engineering** track). **Built-in tools** run on OpenAI's side, so you don't execute them yourself.
+
+```sketch
+title: "Built-in tools vs your functions"
+caption: "Built-in tools such as web search and file search run on the platform. Your own functions come back to your code to run, and you send the result."
+cellW: 190
+nodes:
+  - id: m
+    label: "Model"
+    col: 1.5
+    row: 0
+    shape: circle
+    tone: grape
+  - id: ws
+    label: "web_search"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "runs on platform"
+  - id: fs
+    label: "file_search"
+    col: 1.5
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "runs on platform"
+  - id: fn
+    label: "your function"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: gold
+    sub: "runs in your code"
+edges:
+  - from: m
+    to: ws
+  - from: m
+    to: fs
+  - from: m
+    to: fn
+  - from: fn
+    to: m
+    label: "output"
+    dashed: true
+    bend: -35
+```
+
 
 | Built-in tool | Type | Use |
 |---|---|---|
@@ -515,6 +635,42 @@ Stream user-facing text; for tool calls and JSON you usually wait for completion
 ## The Batch API: half price for patient jobs
 
 For evaluations, back-fills, classification of thousands of records, or nightly summaries: write requests to a JSONL file, upload it, and collect results within 24 hours at about **50% off**.
+
+```sketch
+title: "Batch jobs"
+caption: "Upload a file of requests, wait up to 24 hours, and download a file of results at about half the price. Good for evals, tagging and embeddings."
+cellW: 200
+nodes:
+  - id: f
+    label: "requests.jsonl"
+    col: 0
+    row: 0
+    shape: doc
+    tone: sky
+    sub: "1 request per line"
+  - id: b
+    label: "Batch job"
+    col: 1.5
+    row: 0
+    shape: db
+    tone: gold
+    sub: "≤ 24 h"
+  - id: o
+    label: "results.jsonl"
+    col: 3
+    row: 0
+    shape: doc
+    tone: teal
+    sub: "match by custom_id"
+edges:
+  - from: f
+    to: b
+    label: "upload"
+  - from: b
+    to: o
+    label: "download"
+```
+
 
 ```python run title="Build a Batch API input file"
 import json

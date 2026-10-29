@@ -16,6 +16,67 @@ tags: [ai agents, agentic ai, tools, mcp, multi-agent, planning, llm]
 
 A chatbot **answers**. An **agent** **acts**: it decides what to do next, uses **tools** (search, databases, code, APIs), looks at the results and keeps going until the goal is reached.
 
+```sketch
+title: "Workflow vs agent"
+caption: "In a workflow your code decides the steps. In an agent the model decides which tool to use next, so it can handle tasks you did not script."
+cellW: 190
+cellH: 95
+nodes:
+  - id: w1
+    label: "Step 1"
+    col: 0
+    row: 0
+    shape: box
+    tone: sky
+  - id: w2
+    label: "LLM step"
+    col: 1
+    row: 0
+    shape: round
+    tone: gold
+  - id: w3
+    label: "Step 3"
+    col: 2
+    row: 0
+    shape: box
+    tone: sky
+  - id: goal
+    label: "Goal"
+    col: 0
+    row: 1.6
+    shape: note
+    tone: grape
+  - id: llm
+    label: "LLM decides"
+    col: 1.2
+    row: 1.6
+    shape: circle
+    tone: grape
+  - id: tools
+    label: "Tools"
+    col: 2.4
+    row: 1.6
+    shape: db
+    tone: teal
+edges:
+  - from: w1
+    to: w2
+  - from: w2
+    to: w3
+  - from: goal
+    to: llm
+  - from: llm
+    to: tools
+    arrow: both
+groups:
+  - label: "workflow: fixed path"
+    nodes: [w1, w2, w3]
+  - label: "agent: model picks the path"
+    nodes: [goal, llm, tools]
+    tone: grape
+```
+
+
 > **Go deeper.** This track introduces agents. For production engineering (API resilience, tool design, loop and context engineering, caching, memory architecture, guardrails, multi-agent systems and harness engineering) continue with **[Agentic AI Engineering](/learn/agentic-engineering)**, then **[MCP & Agent Protocols](/learn/mcp)** and **[AI Evaluations](/learn/ai-evaluations)**.
 
 ```text
@@ -47,6 +108,60 @@ Start with the **simplest thing that works**: a single prompt, then a workflow, 
 # The Agent Loop {#agent-loop}
 
 Here is a complete agent loop. The "LLM" is simulated with simple rules so the whole thing runs in your browser — swap `fake_llm` for a real model call and it's a real agent.
+
+```sketch
+title: "Think, act, observe"
+caption: "The model reads the goal and history, picks a tool, your code runs it, and the result goes back into the history. It stops when it can answer or hits a limit."
+cellW: 185
+cellH: 100
+nodes:
+  - id: ctx
+    label: "Goal + history"
+    col: 0
+    row: 0.6
+    shape: doc
+    tone: sky
+  - id: llm
+    label: "Model"
+    col: 1.5
+    row: 0.6
+    shape: circle
+    tone: grape
+  - id: act
+    label: "Run the tool"
+    col: 3
+    row: 0
+    shape: round
+    tone: gold
+  - id: obs
+    label: "Add result"
+    col: 3
+    row: 1.2
+    shape: note
+    tone: teal
+  - id: done
+    label: "Final answer"
+    col: 1.5
+    row: 2
+    shape: pill
+    tone: teal
+    sub: "or step limit"
+edges:
+  - from: ctx
+    to: llm
+  - from: llm
+    to: act
+    label: "tool call"
+  - from: act
+    to: obs
+  - from: obs
+    to: llm
+    label: "observe"
+  - from: llm
+    to: done
+    label: "done"
+```
+
 
 ```python run title="A runnable ReAct-style agent"
 import json
@@ -191,6 +306,51 @@ print("Completed:", done)
 
 # Memory {#memory}
 
+
+```sketch
+title: "Kinds of agent memory"
+caption: "Short-term memory is the conversation in the context window. Long-term memory is stored outside and pulled back in when it is relevant."
+cellW: 200
+cellH: 100
+nodes:
+  - id: ctx
+    label: "Context window"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "short-term · this task"
+  - id: sum
+    label: "Summaries"
+    col: 0
+    row: 1.3
+    shape: note
+    tone: sky
+    sub: "old turns squeezed"
+  - id: vec
+    label: "Facts store"
+    col: 1.5
+    row: 1.3
+    shape: db
+    tone: teal
+    sub: "user prefers SMS"
+  - id: ep
+    label: "Past runs"
+    col: 3
+    row: 1.3
+    shape: db
+    tone: grape
+    sub: "what worked before"
+edges:
+  - from: sum
+    to: ctx
+  - from: vec
+    to: ctx
+    label: "retrieve"
+  - from: ep
+    to: ctx
+```
+
 | Memory type | What it holds | Example |
 |---|---|---|
 | **Short-term** (working) | The current task's messages and tool results | Steps so far |
@@ -203,6 +363,56 @@ Keep the working context **small and relevant** — summarise long tool outputs,
 # Multi-Agent Systems {#multi-agent}
 
 Some tasks split naturally across **specialist agents**:
+
+```sketch
+title: "Orchestrator and workers"
+caption: "One agent splits the job and hands pieces to specialists with their own tools and context, then combines what they return."
+cellW: 200
+nodes:
+  - id: o
+    label: "Orchestrator"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: a
+    label: "Research agent"
+    col: 0
+    row: 1.3
+    shape: round
+    tone: sky
+    sub: "web search"
+  - id: b
+    label: "Data agent"
+    col: 1.5
+    row: 1.3
+    shape: round
+    tone: teal
+    sub: "SQL"
+  - id: c
+    label: "Writer agent"
+    col: 3
+    row: 1.3
+    shape: round
+    tone: grape
+    sub: "drafts the report"
+edges:
+  - from: o
+    to: a
+  - from: o
+    to: b
+  - from: o
+    to: c
+  - from: a
+    to: o
+    dashed: true
+    bend: 30
+  - from: c
+    to: o
+    dashed: true
+    bend: -30
+```
+
 
 ```text
                 ┌──────────────┐

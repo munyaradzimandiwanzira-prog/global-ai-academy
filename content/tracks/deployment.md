@@ -16,6 +16,67 @@ tags: [deployment, devops, docker, ci/cd, github actions, cloudflare, hosting]
 
 "It works on my machine" isn't finished. **Deployment** puts your app on servers so anyone can use it — reliably, securely, and in a way you can update safely.
 
+```sketch
+title: "The path to production"
+caption: "Code goes to Git, automated checks run, a build is made, and only a passing build is deployed where users can reach it."
+cellW: 190
+nodes:
+  - id: dev
+    label: "Your laptop"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+  - id: git
+    label: "GitHub"
+    col: 1.3
+    row: 0
+    shape: db
+    sub: "git push"
+  - id: ci
+    label: "CI checks"
+    col: 2.6
+    row: 0
+    shape: diamond
+    tone: gold
+    sub: "tests · lint"
+  - id: build
+    label: "Build"
+    col: 2.6
+    row: 1.3
+    shape: round
+    tone: grape
+    sub: "bundle · image"
+  - id: prod
+    label: "Production"
+    col: 1.3
+    row: 1.3
+    shape: pill
+    tone: teal
+    sub: "users"
+  - id: fix
+    label: "Fix it"
+    col: 3.9
+    row: 0
+    shape: pill
+    tone: rose
+edges:
+  - from: dev
+    to: git
+  - from: git
+    to: ci
+  - from: ci
+    to: build
+    label: "pass"
+  - from: ci
+    to: fix
+    label: "fail"
+  - from: build
+    to: prod
+    label: "deploy"
+```
+
+
 ```text
  Code on laptop ─▶ Git push ─▶ CI: test & build ─▶ Deploy ─▶ Users
                                    │                  │
@@ -62,6 +123,52 @@ npx wrangler secret put OPENAI_API_KEY
 # Docker {#docker}
 
 **Docker** packages your app and everything it needs into an **image**. A running image is a **container**. It runs the same on your laptop, a server or the cloud.
+
+```sketch
+title: "Image vs container"
+caption: "A Dockerfile is the recipe. Building it makes an image (a frozen snapshot); running the image starts containers, and every one behaves the same."
+cellW: 190
+cellH: 100
+nodes:
+  - id: df
+    label: "Dockerfile"
+    col: 0
+    row: 0.6
+    shape: doc
+    tone: sky
+    sub: "FROM python:3.12…"
+  - id: img
+    label: "Image"
+    col: 1.6
+    row: 0.6
+    shape: db
+    tone: gold
+    sub: "read-only snapshot"
+  - id: c1
+    label: "Container"
+    col: 3.2
+    row: 0
+    shape: round
+    tone: teal
+    sub: "on your laptop"
+  - id: c2
+    label: "Container"
+    col: 3.2
+    row: 1.2
+    shape: round
+    tone: teal
+    sub: "on the server"
+edges:
+  - from: df
+    to: img
+    label: "build"
+  - from: img
+    to: c1
+    label: "run"
+  - from: img
+    to: c2
+```
+
 
 ```dockerfile
 # Dockerfile for a FastAPI app
@@ -191,6 +298,51 @@ export default {
 
 On a VPS you manage the server yourself:
 
+```sketch
+title: "A reverse proxy in front of your app"
+caption: "The proxy answers on ports 80 and 443, handles HTTPS certificates and compression, and forwards requests to apps listening only on the inside."
+cellW: 190
+cellH: 100
+nodes:
+  - id: u
+    label: "Browser"
+    col: 0
+    row: 0.6
+    shape: person
+  - id: px
+    label: "Caddy / Nginx"
+    col: 1.4
+    row: 0.6
+    shape: round
+    tone: gold
+    sub: ":443 · TLS"
+  - id: a1
+    label: "API"
+    col: 2.9
+    row: 0
+    shape: round
+    tone: sky
+    sub: "localhost:8000"
+  - id: a2
+    label: "Static files"
+    col: 2.9
+    row: 1.2
+    shape: round
+    tone: teal
+    sub: "/var/www"
+edges:
+  - from: u
+    to: px
+    label: "HTTPS"
+  - from: px
+    to: a1
+    label: "/api"
+  - from: px
+    to: a2
+    label: "/"
+```
+
+
 1. Create a server (Ubuntu LTS), add your **SSH key**, disable password login.
 2. Update it: `sudo apt update && sudo apt upgrade`.
 3. Set a firewall: `sudo ufw allow OpenSSH && sudo ufw allow 80,443/tcp && sudo ufw enable`.
@@ -239,6 +391,67 @@ Always redirect HTTP → HTTPS.
 - **Logs and metrics** — request rates, error rates, latency.
 
 ## Release safely
+
+
+```sketch
+title: "Canary release with a quick rollback"
+caption: "Send a small share of traffic to the new version, watch errors and latency, then roll forward or roll back in one step."
+cellW: 175
+cellH: 100
+nodes:
+  - id: lb
+    label: "Traffic"
+    col: 0
+    row: 0.6
+    shape: pill
+    tone: sky
+  - id: v1
+    label: "v1 (current)"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: teal
+    sub: "95%"
+  - id: v2
+    label: "v2 (new)"
+    col: 1.5
+    row: 1.2
+    shape: round
+    tone: gold
+    sub: "5%"
+  - id: mon
+    label: "Healthy?"
+    col: 3
+    row: 1.2
+    shape: diamond
+    tone: grape
+    sub: "errors · latency"
+  - id: all
+    label: "Move to 100%"
+    col: 4.3
+    row: 0.6
+    shape: pill
+    tone: teal
+  - id: rb
+    label: "Roll back"
+    col: 4.3
+    row: 1.8
+    shape: pill
+    tone: rose
+edges:
+  - from: lb
+    to: v1
+  - from: lb
+    to: v2
+  - from: v2
+    to: mon
+  - from: mon
+    to: all
+    label: "yes"
+  - from: mon
+    to: rb
+    label: "no"
+```
 
 - Deploy small changes often.
 - **Feature flags** let you turn new features on gradually.

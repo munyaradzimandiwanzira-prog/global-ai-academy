@@ -16,6 +16,69 @@ tags: [guardrails, ai safety, security, prompt injection, pii, responsible ai, e
 
 A demo that works 90% of the time is impressive. A **product** that fails 10% of the time can leak private data, insult customers, give dangerous advice or send money to the wrong place.
 
+```sketch
+title: "Guardrails on both sides of the model"
+caption: "Check what goes in, limit what the model can do, and check what comes out before a user or a system acts on it."
+cellW: 185
+nodes:
+  - id: u
+    label: "User input"
+    col: 0
+    row: 0
+    shape: note
+    tone: sky
+  - id: ig
+    label: "Input checks"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "PII · injection · size"
+  - id: m
+    label: "Model + tools"
+    col: 2.6
+    row: 0
+    shape: circle
+    tone: grape
+    sub: "least privilege"
+  - id: og
+    label: "Output checks"
+    col: 3.9
+    row: 0
+    shape: round
+    tone: gold
+    sub: "schema · facts · policy"
+  - id: out
+    label: "Response"
+    col: 3.9
+    row: 1.3
+    shape: pill
+    tone: teal
+  - id: blk
+    label: "Block or ask a human"
+    col: 1.95
+    row: 1.3
+    shape: pill
+    tone: rose
+edges:
+  - from: u
+    to: ig
+  - from: ig
+    to: m
+  - from: m
+    to: og
+  - from: og
+    to: out
+    label: "pass"
+  - from: ig
+    to: blk
+    dashed: true
+  - from: og
+    to: blk
+    dashed: true
+```
+
+
 **Guardrails** are checks and controls around an AI model that keep its behaviour inside safe, intended limits.
 
 ```text
@@ -79,6 +142,57 @@ Then add **classifier-based** checks for things rules can't catch: topic classif
 # Protecting Personal Data {#pii}
 
 **PII** (personally identifiable information) — names with ID numbers, phone numbers, addresses, account numbers, medical details — must be protected under Zimbabwe's **Cyber and Data Protection Act** and similar laws worldwide.
+
+```sketch
+title: "Redact before the model sees it"
+caption: "Swap personal details for placeholders before sending text to a model, and put the real values back only where they are needed."
+cellW: 180
+nodes:
+  - id: raw
+    label: "Raw text"
+    col: 0
+    row: 0
+    shape: doc
+    tone: rose
+    sub: "Rudo · 0771 234 567"
+  - id: red
+    label: "Redact"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+  - id: safe
+    label: "Safe text"
+    col: 3
+    row: 0
+    shape: doc
+    tone: teal
+    sub: "[NAME] · [PHONE]"
+  - id: map
+    label: "Placeholder map"
+    col: 1.5
+    row: 1.3
+    shape: db
+    tone: grape
+    sub: "kept on your server"
+  - id: llm
+    label: "Model"
+    col: 4.2
+    row: 0
+    shape: circle
+    tone: sky
+edges:
+  - from: raw
+    to: red
+  - from: red
+    to: safe
+  - from: red
+    to: map
+    dashed: true
+  - from: safe
+    to: llm
+```
+
 
 Redact PII **before** it reaches a third-party model or your logs:
 
@@ -207,6 +321,50 @@ for a in answers:
 # Tools, Agents and Human Approval {#agent-safety}
 
 Agents that **act** need stronger controls than chatbots that only talk.
+
+```sketch
+title: "Risk decides who approves"
+caption: "Let the agent read freely, but require a person to approve anything that spends money, sends messages or deletes data."
+cellW: 200
+cellH: 100
+nodes:
+  - id: call
+    label: "Tool call"
+    col: 0
+    row: 0.6
+    shape: note
+    tone: sky
+  - id: risk
+    label: "Risk level?"
+    col: 1.5
+    row: 0.6
+    shape: diamond
+    tone: gold
+  - id: run
+    label: "Run now"
+    col: 3
+    row: 0
+    shape: pill
+    tone: teal
+    sub: "read · search"
+  - id: ask
+    label: "Ask a human"
+    col: 3
+    row: 1.2
+    shape: round
+    tone: rose
+    sub: "pay · send · delete"
+edges:
+  - from: call
+    to: risk
+  - from: risk
+    to: run
+    label: "low"
+  - from: risk
+    to: ask
+    label: "high"
+```
+
 
 | Control | Example |
 |---|---|

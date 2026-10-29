@@ -42,6 +42,59 @@ tags: [hugging face, transformers, open source, models, datasets, nlp, fine-tuni
 
 The `pipeline` function picks a sensible model for a task and handles all the steps.
 
+```sketch
+title: "What pipeline() does for you"
+caption: "A pipeline bundles three steps: the tokenizer turns text into numbers, the model computes, and post-processing turns the numbers back into labels."
+cellW: 180
+nodes:
+  - id: txt
+    label: "\"Great service!\""
+    col: 0
+    row: 0
+    shape: note
+    tone: sky
+  - id: tok
+    label: "Tokenizer"
+    col: 1.3
+    row: 0
+    shape: round
+    tone: gold
+    sub: "text → IDs"
+  - id: mdl
+    label: "Model"
+    col: 2.6
+    row: 0
+    shape: circle
+    tone: grape
+  - id: post
+    label: "Post-process"
+    col: 3.9
+    row: 0
+    shape: round
+    tone: gold
+    sub: "scores → label"
+  - id: out
+    label: "POSITIVE 0.99"
+    col: 3.9
+    row: 1.3
+    shape: pill
+    tone: teal
+edges:
+  - from: txt
+    to: tok
+  - from: tok
+    to: mdl
+  - from: mdl
+    to: post
+  - from: post
+    to: out
+groups:
+  - label: "pipeline(\"sentiment-analysis\")"
+    nodes: [tok, mdl, post]
+    tone: grape
+```
+
+
 ```bash
 pip install transformers torch
 ```
@@ -84,6 +137,62 @@ On the Hub, filter by **task**, **language** and **licence**, then sort by downl
 # Tokenizers {#tokenizers}
 
 Models work with **tokens**, not words. The tokenizer splits text and maps each piece to an ID.
+
+```sketch
+title: "Text becomes token IDs"
+caption: "Common words are one token; rarer words, including many Shona words, are split into pieces (the split shown is illustrative). The model only ever sees the numbers."
+cellW: 130
+cellH: 95
+nodes:
+  - id: t
+    label: "\"Mhoro, makadini?\""
+    col: 0
+    row: 0.6
+    shape: note
+    tone: sky
+  - id: p1
+    label: "Mh"
+    col: 1.5
+    row: 0
+    shape: box
+    tone: gold
+  - id: p2
+    label: "oro"
+    col: 2.3
+    row: 0
+    shape: box
+    tone: gold
+  - id: p3
+    label: ","
+    col: 3.1
+    row: 0
+    shape: box
+    tone: gold
+  - id: p4
+    label: "mak"
+    col: 1.5
+    row: 1.2
+    shape: box
+    tone: teal
+  - id: p5
+    label: "ad"
+    col: 2.3
+    row: 1.2
+    shape: box
+    tone: teal
+  - id: p6
+    label: "ini?"
+    col: 3.1
+    row: 1.2
+    shape: box
+    tone: teal
+edges:
+  - from: t
+    to: p1
+  - from: t
+    to: p4
+```
+
 
 ```python
 from transformers import AutoTokenizer
@@ -155,6 +264,42 @@ trainer.push_to_hub()   # share it (or keep it private)
 **LoRA** (via the `peft` library) trains a small set of extra weights instead of the whole model — fine-tuning LLMs on a single GPU, or free GPUs in Google Colab.
 
 ## When to fine-tune vs prompt vs RAG
+
+
+```sketch
+title: "Pick the cheapest fix that works"
+caption: "Try prompting first. Add RAG when the model lacks facts. Fine-tune only when it needs a new skill, style or format that prompting cannot teach."
+cellW: 210
+nodes:
+  - id: p
+    label: "Prompting"
+    col: 0
+    row: 0
+    shape: round
+    tone: teal
+    sub: "minutes · cheap"
+  - id: r
+    label: "RAG"
+    col: 1.5
+    row: 0
+    shape: round
+    tone: gold
+    sub: "missing facts"
+  - id: f
+    label: "Fine-tuning"
+    col: 3
+    row: 0
+    shape: round
+    tone: grape
+    sub: "new behaviour · data + GPU"
+edges:
+  - from: p
+    to: r
+    label: "not enough?"
+  - from: r
+    to: f
+    label: "still not?"
+```
 
 | Need | Best approach |
 |---|---|

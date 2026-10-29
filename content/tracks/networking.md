@@ -44,6 +44,56 @@ A **network** is computers connected to share data. The **internet** is a networ
 
 Networking is split into **layers**, each with one job. Engineers use the layers to troubleshoot: "Is it a cable problem (layer 1) or a DNS problem (layer 7)?"
 
+```sketch
+title: "The TCP/IP layers"
+caption: "Each layer wraps the data from the one above with its own header. The receiver unwraps them in reverse order."
+cellW: 240
+cellH: 80
+nodes:
+  - id: app
+    label: "Application"
+    col: 0
+    row: 0
+    shape: box
+    tone: grape
+    sub: "HTTP · DNS · SMTP"
+  - id: tr
+    label: "Transport"
+    col: 0
+    row: 1
+    shape: box
+    tone: gold
+    sub: "TCP · UDP · ports"
+  - id: net
+    label: "Internet"
+    col: 0
+    row: 2
+    shape: box
+    tone: sky
+    sub: "IP addresses · routing"
+  - id: link
+    label: "Link"
+    col: 0
+    row: 3
+    shape: box
+    tone: teal
+    sub: "Ethernet · Wi-Fi · MAC"
+  - id: pkt
+    label: "A web request"
+    col: 2
+    row: 1.5
+    shape: note
+    sub: "HTTP inside TCP inside IP inside Wi-Fi"
+edges:
+  - from: pkt
+    to: app
+    dashed: true
+  - from: pkt
+    to: link
+    dashed: true
+```
+
+
 | OSI layer | TCP/IP layer | Examples |
 |---|---|---|
 | 7 Application | Application | HTTP, DNS, SMTP, SSH |
@@ -138,6 +188,61 @@ tests: |
 
 **DNS** (Domain Name System) translates names like `www.zimparks.org.zw` into IP addresses.
 
+```sketch
+title: "Resolving a name"
+caption: "Your computer asks a resolver. If it has no cached answer, the resolver asks the root, then the .com servers, then the domain's own name server."
+cellW: 190
+cellH: 95
+nodes:
+  - id: pc
+    label: "Your laptop"
+    col: 0
+    row: 1
+    shape: round
+    tone: sky
+    sub: "skurulearning.com?"
+  - id: res
+    label: "Resolver"
+    col: 1.6
+    row: 1
+    shape: db
+    tone: gold
+    sub: "ISP or 1.1.1.1"
+  - id: root
+    label: "Root"
+    col: 3.2
+    row: 0
+    shape: box
+    sub: "ask .com"
+  - id: tld
+    label: ".com servers"
+    col: 3.2
+    row: 1
+    shape: box
+    sub: "ask Cloudflare"
+  - id: auth
+    label: "Name server"
+    col: 3.2
+    row: 2
+    shape: box
+    tone: teal
+    sub: "104.21.x.x"
+edges:
+  - from: pc
+    to: res
+    arrow: both
+  - from: res
+    to: root
+    label: "1"
+  - from: res
+    to: tld
+    label: "2"
+  - from: res
+    to: auth
+    label: "3"
+```
+
+
 ```text
 Browser → resolver (ISP or 1.1.1.1/8.8.8.8)
             → root server: "ask the .zw servers"
@@ -162,6 +267,61 @@ dig +short MX example.co.zw
 > "The site is down for me" is often a DNS problem. Try another resolver (`1.1.1.1`) or check the record with `dig`.
 
 # TCP, UDP and Ports {#transport}
+
+
+```sketch
+title: "TCP three-way handshake"
+caption: "Before any data moves, TCP agrees on sequence numbers in three messages. UDP skips this and just sends, which is faster but unreliable."
+cellW: 180
+cellH: 80
+nodes:
+  - id: c1
+    label: "Client"
+    col: 0
+    row: 0
+    shape: pill
+    tone: sky
+  - id: s1
+    label: "Server :443"
+    col: 3
+    row: 0
+    shape: pill
+    tone: gold
+  - id: c2
+    label: "Client"
+    col: 0
+    row: 1
+    shape: pill
+    tone: sky
+  - id: s2
+    label: "Server"
+    col: 3
+    row: 1
+    shape: pill
+    tone: gold
+  - id: c3
+    label: "Client"
+    col: 0
+    row: 2
+    shape: pill
+    tone: sky
+  - id: s3
+    label: "Server"
+    col: 3
+    row: 2
+    shape: pill
+    tone: gold
+edges:
+  - from: c1
+    to: s1
+    label: "1. SYN"
+  - from: s2
+    to: c2
+    label: "2. SYN-ACK"
+  - from: c3
+    to: s3
+    label: "3. ACK, then data"
+```
 
 | | TCP | UDP |
 |---|---|---|
@@ -195,6 +355,51 @@ for step in handshake():
 # Routing and NAT {#routing}
 
 Routers forward packets hop by hop toward the destination using **routing tables**. Each entry says "for this network, send packets to this next hop". The **default route** (`0.0.0.0/0`) catches everything else — usually your ISP.
+
+```sketch
+title: "Many devices, one public address"
+caption: "Your router gives every device a private address and rewrites outgoing packets to use its single public address, remembering who asked for what."
+cellW: 190
+cellH: 100
+nodes:
+  - id: ph
+    label: "Phone"
+    col: 0
+    row: 0
+    shape: round
+    tone: sky
+    sub: "192.168.1.5"
+  - id: lap
+    label: "Laptop"
+    col: 0
+    row: 1.2
+    shape: round
+    tone: sky
+    sub: "192.168.1.8"
+  - id: r
+    label: "Home router"
+    col: 1.6
+    row: 0.6
+    shape: diamond
+    tone: gold
+    sub: "NAT table"
+  - id: isp
+    label: "Internet"
+    col: 3.2
+    row: 0.6
+    shape: db
+    tone: teal
+    sub: "sees 41.x.x.x only"
+edges:
+  - from: ph
+    to: r
+  - from: lap
+    to: r
+  - from: r
+    to: isp
+    label: "rewrite"
+```
+
 
 ```python run title="Longest-prefix routing"
 import ipaddress
