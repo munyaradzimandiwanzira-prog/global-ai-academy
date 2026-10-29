@@ -50,7 +50,7 @@ Edit `vars` in `wrangler.jsonc`, then run `npm run deploy` again:
 | Var | Set to |
 |---|---|
 | `APP_URL` | Your public address, e.g. `https://globalaiacademy.co.zw`. Email links and Paynow redirects use it. Until it's set, the app uses the address it was reached on. |
-| `EMAIL_FROM` | A sender verified in Brevo. It is set to `munyaradzimandiwanzira@gmail.com`, which is verified on your Brevo account today. Move to an address on your own domain once the domain is authenticated (better inbox placement). |
+| `EMAIL_FROM` | A sender verified in Brevo. Set to `admin@skurulearning.com`; the skurulearning.com domain is authenticated in Brevo (Brevo code, two DKIM CNAMEs and DMARC in Cloudflare DNS, 29 Oct 2026). |
 | `OPENAI_MODEL` | Defaults to `gpt-4.1-mini` (good quality per dollar) |
 | `JUDGE0_URL` | Your Judge0 endpoint, if you use one |
 
