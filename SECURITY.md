@@ -18,7 +18,7 @@ Mapped to the OWASP Top 10 (2025) and OWASP ASVS level 2. The code that enforces
 | CSRF | Same-origin `Origin`/`Referer` check on every state-changing request | `worker/lib/session.ts` |
 | Brute force & bots | D1 rate limits on sign-in (per IP and per account), sign-up, reset, codes, AI and payments; optional Cloudflare Turnstile | `worker/lib/ratelimit.ts`, `worker/lib/turnstile.ts` |
 | Injection | Parameterised D1 queries only; zod validation on every input; links limited to http(s) | `shared/schemas.ts` |
-| XSS & content security | Strict CSP on the site (no `unsafe-eval`, no third-party script hosts beyond Pyodide and Turnstile); learner HTML runs in a separate opaque-origin sandbox page with its own CSP | `public/_headers`, `worker/sandbox.ts` |
+| XSS & content security | Strict CSP on the site (no `unsafe-eval`; third-party scripts only from Pyodide, Turnstile and Cloudflare Web Analytics); learner HTML runs in a separate opaque-origin sandbox page with its own CSP | `public/_headers`, `worker/sandbox.ts` |
 | Code runners | Learner/shared code runs in Web Workers that cannot call this site (fetch/XHR same-origin blocked, no nested workers) | `src/features/runners/network-guard.ts` |
 | AI (OWASP LLM Top 10) | Learner text fenced as data, delimiter tags neutralised; per-user daily quotas plus a site-wide daily circuit breaker; chat size capped | `worker/lib/prompts.ts`, `worker/lib/ai-quota.ts` |
 | Payments | Paynow notifications verified by SHA-512 hash (constant-time) and amount check; idempotent settlement | `worker/lib/paynow.ts`, `worker/routes/payments.ts` |
