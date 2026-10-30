@@ -149,7 +149,7 @@ account.get('/export', async (c) => {
   const user = await freshUser(c);
   await hit(c.env.DB, `export:${user.id}`, 5, 3600, 'You can download your data 5 times an hour.');
   const q = (sql: string) => c.env.DB.prepare(sql).bind(user.id).all().then((r) => r.results);
-  const [progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests] = await Promise.all([
+  const [progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests, zuvaProfile, zuvaMemories, zuvaChats] = await Promise.all([
     q('SELECT track_id, lesson_slug, status, completed_at, updated_at FROM progress WHERE user_id = ?'),
     q('SELECT kind, ref_id, track_id, passed, score, attempts, last_code, updated_at FROM activity WHERE user_id = ?'),
     q('SELECT source, source_id, amount, created_at FROM xp_events WHERE user_id = ?'),
@@ -163,6 +163,9 @@ account.get('/export', async (c) => {
     q('SELECT classroom_id, body, created_at FROM messages WHERE user_id = ?'),
     q('SELECT reference, plan, period, amount_cents, currency, status, created_at FROM payments WHERE user_id = ?'),
     q('SELECT message, status, created_at FROM teacher_requests WHERE user_id = ?'),
+    q('SELECT interests, goals, learning_style, memory_enabled, updated_at FROM zuva_profiles WHERE user_id = ?'),
+    q('SELECT kind, content, source, created_at, last_used_at FROM zuva_memories WHERE user_id = ?'),
+    q('SELECT t.title, t.mode, t.summary, m.role, m.content, m.created_at FROM zuva_threads t JOIN zuva_messages m ON m.thread_id = t.id WHERE t.user_id = ? ORDER BY t.created_at, m.id'),
   ]);
   const data = {
     exportedAt: nowIso(),
@@ -174,6 +177,7 @@ account.get('/export', async (c) => {
       lastLesson: user.last_lesson,
     },
     progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests,
+    zuva: { profile: zuvaProfile[0] ?? null, memories: zuvaMemories, conversations: zuvaChats },
   };
   await audit(c.env.DB, user.id, 'account.exported', user.id);
   return new Response(JSON.stringify(data, null, 2), {
@@ -208,7 +212,7 @@ account.post('/delete', async (c) => {
   await db.batch([
     ...['sessions', 'email_tokens', 'progress', 'activity', 'xp_events', 'goals', 'projects', 'capstones', 'submissions',
       'certificates', 'exam_attempts', 'classroom_members', 'messages', 'learner_reports', 'teacher_requests', 'waitlist',
-      'mfa_recovery_codes', 'mfa_challenges'].map(del),
+      'mfa_recovery_codes', 'mfa_challenges', 'zuva_threads', 'zuva_memories', 'zuva_profiles'].map(del),
     db.prepare('DELETE FROM contact_messages WHERE email = ?').bind(user.email),
     db.prepare(
       `UPDATE users SET email = ?, name = 'Deleted account', password_hash = '!', city = NULL, school = NULL, bio = NULL,

@@ -111,6 +111,7 @@ export const ICONS = {
   MailWarning: 'mark_email_unread',
   MapPin: 'location_on',
   Megaphone: 'campaign',
+  Mic: 'mic',
   Menu: 'menu',
   MessageCircle: 'chat_bubble',
   MessageSquare: 'chat',
@@ -118,6 +119,7 @@ export const ICONS = {
   Moon: 'dark_mode',
   Phone: 'call',
   Play: 'play_arrow',
+  Quiz: 'quiz',
   PlayCircle: 'play_circle',
   Plus: 'add',
   Printer: 'print',
@@ -129,6 +131,8 @@ export const ICONS = {
   Rows3: 'table_rows',
   Save: 'save',
   ScrollText: 'history_edu',
+  Science: 'science',
+  ShoppingBasket: 'shopping_basket',
   Search: 'search',
   Send: 'send',
   Server: 'dns',
@@ -139,8 +143,10 @@ export const ICONS = {
   ShieldCheck: 'verified_user',
   ShieldX: 'gpp_bad',
   Smartphone: 'smartphone',
+  History: 'history',
   Sparkles: 'auto_awesome',
   Star: 'star',
+  StopCircle: 'stop_circle',
   Sun: 'light_mode',
   Tag: 'sell',
   Target: 'target',
@@ -172,6 +178,12 @@ export const Award = icon(ICONS.Award);
 export const BookOpen = icon(ICONS.BookOpen);
 export const BookOpenCheck = icon(ICONS.BookOpenCheck);
 export const Brain = icon(ICONS.Brain);
+export const Mic = icon(ICONS.Mic);
+export const Science = icon(ICONS.Science);
+export const ShoppingBasket = icon(ICONS.ShoppingBasket);
+export const StopCircle = icon(ICONS.StopCircle);
+export const Quiz = icon(ICONS.Quiz);
+export const History = icon(ICONS.History);
 export const Briefcase = icon(ICONS.Briefcase);
 export const CalendarClock = icon(ICONS.CalendarClock);
 export const Check = icon(ICONS.Check);

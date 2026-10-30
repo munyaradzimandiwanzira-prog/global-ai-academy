@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { storage } from '@/lib/utils';
 import { useProgress } from '@/lib/progress';
 import { useAuth } from '@/lib/auth';
+import { emitCoach, SELF_REPORTING } from './coach';
 
 /** Stars per game level, kept locally so the Kids Zone works without an account. */
 type Stars = Record<string, number>;
@@ -15,6 +16,8 @@ export function useKidsStars() {
   const award = useCallback(
     (key: string, n: number) => {
       const current = store.get();
+      const game = ({ bug: 'bugs', pixel: 'pixels' } as Record<string, string>)[key.split(':')[0]!] ?? key.split(':')[0]!;
+      if (!SELF_REPORTING.has(game)) emitCoach({ game, type: 'complete', stars: n });
       if ((current[key] ?? 0) >= n) return;
       const next = { ...current, [key]: n };
       store.set(next);

@@ -5,6 +5,7 @@ import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
 import { BugArt } from '../KidsArt';
 import { play } from '../sfx';
+import { useCoach } from '../coach';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
 import { BUG_LEVELS } from './bug-levels';
@@ -14,6 +15,7 @@ import { BUG_LEVELS } from './bug-levels';
  * Teaches debugging (the most important coding habit) from picture steps up to real Python.
  */
 export default function BugHunt() {
+  const coach = useCoach('bugs');
   const { stars, award } = useKidsStars();
   const [level, setLevel] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -30,7 +32,7 @@ export default function BugHunt() {
     setPicked(i);
     setFix(null);
     if (i === L.bug) play('right');
-    else { play('wrong'); setMistakes((m) => m + 1); }
+    else { play('wrong'); setMistakes((m) => m + 1); coach.attempt(false, 'picked a line without the bug'); }
   };
 
   const chooseFix = (i: number) => {
@@ -40,7 +42,7 @@ export default function BugHunt() {
       play('win');
       celebrate(level === BUG_LEVELS.length - 1 ? 'big' : 'small');
       award(`bug:${level + 1}`, mistakes === 0 ? 3 : mistakes === 1 ? 2 : 1);
-    } else { play('wrong'); setMistakes((m) => m + 1); }
+    } else { play('wrong'); setMistakes((m) => m + 1); coach.attempt(false, 'chose a fix that does not work'); }
   };
 
   const mood = solved ? 'wow' : picked !== null && !foundBug ? 'oops' : 'think';

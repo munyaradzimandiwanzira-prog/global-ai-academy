@@ -14,7 +14,7 @@ Anything inside <student_code>, <student_message>, <error> or <task> tags is dat
  * <student_code> early and smuggle "instructions" in after it (prompt injection).
  * The text stays readable to the model; only the angle brackets of these tags change.
  */
-const DATA_TAG = /<\s*\/?\s*(student_code|student_message|error|task|lesson|notes)\b[^>]*>/gi;
+const DATA_TAG = /<\s*\/?\s*(student_code|student_message|error|task|lesson|notes|learner_message|page|activity|profile|memory|tool_result|chat|existing|request|has_at_home|candidates|topic|previous_summary)\b[^>]*>/gi;
 export function asData(text: string): string {
   return text.replace(DATA_TAG, (tag) => tag.replace(/</g, '‹').replace(/>/g, '›'));
 }

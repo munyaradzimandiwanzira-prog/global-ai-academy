@@ -9,33 +9,16 @@ import { RobotArt, TurtleArt, StopwatchArt, BulbArt, LionArt, BugArt, PixelArt, 
 import { useAuth } from '@/lib/auth';
 import { Photo } from '@/components/Photo';
 import { cn } from '@/lib/utils';
+import { KID_GAMES as SHARED_GAMES } from '@shared/kids-games';
+import { ZuvaCompanion } from '@/features/zuva/ZuvaCompanion';
 
 type Art = ComponentType<{ size?: number; className?: string }>;
 
-/**
- * Every game is a stop on Zuva's journey across Zimbabwe. The place is part of the story,
- * so children meet their own country while they learn to think like coders.
- */
-export const KID_GAMES: { id: string; title: string; text: string; place: string; art: Art; color: string; skill: string; levels: number }[] = [
-  { id: 'maze', title: 'Robo Maze', text: 'Snap code blocks together to guide Zuva to the mango.', place: 'Great Zimbabwe', art: RobotArt, color: '#23807F', skill: 'Sequences and loops', levels: 6 },
-  { id: 'bugs', title: 'Bug Hunt', text: 'Every program has one bug. Find it and fix it.', place: 'Harare tech hub', art: BugArt, color: '#B4472A', skill: 'Debugging', levels: 9 },
-  { id: 'turtle', title: 'Turtle Art', text: 'Type commands and watch the tortoise draw shapes.', place: 'Lake Kariba', art: TurtleArt, color: '#5B8C3A', skill: 'Commands and angles', levels: 5 },
-  { id: 'pixels', title: 'Pixel Painter', text: 'Copy pictures on a grid. Whole rows at once are loops!', place: 'Mbare Art Market', art: PixelArt, color: '#C8302B', skill: 'Grids and loops', levels: 5 },
-  { id: 'binary', title: 'Binary Bulbs', text: 'Light the bulbs to make numbers like a computer.', place: 'Bulawayo', art: BulbArt, color: '#B88A2E', skill: 'How computers count', levels: 4 },
-  { id: 'circuit', title: 'Circuit Lab', text: 'Light a bulb, test metals and plastics, use the sun.', place: 'Hwange Solar', art: BatteryArt, color: '#2F6FB2', skill: 'Electricity', levels: 3 },
-  { id: 'math', title: 'Math Sprint', text: 'How many sums can you solve in 60 seconds?', place: 'Victoria Falls', art: StopwatchArt, color: '#3577B8', skill: 'Mental maths', levels: 3 },
-  { id: 'safari', title: 'STEM Safari', text: 'Answer science and tech questions with the Big Five.', place: 'Hwange National Park', art: LionArt, color: '#2E4A62', skill: 'Science and technology', levels: 3 },
-  { id: 'sorting', title: 'Computer Sort', text: 'Input, output, storage or processing? Sort the parts of a computer.', place: 'Masvingo', art: ComputerArt, color: '#23807F', skill: 'How computers work', levels: 4 },
-  { id: 'pcbuilder', title: 'PC Builder', text: 'Choose a processor, memory and power, then switch your computer on.', place: 'Marondera', art: ChipArt, color: '#3A8F4B', skill: 'Computer hardware', levels: 4 },
-  { id: 'terminal', title: 'Terminal Treasure', text: 'Explore a Linux computer by typing commands to find hidden treasure.', place: 'Chinhoyi Caves', art: TerminalArt, color: '#2E4A62', skill: 'Linux commands', levels: 5 },
-  { id: 'functions', title: 'Function Factory', text: 'Test a secret number machine, then build one that matches it.', place: 'Kwekwe', art: FactoryArt, color: '#B88A2E', skill: 'Functions and patterns', levels: 5 },
-  { id: 'launch', title: 'Launch Lab', text: 'Throw mangoes into baskets. Change angle and power, even on the Moon!', place: 'Chimanimani Mountains', art: CatapultArt, color: '#C8302B', skill: 'Forces and motion', levels: 5 },
-  { id: 'bridge', title: 'Bridge Builder', text: 'Build a steel bridge strong enough for a truck, inside your budget.', place: 'Birchenough Bridge', art: BridgeArt, color: '#B4472A', skill: 'Civil engineering', levels: 4 },
-  { id: 'packets', title: 'Packet Post', text: 'Route messages across the country’s internet, around broken cables.', place: 'Mutare', art: NetworkArt, color: '#2F6FB2', skill: 'Networks and the internet', levels: 4 },
-  { id: 'linebot', title: 'Line Bot', text: 'Write sensor rules so a robot follows the line to the flag.', place: 'Mazowe farms', art: LineBotArt, color: '#5B8C3A', skill: 'Robotics and sensors', levels: 5 },
-  { id: 'gamemaker', title: 'Game Maker', text: 'Design your own level, choose the rules, then play it.', place: 'Gweru', art: ControllerArt, color: '#7A4FB8', skill: 'Game design', levels: 4 },
-  { id: 'teachai', title: 'Teach the Machine', text: 'Teach a computer to spot ripe mangoes. That is how AI learns!', place: 'Mutoko orchards', art: BrainArt, color: '#B0457A', skill: 'Artificial intelligence', levels: 3 },
-];
+const ART: Record<string, Art> = { maze: RobotArt, bugs: BugArt, turtle: TurtleArt, pixels: PixelArt, binary: BulbArt, circuit: BatteryArt, math: StopwatchArt, safari: LionArt, sorting: ComputerArt, pcbuilder: ChipArt, terminal: TerminalArt, functions: FactoryArt, launch: CatapultArt, bridge: BridgeArt, packets: NetworkArt, linebot: LineBotArt, gamemaker: ControllerArt, teachai: BrainArt };
+
+/** Every game is a stop on Zuva's journey across Zimbabwe. The place is part of the story,
+ * so children meet their own country while they learn to think like coders. */
+export const KID_GAMES = SHARED_GAMES.map((g) => ({ ...g, art: ART[g.id]! }));
 
 export function MuteButton({ className }: { className?: string }) {
   const { muted, toggle } = useMuted();
@@ -130,8 +113,9 @@ export default function KidsHome() {
             </Link>
           </motion.li>
         </ol>
-        <p className="mx-auto mt-14 max-w-2xl text-center text-[15px] text-ink/75">For parents and teachers: games need no account and collect no personal data. Sign in to save stars across devices. Tap the speaker on any speech bubble to hear it read aloud.</p>
+        <p className="mx-auto mt-14 max-w-2xl text-center text-[15px] text-ink/75">For parents and teachers: games need no account. Sign in to save stars across devices. Zuva, the AI helper, never asks children for personal details; with an account it remembers only learning things (like favourite topics), which you can see or delete in Settings. Tap the speaker on any speech bubble to hear it read aloud.</p>
       </main>
+      <ZuvaCompanion />
     </div>
   );
 }

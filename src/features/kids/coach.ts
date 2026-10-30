@@ -84,3 +84,18 @@ export function useCoach(game: string) {
     [game],
   );
 }
+
+/** Games that report their own levels and completions. The original games get generic ones (see KidsGame). */
+export const SELF_REPORTING = new Set(['sorting', 'pcbuilder', 'terminal', 'functions', 'launch', 'bridge', 'packets', 'linebot', 'gamemaker', 'teachai']);
+
+/** Goal and hints for the original games, which don't describe each level to the coach. */
+export const GENERIC_COACHING: Record<string, { goal: string; hints: string[] }> = {
+  maze: { goal: 'Snap code blocks together so Zuva walks to the mango without hitting rocks.', hints: ['Trace the path with your finger first. Count the squares.', 'Turn left and turn right spin Zuva on the spot; they don’t move forward.', 'If the same blocks repeat, a loop (repeat) block can do them for you.'] },
+  bugs: { goal: 'Find the one line of code with a bug, then choose the fix.', hints: ['Read each line slowly and ask: what would the computer do here?', 'Look carefully at spelling, quotes and brackets.', 'Compare what the program should print with what it does print.'] },
+  turtle: { goal: 'Type turtle commands to draw the shape shown.', hints: ['A square has 4 equal sides and 4 turns of 90 degrees.', 'The turns in any closed shape add up to 360 degrees.', 'Try repeat: draw one side and turn, then repeat it.'] },
+  pixels: { goal: 'Copy the picture by colouring the right squares on the grid.', hints: ['Work one row at a time from the top.', 'Count the squares before you colour them.', 'Whole rows of one colour can be filled quickly, like a loop!'] },
+  binary: { goal: 'Switch bulbs on so their values add up to the target number.', hints: ['Start with the biggest bulb that fits in the number.', 'Take that value away, then find the next bulb that fits.', 'Each bulb is double the one on its right: 1, 2, 4, 8, 16…'] },
+  circuit: { goal: 'Build circuits: light the bulb, test materials and use solar power.', hints: ['Electricity needs a full loop to flow, with no gaps.', 'Metals let electricity through; plastic and wood don’t.', 'Solar panels need strong light: move the sun higher.'] },
+  math: { goal: 'Answer as many sums as you can in 60 seconds.', hints: ['Do the easy ones fast and don’t worry about mistakes.', 'For adding 9, add 10 then take 1 away.', 'Times tables: 5 × anything ends in 0 or 5.'] },
+  safari: { goal: 'Answer science, maths, tech and world questions.', hints: ['Read all the answers before choosing.', 'Cross out answers you know are wrong first.', 'Think about what you have seen in real life.'] },
+};

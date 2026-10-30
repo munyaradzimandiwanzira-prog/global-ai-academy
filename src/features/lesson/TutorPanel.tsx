@@ -1,56 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useMemo } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Send, Sparkles, Lock } from '@/components/icons';
-import { api, errorMessage } from '@/lib/api';
+import { X, Lock } from '@/components/icons';
 import { useAuth } from '@/lib/auth';
-import { Markdown } from '@/components/Markdown';
-import { cn } from '@/lib/utils';
+import { ZuvaChat } from '@/features/zuva/ZuvaChat';
 
-interface Msg { role: 'user' | 'assistant'; content: string }
+const STARTERS = ['Explain this lesson more simply', 'Give me a real-life Zimbabwean example', 'Quiz me on this lesson', 'What should I learn next?', 'Help me plan a hands-on project'];
 
-const STARTERS = ['Explain this lesson more simply', 'Give me a real-life Zimbabwean example', 'Quiz me with one question', 'What should I learn next?'];
-
+/** Professor Zuva: the lesson tutor. Same agent as the Kids Zone, with the grown-up persona, lesson context, tools, memory and dictation. */
 export function TutorPanel({ open, onClose, trackId, lessonTitle, excerpt }: { open: boolean; onClose: () => void; trackId: string; lessonTitle: string; excerpt: string }) {
   const { user, can } = useAuth();
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState('');
-  const [busy, setBusy] = useState(false);
-  const scroller = useRef<HTMLDivElement>(null);
-  const abort = useRef<AbortController | null>(null);
-
-  useEffect(() => { setMessages([]); }, [lessonTitle]);
-  useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight }); }, [messages]);
-  useEffect(() => () => abort.current?.abort(), []);
-
+  const { pathname } = useLocation();
   const allowed = can('ai.tutor');
-
-  const send = async (text: string) => {
-    const content = text.trim();
-    if (!content || busy) return;
-    const next: Msg[] = [...messages, { role: 'user', content }];
-    setMessages([...next, { role: 'assistant', content: '' }]);
-    setInput('');
-    setBusy(true);
-    abort.current = new AbortController();
-    try {
-      await api.stream('/api/ai/tutor', { trackId, lessonTitle, lessonExcerpt: excerpt.slice(0, 6000), messages: next.slice(-12) }, (chunk) => {
-        setMessages((m) => {
-          const copy = [...m];
-          copy[copy.length - 1] = { role: 'assistant', content: copy[copy.length - 1]!.content + chunk };
-          return copy;
-        });
-      }, abort.current.signal);
-    } catch (e) {
-      setMessages((m) => {
-        const copy = [...m];
-        copy[copy.length - 1] = { role: 'assistant', content: `⚠️ ${errorMessage(e)}` };
-        return copy;
-      });
-    } finally {
-      setBusy(false);
-    }
-  };
+  const first = user?.name.trim().split(/\s+/)[0];
+  const getContext = useCallback(() => ({ page: { path: pathname, title: lessonTitle }, lesson: { trackId, lessonTitle, excerpt: excerpt.slice(0, 6000) } }), [excerpt, lessonTitle, pathname, trackId]);
+  const greeting = useMemo(() => `${first ? `Mhoro ${first}! ` : ''}I’m Professor Zuva. Ask me anything about **${lessonTitle}**, type or tap the mic to talk. I can explain, quiz you, find lessons, and plan hands-on projects.`, [first, lessonTitle]);
 
   return (
     <AnimatePresence>
@@ -79,38 +43,7 @@ export function TutorPanel({ open, onClose, trackId, lessonTitle, excerpt }: { o
                 {user ? <Link to="/pricing" className="btn-gold mt-5">See Plus</Link> : <Link to="/signup" className="btn-primary mt-5">Create a free account</Link>}
               </div>
             ) : (
-              <>
-                <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto p-4">
-                  {messages.length === 0 && (
-                    <div>
-                      <p className="text-sm text-muted-fg">Ask anything about <strong className="text-fg">{lessonTitle}</strong>. Try:</p>
-                      <div className="mt-3 flex flex-col gap-2">
-                        {STARTERS.map((s) => (
-                          <button key={s} onClick={() => send(s)} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-left text-sm hover:border-teal hover:bg-teal-100/50 dark:hover:bg-night-700"><Sparkles className="h-4 w-4 text-gold-600" />{s}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {messages.map((m, i) => (
-                    <div key={i} className={cn('max-w-[92%] rounded-2xl px-4 py-2.5 text-sm', m.role === 'user' ? 'ml-auto bg-ink text-white' : 'bg-muted')}>
-                      {m.role === 'assistant' ? (m.content ? <Markdown className="prose-sm">{m.content}</Markdown> : <span className="inline-flex gap-1"><span className="h-2 w-2 animate-bounce rounded-full bg-muted-fg" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-fg [animation-delay:.15s]" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-fg [animation-delay:.3s]" /></span>) : m.content}
-                    </div>
-                  ))}
-                </div>
-                <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className="flex items-end gap-2 border-t border-border p-3">
-                  <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(input); } }}
-                    rows={1}
-                    maxLength={4000}
-                    placeholder="Ask Professor Zuva…"
-                    className="input max-h-32 min-h-[42px] resize-none"
-                    aria-label="Message"
-                  />
-                  <button disabled={busy || !input.trim()} className="btn-run h-[42px] px-3" aria-label="Send"><Send className="h-4 w-4" /></button>
-                </form>
-              </>
+              <ZuvaChat mode="learner" skin="grown" greeting={greeting} starters={STARTERS} getContext={getContext} threadKey={`lesson:${trackId}:${lessonTitle}`} signedIn={!!user} />
             )}
           </motion.aside>
         </>

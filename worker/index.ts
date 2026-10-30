@@ -17,12 +17,17 @@ import projects from './routes/projects';
 import capstones from './routes/capstones';
 import content from './routes/content';
 import account from './routes/account';
+import zuva from './routes/zuva';
+import mcp from './routes/mcp';
 import { sandboxResponse } from './sandbox';
 
 const app = new Hono<AppEnv>();
 
 app.use('/api/*', secureHeaders({ crossOriginResourcePolicy: 'same-origin', referrerPolicy: 'strict-origin-when-cross-origin' }));
-app.use('/api/*', bodyLimit({ maxSize: 128 * 1024, onError: (c) => c.json({ error: { code: 'too_large', message: 'Request is too large.' } }, 413) }));
+const tooLarge = (c: Parameters<Parameters<typeof bodyLimit>[0]['onError'] & {}>[0]) => c.json({ error: { code: 'too_large', message: 'Request is too large.' } }, 413);
+// Dictation uploads short audio clips; everything else stays small.
+app.use('/api/zuva/transcribe', bodyLimit({ maxSize: 4.5 * 1024 * 1024, onError: tooLarge }));
+app.use('/api/*', async (c, next) => (c.req.path === '/api/zuva/transcribe' ? next() : bodyLimit({ maxSize: 128 * 1024, onError: tooLarge })(c, next)));
 app.use('/api/*', csrfMiddleware);
 app.use('/api/*', sessionMiddleware);
 app.use('/api/*', async (c, next) => {
@@ -43,6 +48,8 @@ app.route('/api/projects', projects);
 app.route('/api/capstones', capstones);
 app.route('/api/content', content);
 app.route('/api/account', account);
+app.route('/api/zuva', zuva);
+app.route('/api/mcp', mcp);
 app.route('/api', pub);
 
 app.get('/sandbox/preview', () => sandboxResponse());

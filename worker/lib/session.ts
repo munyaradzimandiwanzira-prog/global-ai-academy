@@ -108,6 +108,8 @@ export const csrfMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const method = c.req.method;
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
   if (c.req.path === '/api/payments/paynow/result') return next();
+  // The MCP endpoint is public, read-only and cookie-free; it does its own Origin check (DNS-rebinding defence).
+  if (c.req.path === '/api/mcp') return next();
   const self = new URL(c.req.url).origin;
   const origin = c.req.header('origin') ?? refererOrigin(c.req.header('referer'));
   const allowed = new Set([self, new URL(c.env.APP_URL).origin]);

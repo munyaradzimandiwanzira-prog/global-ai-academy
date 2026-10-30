@@ -1,9 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Star } from '@/components/icons';
 import { KID_GAMES, MuteButton } from './KidsHome';
 import { useKidsStars } from './kidsStore';
 import { Spinner } from '@/components/ui';
+import { ZuvaCompanion } from '@/features/zuva/ZuvaCompanion';
+import { emitCoach, GENERIC_COACHING } from './coach';
 
 const GAMES = {
   maze: lazy(() => import('./games/RoboMaze')),
@@ -31,6 +33,8 @@ export default function KidsGame() {
   const { total } = useKidsStars();
   const meta = KID_GAMES.find((g) => g.id === game);
   const Game = GAMES[game as keyof typeof GAMES];
+  // The original games don't describe their levels to the coach, so give Zuva a general picture.
+  useEffect(() => { const g = GENERIC_COACHING[game]; if (g) emitCoach({ game, type: 'level', level: 'any', goal: g.goal, hints: g.hints }); }, [game]);
   if (!meta || !Game) return <Navigate to="/kids" replace />;
   return (
     <div className="min-h-screen bg-[#EEF4F3] font-kids text-ink">
@@ -47,6 +51,7 @@ export default function KidsGame() {
           <Game />
         </Suspense>
       </main>
+      <ZuvaCompanion game={game} />
     </div>
   );
 }

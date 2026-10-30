@@ -6,6 +6,7 @@ import { useKidsStars } from '../kidsStore';
 import { Zuva } from '../Zuva';
 import { ElephantArt, GiraffeArt, RhinoArt, LionArt, TrophyArt } from '../KidsArt';
 import { play } from '../sfx';
+import { useCoach } from '../coach';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
 
@@ -65,6 +66,7 @@ const BANK: Question[] = [
 const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 
 export default function StemSafari() {
+  const coach = useCoach('safari');
   const { award } = useKidsStars();
   const [topic, setTopic] = useState<Topic | 'all' | null>(null);
   const [seed, setSeed] = useState(0);
@@ -80,7 +82,7 @@ export default function StemSafari() {
   const pick = (o: number) => {
     if (picked !== null || !q) return;
     setPicked(o);
-    if (o === q.answer) { setScore((s) => s + 1); celebrate('small'); play('right'); } else { setLives((l) => l - 1); play('wrong'); }
+    if (o === q.answer) { setScore((s) => s + 1); celebrate('small'); play('right'); coach.attempt(true); } else { setLives((l) => l - 1); play('wrong'); coach.attempt(false, `answered "${q.options[o]}" to "${q.q}"`); }
   };
   const next = () => {
     setPicked(null);

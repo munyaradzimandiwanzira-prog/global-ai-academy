@@ -95,6 +95,26 @@ export const tutorSchema = z.object({
     .refine((ms) => ms.reduce((n, m) => n + m.content.length, 0) <= 24_000, 'This chat is too long. Start a new one to keep going.'),
 });
 
+/** Zuva agent chat. Guests send their short history; signed-in learners send a threadId instead. */
+export const zuvaChatSchema = z.object({
+  mode: z.enum(['kids', 'learner']),
+  message: z.string().trim().min(1, 'Type or say something first').max(2000),
+  threadId: z.string().max(40).optional(),
+  history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(2000) })).max(8).optional(),
+  page: z.object({ path: z.string().max(200), title: z.string().max(200).optional() }).optional(),
+  lesson: z.object({ trackId: z.string().max(60).optional(), lessonTitle: z.string().max(200).optional(), excerpt: z.string().max(6000).optional() }).optional(),
+  activity: z
+    .object({
+      game: z.string().max(40).optional(), level: z.string().max(40).optional(), goal: z.string().max(400).optional(),
+      attempts: z.number().int().min(0).max(10_000).optional(), fails: z.number().int().min(0).max(10_000).optional(),
+      failStreak: z.number().int().min(0).max(10_000).optional(), lastDetail: z.string().max(300).optional(),
+      secondsOnLevel: z.number().int().min(0).max(86_400).optional(), hintsShown: z.number().int().min(0).max(50).optional(),
+      hints: z.array(z.string().max(300)).max(6).optional(),
+    })
+    .optional(),
+});
+export const zuvaSettingsSchema = z.object({ memoryEnabled: z.boolean() });
+
 export const runSchema = z.object({
   language: z.enum(['java', 'kotlin', 'php', 'cpp', 'c', 'swift', 'go', 'bash']),
   code: z.string().min(1).max(20000),

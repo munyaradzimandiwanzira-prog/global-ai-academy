@@ -51,8 +51,17 @@ Edit `vars` in `wrangler.jsonc`, then run `npm run deploy` again:
 |---|---|
 | `APP_URL` | Your public address, e.g. `https://globalaiacademy.co.zw`. Email links and Paynow redirects use it. Until it's set, the app uses the address it was reached on. |
 | `EMAIL_FROM` | A sender verified in Brevo. Set to `admin@skurulearning.com`; the skurulearning.com domain is authenticated in Brevo (Brevo code, two DKIM CNAMEs and DMARC in Cloudflare DNS, 29 Oct 2026). |
-| `OPENAI_MODEL` | Defaults to `gpt-4.1-mini` (good quality per dollar) |
+| `OPENAI_MODEL` | Model for quiz/code hints and teacher tools. Defaults to `gpt-4.1-mini` (OpenAI ends support on 14 Jan 2027; move to `gpt-5.4-mini` before then). |
+| `ZUVA_MODEL` | Model for the Zuva tutor agent. `gpt-5.4-mini` (a reasoning model: the code sends `max_completion_tokens` and `reasoning_effort`, no temperature). |
+| `ZUVA_TRANSCRIBE_MODEL` | Speech-to-text for dictation. `gpt-transcribe`. |
 | `JUDGE0_URL` | Your Judge0 endpoint, if you use one |
+
+The OpenAI project behind `OPENAI_API_KEY` must have access to all three models, plus `omni-moderation-latest` (used for every child message).
+
+### Zuva and MCP
+
+- Zuva's memory lives in D1 (migration `0004_zuva.sql`): profile, typed memories (max 60 per learner, expire after 180 days for children and 365 for adults), and threads (deleted after 90 days idle). Learners manage it in **Settings → What Zuva remembers**, and it is included in the account data export.
+- The academy's catalogue is also a public, read-only **MCP server** at `https://skurulearning.com/api/mcp` (spec 2026-07-28, with 2025-03-26 to 2025-11-25 still accepted). Tools: `search_lessons`, `get_track_outline`, `list_kids_games`, `find_experiments`, `get_experiment`. It holds no user data, rejects cross-origin browser calls and is limited to 120 requests a minute per IP. Zuva uses the same tools in-process.
 
 ## 5. Custom domain (optional)
 

@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { Field, Input, PageHeader, Select, Textarea } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
 import { SecuritySettings } from './SecuritySettings';
+import { ZuvaMemorySettings } from './ZuvaMemorySettings';
 
 export default function Settings() {
   const { user, setUser, refresh } = useAuth();
@@ -108,6 +109,8 @@ export default function Settings() {
           </div>
           <button className="btn-outline">Change password</button>
         </form>
+
+        <ZuvaMemorySettings />
 
         <SecuritySettings />
       </div>
