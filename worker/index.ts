@@ -20,6 +20,7 @@ import account from './routes/account';
 import zuva from './routes/zuva';
 import mcp from './routes/mcp';
 import { sandboxResponse } from './sandbox';
+import { withRanges } from './lib/ranges';
 
 const app = new Hono<AppEnv>();
 
@@ -53,6 +54,15 @@ app.route('/api/mcp', mcp);
 app.route('/api', pub);
 
 app.get('/sandbox/preview', () => sandboxResponse());
+
+// Media needs byte ranges for seeking and for Safari on iOS; the assets layer only sends whole files.
+// Files under /videos/ are versioned by name (tour-v1.mp4), so they can be cached for a year.
+app.on(['GET', 'HEAD'], '/videos/*', async (c) => {
+  const url = new URL(c.req.url);
+  const asset = await c.env.ASSETS.fetch(new Request(url.toString(), { method: 'GET' }));
+  if (asset.headers.get('content-type')?.startsWith('text/html')) return new Response('Not found', { status: 404 });
+  return withRanges(c.req.raw, asset, 'public, max-age=31536000, immutable');
+});
 
 app.notFound((c) => {
   if (c.req.path.startsWith('/api/')) return c.json({ error: { code: 'not_found', message: 'Unknown API route.' } }, 404);

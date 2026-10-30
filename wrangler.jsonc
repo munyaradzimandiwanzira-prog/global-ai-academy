@@ -15,9 +15,10 @@
   "workers_dev": false,
   "preview_urls": false,
   "assets": {
-    // SPA routing: unknown paths serve index.html; /api/* and the preview sandbox always hit the worker.
+    // SPA routing: unknown paths serve index.html; /api/*, the preview sandbox and /videos/* (byte ranges) always hit the worker.
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/sandbox/*"]
+    "run_worker_first": ["/api/*", "/sandbox/*", "/videos/*"]
   },
   "d1_databases": [
     {
