@@ -234,3 +234,135 @@ export function RockTile({ size = 40 }: { size?: number }) {
     </svg>
   );
 }
+
+// ── Art for the second half of Zuva's journey ─────────────────────────────────
+
+export function CatapultArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <path d="M8 82 H88" {...line} />
+      <path d="M14 30 Q44 6 80 22" fill="none" stroke="#F2B544" strokeWidth="3" strokeDasharray="5 6" strokeLinecap="round" />
+      <circle cx="80" cy="24" r="7" fill="#F7C35C" {...line} strokeWidth={3} />
+      <rect x="18" y="62" width="40" height="12" rx="4" fill="#B88A2E" {...line} />
+      <path d="M24 62 L50 30" {...line} strokeWidth={6} stroke="#7A5418" />
+      <path d="M24 62 L50 30" fill="none" {...line} />
+      <circle cx="51" cy="28" r="6" fill="#C8302B" {...line} strokeWidth={3} />
+      <circle cx="26" cy="78" r="6" fill={INK} /><circle cx="52" cy="78" r="6" fill={INK} />
+    </svg>
+  );
+}
+
+export function TerminalArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <rect x="10" y="16" width="76" height="60" rx="10" fill={INK} {...line} />
+      <rect x="10" y="16" width="76" height="14" rx="7" fill="#2E4A62" />
+      <circle cx="20" cy="23" r="3" fill="#F28B82" /><circle cx="30" cy="23" r="3" fill="#F7C35C" /><circle cx="40" cy="23" r="3" fill="#8FD3D1" />
+      <path d="M22 44 L32 52 L22 60" fill="none" stroke="#8FD3D1" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M38 60 H56" stroke="#F7C35C" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ControllerArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <path d="M22 34 H74 Q88 34 90 52 L92 66 Q93 78 82 78 Q74 78 68 66 H28 Q22 78 14 78 Q3 78 4 66 L6 52 Q8 34 22 34 Z" fill="#7A4FB8" {...line} />
+      <path d="M24 46 V60 M17 53 H31" stroke="#F7C35C" strokeWidth="5" strokeLinecap="round" />
+      <circle cx="68" cy="48" r="4.5" fill="#8FD3D1" /><circle cx="77" cy="56" r="4.5" fill="#F28B82" />
+      <path d="M48 20 V34" {...line} />
+      <circle cx="48" cy="16" r="5" fill="#F2B544" {...line} strokeWidth={3} />
+    </svg>
+  );
+}
+
+export function NetworkArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <path d="M24 26 L48 50 L74 22 M48 50 L22 74 M48 50 L76 74" {...line} />
+      {[[24, 26, '#8FD3D1'], [74, 22, '#F7C35C'], [22, 74, '#F28B82'], [76, 74, '#9BCB6B']].map(([x, y, c]) => (
+        <circle key={`${x}${y}`} cx={x as number} cy={y as number} r="9" fill={c as string} {...line} />
+      ))}
+      <rect x="36" y="40" width="24" height="20" rx="5" fill="#2F6FB2" {...line} />
+      <circle cx="44" cy="50" r="2.5" fill="#F7C35C" /><circle cx="52" cy="50" r="2.5" fill="#8FD3D1" />
+    </svg>
+  );
+}
+
+export function ComputerArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <rect x="12" y="14" width="72" height="50" rx="8" fill="#2E4A62" {...line} />
+      <rect x="20" y="22" width="56" height="34" rx="4" fill="#8FD3D1" />
+      <path d="M30 46 L40 34 L48 42 L56 30 L66 46" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M40 64 L36 76 H60 L56 64" fill="#9AA6B2" {...line} />
+      <rect x="24" y="78" width="48" height="8" rx="4" fill="#D6EBE8" {...line} strokeWidth={3} />
+    </svg>
+  );
+}
+
+export function ChipArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <g {...line} strokeWidth={4}>
+        {[30, 42, 54, 66].map((p) => <path key={p} d={`M${p} 10 V20 M${p} 76 V86 M10 ${p} H20 M76 ${p} H86`} />)}
+      </g>
+      <rect x="20" y="20" width="56" height="56" rx="8" fill="#3A8F4B" {...line} />
+      <rect x="32" y="32" width="32" height="32" rx="4" fill="#B88A2E" {...line} strokeWidth={3} />
+      <path d="M40 48 H56 M48 40 V56" stroke="#F7C35C" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function FactoryArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <rect x="26" y="30" width="44" height="44" rx="8" fill="#23807F" {...line} />
+      <circle cx="48" cy="52" r="11" fill="#F7C35C" {...line} strokeWidth={3} />
+      <circle cx="48" cy="52" r="4" fill={INK} />
+      <path d="M6 52 H26 M70 52 H90" {...line} />
+      <path d="M18 46 L26 52 L18 58" fill="none" {...line} />
+      <path d="M82 46 L90 52 L82 58" fill="none" {...line} />
+      <rect x="2" y="44" width="10" height="16" rx="3" fill="#8FD3D1" {...line} strokeWidth={3} />
+      <path d="M38 30 V16 H58 V30" fill="#9AA6B2" {...line} />
+    </svg>
+  );
+}
+
+export function BridgeArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <path d="M4 74 Q48 92 92 74 V90 H4 Z" fill="#2F6FB2" />
+      <path d="M8 60 Q48 10 88 60" fill="none" stroke="#C8302B" strokeWidth="6" strokeLinecap="round" />
+      <path d="M8 60 Q48 10 88 60" fill="none" {...line} strokeWidth={2} />
+      <path d="M4 60 H92" {...line} strokeWidth={5} />
+      {[22, 34, 48, 62, 74].map((x) => <path key={x} d={`M${x} 60 V${x === 48 ? 36 : x === 34 || x === 62 ? 41 : 50}`} {...line} strokeWidth={3} />)}
+      <path d="M8 60 V80 M88 60 V80" {...line} strokeWidth={6} />
+    </svg>
+  );
+}
+
+export function LineBotArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <path d="M6 86 Q30 60 48 70 T90 50" fill="none" stroke={INK} strokeWidth="7" strokeLinecap="round" />
+      <rect x="26" y="20" width="44" height="34" rx="10" fill="#F7C35C" {...line} />
+      <rect x="34" y="28" width="28" height="12" rx="5" fill={INK} />
+      <circle cx="42" cy="34" r="3" fill="#8FD3D1" /><circle cx="54" cy="34" r="3" fill="#8FD3D1" />
+      <circle cx="30" cy="58" r="8" fill="#2E4A62" {...line} /><circle cx="66" cy="58" r="8" fill="#2E4A62" {...line} />
+      <path d="M36 54 L32 66 M48 54 V66 M60 54 L64 66" stroke="#F28B82" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function BrainArt({ size = 96, ...rest }: ArtProps) {
+  return (
+    <svg {...base(size, rest)}>
+      <path d="M48 18 Q30 10 22 26 Q8 30 12 46 Q4 58 16 68 Q18 84 36 80 Q44 88 48 80 Q52 88 60 80 Q78 84 80 68 Q92 58 84 46 Q88 30 74 26 Q66 10 48 18 Z" fill="#F2A7C0" {...line} />
+      <path d="M48 20 V80" {...line} strokeWidth={3} />
+      <circle cx="32" cy="40" r="4" fill="#23807F" /><circle cx="64" cy="40" r="4" fill="#23807F" />
+      <circle cx="30" cy="62" r="4" fill="#F7C35C" /><circle cx="66" cy="62" r="4" fill="#F7C35C" />
+      <path d="M32 40 L30 62 M64 40 L66 62 M32 40 L48 50 M64 40 L48 50" stroke={INK} strokeWidth="2" />
+    </svg>
+  );
+}

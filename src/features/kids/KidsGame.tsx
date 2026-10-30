@@ -14,6 +14,16 @@ const GAMES = {
   bugs: lazy(() => import('./games/BugHunt')),
   pixels: lazy(() => import('./games/PixelPainter')),
   circuit: lazy(() => import('./games/CircuitLab')),
+  sorting: lazy(() => import('./games/ComputerSort')),
+  pcbuilder: lazy(() => import('./games/PCBuilder')),
+  terminal: lazy(() => import('./games/TerminalTreasure')),
+  functions: lazy(() => import('./games/FunctionFactory')),
+  launch: lazy(() => import('./games/LaunchLab')),
+  bridge: lazy(() => import('./games/BridgeBuilder')),
+  packets: lazy(() => import('./games/PacketPost')),
+  linebot: lazy(() => import('./games/LineBot')),
+  gamemaker: lazy(() => import('./games/GameMaker')),
+  teachai: lazy(() => import('./games/TeachMachine')),
 } as const;
 
 export default function KidsGame() {
