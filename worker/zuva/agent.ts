@@ -111,15 +111,17 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
 
       const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, memoryEnabled, emit };
       const tools = toolsFor(ctx);
-      const model = env.ZUVA_MODEL || 'gpt-5.4-mini';
+      const model = env.ZUVA_MODEL || 'gpt-5.5';
+      // Children get quick, short answers; grown-up learners get deeper reasoning.
+      const effort = input.mode === 'kids' ? 'low' : 'medium';
       let reply = '';
       for (let step = 0; step <= MAX_STEPS; step++) {
         const last = step === MAX_STEPS;
-        const r = await chatWithTools(env, { model, messages, tools: last ? [] : tools.map((t) => t.spec), maxTokens: input.mode === 'kids' ? 700 : 1400, reasoningEffort: 'low' });
+        const r = await chatWithTools(env, { model, messages, tools: last ? [] : tools.map((t) => t.spec), maxTokens: input.mode === 'kids' ? 2000 : 4000, reasoningEffort: effort });
         if (!r.toolCalls.length || last) { reply = r.content.trim(); break; }
-        messages.push({ role: 'assistant', content: r.content || null, tool_calls: r.toolCalls.map((tc) => ({ id: tc.id, type: 'function' as const, function: { name: tc.name, arguments: tc.arguments } })) });
-        for (const tc of r.toolCalls.slice(0, 4)) messages.push({ role: 'tool', tool_call_id: tc.id, content: await runTool(ctx, tools, tc.name, tc.arguments) });
-        for (const tc of r.toolCalls.slice(4)) messages.push({ role: 'tool', tool_call_id: tc.id, content: '<tool_result>Skipped: too many tools at once.</tool_result>' });
+        messages.push(...r.items);
+        for (const tc of r.toolCalls.slice(0, 4)) messages.push({ type: 'function_call_output', call_id: tc.id, output: await runTool(ctx, tools, tc.name, tc.arguments) });
+        for (const tc of r.toolCalls.slice(4)) messages.push({ type: 'function_call_output', call_id: tc.id, output: '<tool_result>Skipped: too many tools at once.</tool_result>' });
       }
       reply = await checkOutput(env, input.mode, reply || 'Hmm, I’m not sure. Can you say that another way?');
       emit({ t: 'text', text: reply });

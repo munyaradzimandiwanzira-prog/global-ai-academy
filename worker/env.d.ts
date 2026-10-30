@@ -6,6 +6,8 @@ interface Env {
   OPENAI_MODEL: string;
   /** Model for the Zuva agent (tool calling). Defaults to gpt-5.4-mini. */
   ZUVA_MODEL?: string;
+  /** Background Zuva jobs (memory curation, summaries). */
+  ZUVA_FAST_MODEL?: string;
   /** Speech-to-text model for dictation. Defaults to gpt-transcribe. */
   ZUVA_TRANSCRIBE_MODEL?: string;
   EMAIL_FROM: string;

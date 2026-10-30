@@ -31,9 +31,10 @@
   "vars": {
     "APP_NAME": "Global AI Academy",
     "APP_URL": "https://skurulearning.com",
-    "OPENAI_MODEL": "gpt-4.1-mini",
+    "OPENAI_MODEL": "gpt-5.4-mini",
     // Zuva, the tutor agent: tool calling, memory and sub-agents. Dictation uses the transcription model.
-    "ZUVA_MODEL": "gpt-5.4-mini",
+    "ZUVA_MODEL": "gpt-5.5",
+    "ZUVA_FAST_MODEL": "gpt-5.4-mini",
     "ZUVA_TRANSCRIBE_MODEL": "gpt-transcribe",
     // Must be a sender verified in Brevo. munyaradzimandiwanzira@gmail.com is verified today; switch to an
     // address on your own domain once it is authenticated in Brevo (better inbox delivery).

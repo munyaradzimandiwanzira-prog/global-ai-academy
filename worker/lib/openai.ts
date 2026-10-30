@@ -10,6 +10,8 @@ interface ChatOptions {
   temperature?: number;
   maxTokens?: number;
   json?: boolean;
+  /** Reasoning models only. Defaults to 'low': hints and short tasks need speed more than depth. */
+  reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
 }
 
 /** OPENAI_BASE_URL lets tests point at a local mock; production uses the real API. */
@@ -23,16 +25,21 @@ function requireKey(env: Env): string {
 /** Reasoning-era models (gpt-5.x, o-series) take max_completion_tokens and reject a custom temperature. */
 export const isReasoningModel = (model: string) => /^(gpt-5|gpt-6|o\d)/.test(model);
 
-function sizing(model: string, maxTokens: number, temperature?: number) {
-  return isReasoningModel(model) ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens, temperature: temperature ?? 0.4 };
+/** Room for hidden reasoning tokens on top of the visible answer (billed only if used). */
+const REASONING_HEADROOM = 1200;
+
+function sizing(model: string, maxTokens: number, temperature?: number, effort: ChatOptions['reasoningEffort'] = 'low') {
+  return isReasoningModel(model)
+    ? { max_completion_tokens: maxTokens + (effort === 'none' ? 0 : REASONING_HEADROOM), reasoning_effort: effort }
+    : { max_tokens: maxTokens, temperature: temperature ?? 0.4 };
 }
 
 function payload(env: Env, opts: ChatOptions & { model?: string }, stream: boolean) {
-  const model = opts.model || env.OPENAI_MODEL || 'gpt-4.1-mini';
+  const model = opts.model || env.OPENAI_MODEL || 'gpt-5.4-mini';
   return JSON.stringify({
     model,
     messages: opts.messages,
-    ...sizing(model, opts.maxTokens ?? 700, opts.temperature),
+    ...sizing(model, opts.maxTokens ?? 700, opts.temperature, opts.reasoningEffort),
     stream,
     ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
   });
@@ -98,40 +105,56 @@ export async function chatStream(env: Env, opts: ChatOptions): Promise<ReadableS
 }
 
 // ── Tool calling (the Zuva agent) ────────────────────────────────────────────
+//
+// Uses the Responses API, which (unlike Chat Completions) lets GPT-5.x reason while calling tools.
+// Stateless: store=false, and the encrypted reasoning comes back in `items` so the next round can
+// continue the same line of thought without OpenAI keeping the conversation.
 
 export interface ToolSpec { name: string; description: string; parameters: Record<string, unknown> }
 export interface ToolCall { id: string; name: string; arguments: string }
+/** An opaque item returned by the model (reasoning, function call or message), passed back verbatim. */
+export interface ModelItem { type: string; [k: string]: unknown }
 export type AgentMessage =
-  | { role: 'system' | 'user'; content: string }
-  | { role: 'assistant'; content: string | null; tool_calls?: { id: string; type: 'function'; function: { name: string; arguments: string } }[] }
-  | { role: 'tool'; tool_call_id: string; content: string };
+  | { role: 'system' | 'user' | 'assistant'; content: string }
+  | { type: 'function_call_output'; call_id: string; output: string }
+  | ModelItem;
+export type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
 
-/** One model turn with tools available. Returns either text, tool calls, or both. */
+interface ResponsesOutput {
+  status?: string;
+  incomplete_details?: { reason?: string } | null;
+  output?: (ModelItem & { call_id?: string; name?: string; arguments?: string; content?: { type: string; text?: string }[] })[];
+  usage?: { input_tokens: number; output_tokens: number };
+}
+
+/** One model turn with tools available. Returns text, tool calls, and the raw items to carry forward. */
 export async function chatWithTools(
   env: Env,
-  opts: { model: string; messages: AgentMessage[]; tools: ToolSpec[]; maxTokens?: number; reasoningEffort?: 'none' | 'low' | 'medium' },
-): Promise<{ content: string; toolCalls: ToolCall[]; usage?: { prompt_tokens: number; completion_tokens: number } }> {
-  // Chat Completions rejects function tools combined with any reasoning effort other than 'none'
-  // for the GPT-5.4 family, so tool-enabled turns run without reasoning; the final answer turn keeps it.
-  const effort = opts.tools.length ? 'none' : opts.reasoningEffort;
+  opts: { model: string; messages: AgentMessage[]; tools: ToolSpec[]; maxTokens?: number; reasoningEffort?: ReasoningEffort },
+): Promise<{ content: string; toolCalls: ToolCall[]; items: ModelItem[]; usage?: { input_tokens: number; output_tokens: number } }> {
+  const reasoning = isReasoningModel(opts.model);
   const body = JSON.stringify({
     model: opts.model,
-    messages: opts.messages,
-    ...(opts.tools.length ? { tools: opts.tools.map((t) => ({ type: 'function', function: t })), tool_choice: 'auto' } : {}),
-    ...sizing(opts.model, opts.maxTokens ?? 900, 0.5),
-    ...(isReasoningModel(opts.model) && effort ? { reasoning_effort: effort } : {}),
+    input: opts.messages.map((m) => ('role' in m && m.role === 'system' ? { ...m, role: 'developer' } : m)),
+    ...(opts.tools.length ? { tools: opts.tools.map((t) => ({ type: 'function', ...t, strict: false })), tool_choice: 'auto', parallel_tool_calls: true } : {}),
+    max_output_tokens: opts.maxTokens ?? 1500,
+    ...(reasoning ? { reasoning: { effort: opts.reasoningEffort ?? 'low' }, include: ['reasoning.encrypted_content'] } : { temperature: 0.5 }),
+    store: false,
   });
-  const res = await post(env, body);
-  const data = (await res.json()) as {
-    choices: { message: { content: string | null; tool_calls?: { id: string; function: { name: string; arguments: string } }[] } }[];
-    usage?: { prompt_tokens: number; completion_tokens: number };
-  };
-  const m = data.choices[0]?.message;
-  return {
-    content: m?.content ?? '',
-    toolCalls: (m?.tool_calls ?? []).map((c) => ({ id: c.id, name: c.function.name, arguments: c.function.arguments })),
-    usage: data.usage,
-  };
+  const res = await post(env, body, `${base(env)}/v1/responses`);
+  const data = (await res.json()) as ResponsesOutput;
+  if (data.status === 'incomplete') console.warn('[openai] incomplete response:', data.incomplete_details?.reason);
+  const items = data.output ?? [];
+  const content = items
+    .filter((i) => i.type === 'message')
+    .flatMap((i) => i.content ?? [])
+    .filter((c) => c.type === 'output_text')
+    .map((c) => c.text ?? '')
+    .join('');
+  const toolCalls = items
+    .filter((i) => i.type === 'function_call')
+    .map((i) => ({ id: String(i.call_id), name: String(i.name), arguments: String(i.arguments ?? '{}') }));
+  return { content, toolCalls, items, usage: data.usage };
 }
 
 // ── Safety: moderation ───────────────────────────────────────────────────────

@@ -51,12 +51,13 @@ Edit `vars` in `wrangler.jsonc`, then run `npm run deploy` again:
 |---|---|
 | `APP_URL` | Your public address, e.g. `https://globalaiacademy.co.zw`. Email links and Paynow redirects use it. Until it's set, the app uses the address it was reached on. |
 | `EMAIL_FROM` | A sender verified in Brevo. Set to `admin@skurulearning.com`; the skurulearning.com domain is authenticated in Brevo (Brevo code, two DKIM CNAMEs and DMARC in Cloudflare DNS, 29 Oct 2026). |
-| `OPENAI_MODEL` | Model for quiz/code hints and teacher tools. Defaults to `gpt-4.1-mini` (OpenAI ends support on 14 Jan 2027; move to `gpt-5.4-mini` before then). |
-| `ZUVA_MODEL` | Model for the Zuva tutor agent. `gpt-5.4-mini` (a reasoning model: the code sends `max_completion_tokens` and `reasoning_effort`, no temperature). |
+| `OPENAI_MODEL` | Quiz/code hints and teacher tools. `gpt-5.4-mini` (fast, low reasoning effort). |
+| `ZUVA_MODEL` | Zuva, the tutor agent, plus its experiment planner and quiz maker. `gpt-5.5`, called through the Responses API so it can reason while using tools (low effort for children, medium for adult learners). |
+| `ZUVA_FAST_MODEL` | Zuva's background jobs (memory curation, conversation summaries). `gpt-5.4-mini`. |
 | `ZUVA_TRANSCRIBE_MODEL` | Speech-to-text for dictation. `gpt-transcribe`. |
 | `JUDGE0_URL` | Your Judge0 endpoint, if you use one |
 
-The OpenAI project behind `OPENAI_API_KEY` must have access to all three models, plus `omni-moderation-latest` (used for every child message).
+The OpenAI project behind `OPENAI_API_KEY` must have access to all four models, plus `omni-moderation-latest` (used for every child message).
 
 ### Zuva and MCP
 
