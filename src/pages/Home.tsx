@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { Photo } from '@/components/Photo';
 import { useReveal } from '@/lib/reveal';
 import { cn } from '@/lib/utils';
+import { TourVideo } from '@/components/home/TourVideo';
 
 const Playground = lazy(() => import('@/features/editor/Playground').then((m) => ({ default: m.Playground })));
 
@@ -179,6 +180,9 @@ export default function Home() {
         </div>
         <div className="chevron-band" aria-hidden="true" />
       </section>
+
+      {/* ── Tour video: the editor and the Kids Zone in action ─────────────── */}
+      <TourVideo />
 
       {/* ── Python: tutorial + live example (W3Schools' signature, in our colours) ── */}
       {py && (
