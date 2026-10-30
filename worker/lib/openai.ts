@@ -111,12 +111,15 @@ export async function chatWithTools(
   env: Env,
   opts: { model: string; messages: AgentMessage[]; tools: ToolSpec[]; maxTokens?: number; reasoningEffort?: 'none' | 'low' | 'medium' },
 ): Promise<{ content: string; toolCalls: ToolCall[]; usage?: { prompt_tokens: number; completion_tokens: number } }> {
+  // Chat Completions rejects function tools combined with any reasoning effort other than 'none'
+  // for the GPT-5.4 family, so tool-enabled turns run without reasoning; the final answer turn keeps it.
+  const effort = opts.tools.length ? 'none' : opts.reasoningEffort;
   const body = JSON.stringify({
     model: opts.model,
     messages: opts.messages,
     ...(opts.tools.length ? { tools: opts.tools.map((t) => ({ type: 'function', function: t })), tool_choice: 'auto' } : {}),
     ...sizing(opts.model, opts.maxTokens ?? 900, 0.5),
-    ...(isReasoningModel(opts.model) && opts.reasoningEffort ? { reasoning_effort: opts.reasoningEffort } : {}),
+    ...(isReasoningModel(opts.model) && effort ? { reasoning_effort: effort } : {}),
   });
   const res = await post(env, body);
   const data = (await res.json()) as {
