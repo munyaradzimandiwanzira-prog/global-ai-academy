@@ -100,7 +100,7 @@ export interface Notice { kind: string; title: string; body?: string; link?: str
  * In-app notification for each user, plus an email when `email` is set and email is configured.
  * Emails go out in the background (waitUntil) so the teacher isn't kept waiting.
  */
-export async function notify(env: Env, userIds: string[], n: Notice, opts: { email?: { base: string; cta: string }; wait?: (p: Promise<unknown>) => void } = {}) {
+export async function notify(env: Env, userIds: string[], n: Notice, opts: { email?: { base: string; cta: string; outro?: string }; wait?: (p: Promise<unknown>) => void } = {}) {
   const ids = [...new Set(userIds)];
   if (!ids.length) return;
   const db = env.DB;
@@ -113,7 +113,7 @@ export async function notify(env: Env, userIds: string[], n: Notice, opts: { ema
       const chunk = ids.slice(i, i + 50);
       const users = await db.prepare(`SELECT id, email, name FROM users WHERE id IN (${chunk.map(() => '?').join(',')}) AND disabled_at IS NULL AND deleted_at IS NULL AND email_verified_at IS NOT NULL`).bind(...chunk).all<{ id: string; email: string; name: string }>();
       for (const u of users.results) {
-        const mail = actionEmail({ appName: env.APP_NAME, name: u.name.split(/\s+/)[0] ?? u.name, heading: n.title, intro: n.body ?? '', cta: opts.email!.cta, url: `${opts.email!.base}${n.link ?? ''}`, outro: 'You get this email because a teacher on the Academy set you work. You can see everything in your notifications.' });
+        const mail = actionEmail({ appName: env.APP_NAME, name: u.name.split(/\s+/)[0] ?? u.name, heading: n.title, intro: n.body ?? '', cta: opts.email!.cta, url: `${opts.email!.base}${n.link ?? ''}`, outro: opts.email!.outro ?? 'You can see everything in your notifications on the Academy.' });
         await sendEmail(env, { to: u.email, toName: u.name, subject: n.title, html: mail.html, text: mail.text }).catch((e) => console.error('[notify:email]', e));
       }
     }
@@ -124,7 +124,13 @@ export async function notify(env: Env, userIds: string[], n: Notice, opts: { ema
 /** A new teacher request: tell every admin in the app and by email, so approvals don't wait. */
 export async function tellAdminsAboutTeacherRequest(env: Env, base: string, name: string, email: string) {
   const admins = await env.DB.prepare("SELECT id FROM users WHERE role = 'admin' AND disabled_at IS NULL AND deleted_at IS NULL").all<{ id: string }>();
-  await notify(env, admins.results.map((a) => a.id), { kind: 'teacher_request', title: `${name} wants to teach`, body: `${name} (${email}) asked for a teacher account. Approve or decline it in the admin console.`, link: '/admin/teachers' }, { email: { base, cta: 'Review the request' } });
+  await notify(env, admins.results.map((a) => a.id), { kind: 'teacher_request', title: `${name} wants to teach`, body: `${name} (${email}) asked for a teacher account. Approve or decline it in the admin console.`, link: '/admin/teachers' }, { email: { base, cta: 'Review the request', outro: 'You get this email because you are an administrator of the Academy.' } });
+}
+
+/** Tell every admin about something waiting for them (in the app and by email). */
+export async function tellAdmins(env: Env, base: string, n: Notice, wait?: (p: Promise<unknown>) => void) {
+  const admins = await env.DB.prepare("SELECT id FROM users WHERE role = 'admin' AND disabled_at IS NULL AND deleted_at IS NULL").all<{ id: string }>();
+  await notify(env, admins.results.map((a) => a.id), n, { email: { base, cta: 'Open the admin console', outro: 'You get this email because you are an administrator of the Academy.' }, wait });
 }
 
 // ── Commission ledger ───────────────────────────────────────────────────────

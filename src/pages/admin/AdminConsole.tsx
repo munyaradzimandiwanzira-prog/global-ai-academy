@@ -2,14 +2,15 @@
  * Admin console, part two: money, teachers, learners, traffic and the data explorer.
  * Every change here goes through audited admin endpoints; secrets are never shown.
  */
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { StudentDetail, StudentReportContent } from '@shared/teaching';
+import type { PayoutRequest, StudentDetail, StudentReportContent } from '@shared/teaching';
+import { PAYOUT_STATUS, methodLabel } from '@/pages/teacher/Payouts';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { Avatar, Dialog, Empty, Field, Input, PageLoader, Select, Stat, Textarea } from '@/components/ui';
-import { ArrowLeft, Eye, Pencil, Plus, Search, Trash2, Wallet, X } from '@/components/icons';
+import { ArrowLeft, Copy, Eye, Pencil, Plus, Search, Trash2, Wallet, X } from '@/components/icons';
 import { cn, formatDate, formatDateTime } from '@/lib/utils';
 
 const money = (cents: number | null | undefined) => {
@@ -127,6 +128,8 @@ export function FinanceAdmin() {
         <Stat label="All time" value={money(t.all_time)} sub={`${t.payments} paid payments`} />
         <Stat label="Owed to teachers" value={money(data.ledger.owed)} sub={`${money(data.ledger.earned)} earned · ${money(data.ledger.paid_out)} paid out`} />
       </div>
+
+      <PayoutQueue />
 
       <Section title="Revenue and commission, last 12 months">
         <Bars data={months} series={[{ name: 'Revenue', className: 'bg-teal' }, { name: 'Teacher commission', className: 'bg-gold' }]} format={(n) => `$${n.toFixed(2)}`} />
@@ -273,6 +276,72 @@ function CommissionOverride({ payment, teachers, onDone }: { payment: Finance['p
       </div>
       <Field label="Reason" htmlFor="co-note"><Input id="co-note" required minLength={3} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
       <button className="btn-primary" disabled={save.isPending}>Save</button>
+    </form>
+  );
+}
+
+/** Teachers' payout requests: send the money outside the app, then mark it paid here. */
+function PayoutQueue() {
+  const qc = useQueryClient();
+  const [all, setAll] = useState(false);
+  const [acting, setActing] = useState<{ r: PayoutRequest; mode: 'pay' | 'reject' } | null>(null);
+  const { data } = useQuery({ queryKey: ['admin-payouts', all], queryFn: () => api.get<{ requests: PayoutRequest[] }>(`/api/admin/payouts${all ? '' : '?status=pending'}`) });
+  const list = data?.requests ?? [];
+  const waiting = list.filter((r) => r.status === 'pending');
+  // Notifications link to /admin/finance#payouts; scroll there once the list has loaded.
+  useEffect(() => { if (data && window.location.hash === '#payouts') document.getElementById('payouts')?.scrollIntoView({ block: 'start' }); }, [data]);
+  const copy = async (text: string) => { try { await navigator.clipboard.writeText(text); toast.success('Copied'); } catch { /* clipboard blocked */ } };
+  return (
+    <section id="payouts" className="card scroll-mt-24 p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">Payout requests {waiting.length > 0 && <span className="chip bg-gold-100 text-gold-600">{waiting.length} waiting</span>}</h2>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-teal" checked={all} onChange={(e) => setAll(e.target.checked)} /> Show finished</label>
+      </div>
+      {list.length ? (
+        <ul className="divide-y divide-border">
+          {list.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">{r.teacher?.name} <span className="font-normal text-muted-fg">asks for</span> {money(r.amountCents)} <span className="font-normal text-muted-fg">by</span> {methodLabel(r.method)}</p>
+                <p className="flex items-center gap-1.5 text-sm"><span className="truncate font-mono">{r.details}</span><button type="button" className="rounded p-1 hover:bg-muted" aria-label="Copy payment details" onClick={() => copy(r.details)}><Copy className="h-3.5 w-3.5" /></button></p>
+                <p className="text-xs text-muted-fg">{formatDateTime(r.createdAt)} · balance {money(r.teacher?.balanceCents)}{r.note ? ` · “${r.note}”` : ''}{r.reference ? ` · ref ${r.reference}` : ''}{r.adminNote ? ` · ${r.adminNote}` : ''}</p>
+              </div>
+              {r.status === 'pending' ? (
+                <div className="flex gap-2">
+                  <button type="button" className="btn-outline btn-sm" onClick={() => setActing({ r, mode: 'reject' })}>Reject</button>
+                  <button type="button" className="btn-primary btn-sm" disabled={(r.teacher?.balanceCents ?? 0) < r.amountCents} title={(r.teacher?.balanceCents ?? 0) < r.amountCents ? 'More than the balance' : undefined} onClick={() => setActing({ r, mode: 'pay' })}>Mark as paid</button>
+                </div>
+              ) : <span className={cn('chip', PAYOUT_STATUS[r.status].className)}>{PAYOUT_STATUS[r.status].label}</span>}
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-sm text-muted-fg">{all ? 'No payout requests yet.' : 'Nothing waiting. Teachers ask for payouts from their wallet.'}</p>}
+      <Dialog open={!!acting} onOpenChange={(o) => !o && setActing(null)} title={acting ? (acting.mode === 'pay' ? `Pay ${acting.r.teacher?.name} ${money(acting.r.amountCents)}` : 'Reject this request') : ''}>
+        {acting && <PayoutDecision r={acting.r} mode={acting.mode} onDone={() => { setActing(null); qc.invalidateQueries({ queryKey: ['admin-payouts'] }); qc.invalidateQueries({ queryKey: ['admin-finance'] }); }} />}
+      </Dialog>
+    </section>
+  );
+}
+
+function PayoutDecision({ r, mode, onDone }: { r: PayoutRequest; mode: 'pay' | 'reject'; onDone: () => void }) {
+  const [f, setF] = useState({ reference: '', note: '' });
+  const save = useMutation({
+    mutationFn: () => api.post(`/api/admin/payouts/${r.id}/${mode}`, f),
+    onSuccess: () => { toast.success(mode === 'pay' ? 'Marked as paid. The teacher has been told.' : 'Request rejected. The teacher has been told.'); onDone(); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  return (
+    <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
+      {mode === 'pay' ? (
+        <>
+          <p className="text-sm">First send {money(r.amountCents)} by {methodLabel(r.method)} to <span className="font-mono font-semibold">{r.details}</span>. Then record it here: it comes off their wallet and they get a notification and an email.</p>
+          <Field label="Transaction reference" htmlFor="pd-ref" hint="From the EcoCash, OneMoney or bank confirmation."><Input id="pd-ref" maxLength={120} value={f.reference} onChange={(e) => setF({ ...f, reference: e.target.value })} /></Field>
+          <Field label="Note to the teacher (optional)" htmlFor="pd-note"><Input id="pd-note" maxLength={300} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></Field>
+        </>
+      ) : (
+        <Field label="Why? (the teacher sees this)" htmlFor="pd-why"><Textarea id="pd-why" rows={3} required minLength={3} maxLength={300} placeholder="e.g. That EcoCash number isn’t registered. Please check it and ask again." value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></Field>
+      )}
+      <button className={mode === 'pay' ? 'btn-primary' : 'btn-outline'} disabled={save.isPending}>{mode === 'pay' ? 'I’ve sent it: mark as paid' : 'Reject request'}</button>
     </form>
   );
 }

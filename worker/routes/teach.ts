@@ -6,8 +6,10 @@
  * that teacher sees (and may open any learner).
  */
 import { createRouter, body, clientKey, requireUser, type Ctx } from '../app';
-import { inviteCreateSchema, lessonPlanRequestSchema, lessonPlanUpdateSchema, teacherSettingsSchema } from '@shared/schemas';
+import { inviteCreateSchema, payoutRequestSchema, lessonPlanRequestSchema, lessonPlanUpdateSchema, teacherSettingsSchema } from '@shared/schemas';
 import type { InvitePreview, LessonPlan, LessonPlanContent, ListedTeacher, StudentReport, StudentReportContent, TeacherInvite, Wallet, WalletEntry } from '@shared/teaching';
+import { PAYOUT_METHODS } from '@shared/teaching';
+import { available, toPayout, usd, type PayoutRow } from '../lib/payouts';
 import { audit, nowIso, parseJson } from '../lib/db';
 import { newId } from '../lib/crypto';
 import { badRequest, forbidden, notFound, conflict } from '../lib/errors';
@@ -15,7 +17,7 @@ import { hit } from '../lib/ratelimit';
 import { appBase } from '../lib/urls';
 import { consumeAiQuota } from '../lib/ai-quota';
 import { getTrack } from '../lib/catalog';
-import { assertCanSeeStudent, commissionRateBp, findInvite, inviteProblem, isAdmin, isTeacher, newInviteCode, walletBalance, type InviteRow } from '../lib/teaching';
+import { assertCanSeeStudent, commissionRateBp, findInvite, inviteProblem, isAdmin, isTeacher, newInviteCode, tellAdmins, walletBalance, type InviteRow } from '../lib/teaching';
 import { rosterFor, studentDetail } from '../lib/students';
 import { catalogHintsFor, writeLessonPlan, writeStudentReport } from '../zuva/teaching';
 
@@ -305,6 +307,53 @@ teach.get('/wallet', async (c) => {
     entries: rows.results.map((r) => ({ id: r.id, kind: r.kind, amountCents: r.amount_cents, note: r.note, studentName: r.student_name, paymentRef: r.reference, createdAt: r.created_at })),
   };
   return c.json({ wallet });
+});
+
+// ── Payout requests ─────────────────────────────────────────────────────
+
+teach.get('/payouts', async (c) => {
+  const s = await scope(c);
+  const db = c.env.DB;
+  const [rows, money] = await Promise.all([
+    db.prepare('SELECT * FROM payout_requests WHERE teacher_id = ? ORDER BY created_at DESC LIMIT 50').bind(s.teacherId).all<PayoutRow>(),
+    available(db, s.teacherId),
+  ]);
+  const last = rows.results[0];
+  return c.json({ requests: rows.results.map((r) => toPayout(r)), ...money, lastMethod: last ? { method: last.method, details: last.details } : null });
+});
+
+teach.post('/payouts', async (c) => {
+  const s = await scope(c);
+  own(s);
+  await hit(c.env.DB, `payout:${s.teacherId}`, 10, 86_400, 'Too many payout requests today. Try again tomorrow.');
+  const input = await body(c, payoutRequestSchema);
+  const db = c.env.DB;
+  const money = await available(db, s.teacherId);
+  if (money.reservedCents > 0) throw conflict('You already have a payout request waiting. Cancel it first to ask for a different amount.');
+  if (input.amountCents > money.availableCents) throw badRequest(`You can ask for up to ${usd(money.availableCents)}.`, { amountCents: `Up to ${usd(money.availableCents)}` });
+  const id = newId();
+  try {
+    await db.prepare('INSERT INTO payout_requests (id, teacher_id, amount_cents, method, details, note) VALUES (?, ?, ?, ?, ?, ?)').bind(id, s.teacherId, input.amountCents, input.method, input.details, input.note).run();
+  } catch (e) {
+    // The one-pending-per-teacher index catches a double click that slipped past the check above.
+    if (/UNIQUE/i.test(String(e))) throw conflict('You already have a payout request waiting.');
+    throw e;
+  }
+  await audit(db, s.user.id, 'payout.request', id, { amountCents: input.amountCents, method: input.method });
+  const label = PAYOUT_METHODS.find((m) => m.id === input.method)?.label ?? input.method;
+  await tellAdmins(c.env, appBase(c.req.url, c.env.APP_URL), { kind: 'payout_request', title: `${s.user.name} asked for a ${usd(input.amountCents)} payout`, body: `Pay by ${label}. Their balance is ${usd(money.balanceCents)}.`, link: '/admin/finance#payouts' },
+    (p) => c.executionCtx.waitUntil(p.catch((e) => console.error('[payout:notify]', e))));
+  const row = await db.prepare('SELECT * FROM payout_requests WHERE id = ?').bind(id).first<PayoutRow>();
+  return c.json({ request: toPayout(row!) }, 201);
+});
+
+teach.post('/payouts/:id/cancel', async (c) => {
+  const s = await scope(c);
+  own(s);
+  const r = await c.env.DB.prepare("UPDATE payout_requests SET status = 'cancelled', reviewed_at = ? WHERE id = ? AND teacher_id = ? AND status = 'pending'").bind(nowIso(), c.req.param('id'), s.teacherId).run();
+  if (!r.meta.changes) throw notFound('No waiting request to cancel.');
+  await audit(c.env.DB, s.user.id, 'payout.cancel', c.req.param('id'));
+  return c.json({ ok: true });
 });
 
 teach.get('/settings', async (c) => {

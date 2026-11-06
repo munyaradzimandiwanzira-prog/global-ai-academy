@@ -184,6 +184,34 @@ r = await admin('PUT', '/api/admin/settings', { commissionRatePercent: 15 });
 ok(r.s === 200 && (await admin('GET', '/api/admin/settings')).j.commissionRatePercent === 15, 'admin changes the commission rate');
 await admin('PUT', '/api/admin/settings', { commissionRatePercent: 10 });
 
+// ── Payout requests ─────────────────────────────────────────────────────
+await admin('POST', '/api/admin/payments/manual', { email: `farai${id}@example.com`, plan: 'academy', period: 'monthly', amountCents: 6000, note: 'EcoCash test 2' });
+let po = (await teacher('GET', '/api/teach/payouts')).j;
+ok(po.availableCents === 600 && po.requests.length === 0, 'teacher can ask for their $6.00 balance');
+ok((await teacher('POST', '/api/teach/payouts', { amountCents: 700, method: 'ecocash', details: '0771234567' })).s === 400, 'cannot ask for more than the balance');
+ok((await teacher('POST', '/api/teach/payouts', { amountCents: 100, method: 'ecocash', details: '0771234567' })).s === 400, 'cannot ask for less than $5');
+r = await teacher('POST', '/api/teach/payouts', { amountCents: 600, method: 'ecocash', details: '0771234567', note: 'Thanks' });
+const poId = r.j.request?.id;
+ok(r.s === 201 && r.j.request.status === 'pending', 'teacher requests a payout');
+ok((await teacher('POST', '/api/teach/payouts', { amountCents: 500, method: 'ecocash', details: '0771234567' })).s === 409, 'only one request can wait at a time');
+ok((await teacher('GET', '/api/teach/payouts')).j.availableCents === 0, 'the waiting request reserves the money');
+ok((await admin('GET', '/api/notifications')).j.notifications.some((n) => n.kind === 'payout_request' && n.link.includes('#payouts')), 'admins are told about the request');
+ok((await admin('GET', '/api/admin/payouts?status=pending')).j.requests.some((x) => x.id === poId && x.teacher.balanceCents === 600 && x.details === '0771234567'), 'admin sees the request with the payment details');
+ok((await teacher('POST', `/api/admin/payouts/${poId}/pay`, {})).s === 403, 'a teacher cannot mark their own payout paid');
+ok((await admin('POST', `/api/admin/payouts/${poId}/reject`, { note: '' })).s === 400, 'rejecting needs a reason');
+r = await admin('POST', `/api/admin/payouts/${poId}/pay`, { reference: 'MP261106.1234.A00001' });
+ok(r.s === 200 && r.j.balanceCents === 0, 'admin marks it paid and the wallet goes to $0.00');
+ok((await admin('POST', `/api/admin/payouts/${poId}/pay`, { reference: 'again' })).s === 404, 'a payout cannot be paid twice');
+w = (await teacher('GET', '/api/teach/wallet')).j.wallet;
+ok(w.entries.some((e) => e.kind === 'payout' && e.amountCents === -600 && e.note.includes('MP261106')), 'the payout is in the wallet history with its reference');
+ok((await teacher('GET', '/api/notifications')).j.notifications.some((n) => n.kind === 'payout_paid'), 'teacher is told the money is on its way');
+await admin('POST', '/api/admin/payments/manual', { email: `farai${id}@example.com`, plan: 'plus', period: 'monthly', amountCents: 5000, note: 'EcoCash test 3' });
+r = await teacher('POST', '/api/teach/payouts', { amountCents: 500, method: 'bank', details: 'CBZ Gweru, R Ncube, 0123456789' });
+ok(r.s === 201 && (await teacher('POST', `/api/teach/payouts/${r.j.request.id}/cancel`)).s === 200 && (await teacher('GET', '/api/teach/payouts')).j.availableCents === 500, 'teacher can cancel a waiting request');
+r = await teacher('POST', '/api/teach/payouts', { amountCents: 500, method: 'onemoney', details: '0711234567' });
+ok((await admin('POST', `/api/admin/payouts/${r.j.request.id}/reject`, { note: 'Number not registered' })).s === 200 && (await teacher('GET', '/api/teach/payouts')).j.requests[0].status === 'rejected', 'admin rejects with a reason the teacher sees');
+ok((await admin('POST', `/api/teach/payouts?teacher=${teacherId}`, { amountCents: 500, method: 'ecocash', details: '0771234567' })).s === 403, 'admins cannot request payouts as a teacher');
+
 // ── Admin sees and controls everything ──────────────────────────────────
 ok((await admin('GET', `/api/teach/students?teacher=${teacherId}`)).j.students.length >= 2, "admin views a teacher's roster");
 ok((await admin('POST', `/api/teach/invites?teacher=${teacherId}`, { label: 'x' })).s === 403, "viewing as a teacher is read-only");
@@ -206,7 +234,7 @@ r = await admin('DELETE', `/api/admin/data/lesson_plans/row?key=${encodeURICompo
 ok(r.s === 200 && (await teacher('GET', `/api/teach/lesson-plans/${planId}`)).s === 404, 'admin deletes a resource');
 ok((await admin('PUT', '/api/admin/data/audit_log/row?key=%7B%7D', { values: { action: 'x' } })).s === 403, 'audit log is read-only');
 ok((await teacher('GET', '/api/admin/data')).s === 403, 'teacher cannot open the data explorer');
-const audit = JSON.parse(sql("SELECT COUNT(*) AS n FROM audit_log WHERE action IN ('data.update','data.delete','payment.manual','wallet.payout','admin.view_learner')"))[0].results[0].n;
+const audit = JSON.parse(sql("SELECT COUNT(*) AS n FROM audit_log WHERE action IN ('data.update','data.delete','payment.manual','wallet.payout','admin.view_learner','payout.pay','payout.request')"))[0].results[0].n;
 ok(audit >= 5, 'admin actions are audited');
 
 // ── Traffic ─────────────────────────────────────────────────────────────

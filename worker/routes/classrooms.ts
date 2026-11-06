@@ -433,7 +433,7 @@ export async function createAssignment(c: Ctx, room: { id: string; name: string 
   const audience = await audienceOf(db, id, room.id);
   const due = input.dueAt ? ` Due ${new Date(input.dueAt).toUTCString().slice(0, 16)}.` : '';
   await notify(c.env, audience, { kind: 'assignment', title: `New work: ${input.title}`, body: `Your teacher set new work in ${room.name}.${due}`, link: workHref({ id, kind: input.kind, resource: input.resource }) }, {
-    email: { base: appBase(c.req.url, c.env.APP_URL), cta: 'Open the work' },
+    email: { base: appBase(c.req.url, c.env.APP_URL), cta: 'Open the work', outro: 'You get this email because a teacher on the Academy set you work. You can see everything in your notifications.' },
     wait: (p) => c.executionCtx.waitUntil(p.catch((e) => console.error('[assign:email]', e))),
   });
   await audit(db, authorId, 'assignment.create', id, { classroom: room.id, kind: input.kind, targets: ids.length || 'class' });

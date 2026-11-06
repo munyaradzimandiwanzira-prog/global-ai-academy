@@ -4,7 +4,7 @@ import { normalizePath, sourceOf, deviceOf } from '../worker/routes/traffic';
 import { validatePlan } from '../worker/zuva/teaching';
 import { resourceProblem, workHref } from '../worker/lib/assignments';
 import { systemPrompt } from '../worker/zuva/persona';
-import { addTeacherSchema, assignmentSchema, signupSchema, platformSettingsSchema, walletEntrySchema } from '../shared/schemas';
+import { payoutRequestSchema, addTeacherSchema, assignmentSchema, signupSchema, platformSettingsSchema, walletEntrySchema } from '../shared/schemas';
 import { KID_LEVELS } from '../shared/kids-curriculum';
 
 describe('commission split', () => {
@@ -57,6 +57,16 @@ describe('admin money inputs', () => {
     expect(walletEntrySchema.safeParse({ teacherId: 't', kind: 'payout', amountCents: 500, note: 'EcoCash' }).success).toBe(true);
     expect(walletEntrySchema.safeParse({ teacherId: 't', kind: 'payout', amountCents: 0, note: 'EcoCash' }).success).toBe(false);
     expect(walletEntrySchema.safeParse({ teacherId: 't', kind: 'commission', amountCents: 500, note: 'sneaky' }).success).toBe(false);
+  });
+});
+
+describe('payout requests', () => {
+  it('needs at least $5, a known method and where to send it', () => {
+    expect(payoutRequestSchema.safeParse({ amountCents: 500, method: 'ecocash', details: '0771234567' }).success).toBe(true);
+    expect(payoutRequestSchema.safeParse({ amountCents: 499, method: 'ecocash', details: '0771234567' }).success).toBe(false);
+    expect(payoutRequestSchema.safeParse({ amountCents: 500, method: 'paypal', details: '0771234567' }).success).toBe(false);
+    expect(payoutRequestSchema.safeParse({ amountCents: 500, method: 'bank', details: '' }).success).toBe(false);
+    expect(payoutRequestSchema.safeParse({ amountCents: 12.5, method: 'ecocash', details: '0771234567' }).success).toBe(false);
   });
 });
 

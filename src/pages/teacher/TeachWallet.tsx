@@ -5,6 +5,7 @@ import { Empty, PageHeader, PageLoader } from '@/components/ui';
 import { Wallet as WalletIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { TeachNav, money, shortDate, useTeacherScope } from './shared';
+import { PayoutPanel } from './Payouts';
 
 const KIND: Record<WalletKind, string> = { commission: 'Commission', reversal: 'Reversed', adjustment: 'Adjustment', payout: 'Paid out' };
 
@@ -31,6 +32,7 @@ export default function TeachWallet() {
           </div>
         ))}
       </dl>
+      <PayoutPanel />
       <section className="mt-8" aria-labelledby="ledger">
         <h2 id="ledger" className="font-display text-xl font-semibold">History</h2>
         {data.entries.length ? (
@@ -53,7 +55,7 @@ export default function TeachWallet() {
         ) : (
           <Empty icon={<WalletIcon className="h-10 w-10" />} title="Nothing here yet">Invite learners and help them learn. When one of them takes a paid plan, your share appears here.</Empty>
         )}
-        <p className="mt-3 text-xs text-muted-fg">Payouts are made by the Academy team. Questions about a payment? Use the Contact page.</p>
+        <p className="mt-3 text-xs text-muted-fg">Payouts are sent by the Academy team by mobile money or bank transfer. Questions about a payment? Use the Contact page.</p>
       </section>
     </div>
   );

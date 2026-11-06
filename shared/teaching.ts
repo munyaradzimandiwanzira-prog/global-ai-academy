@@ -93,6 +93,32 @@ export type WalletKind = 'commission' | 'reversal' | 'adjustment' | 'payout';
 export interface WalletEntry { id: string; kind: WalletKind; amountCents: number; note: string; studentName: string | null; paymentRef: string | null; createdAt: string }
 export interface Wallet { balanceCents: number; earnedCents: number; paidOutCents: number; ratePercent: number; entries: WalletEntry[]; payingStudents: number }
 
+/** Smallest payout a teacher can ask for, so mobile-money fees don't eat it. */
+export const PAYOUT_MIN_CENTS = 500;
+export const PAYOUT_METHODS = [
+  { id: 'ecocash', label: 'EcoCash', hint: 'EcoCash number, e.g. 077 123 4567' },
+  { id: 'onemoney', label: 'OneMoney', hint: 'OneMoney number, e.g. 071 123 4567' },
+  { id: 'innbucks', label: 'InnBucks', hint: 'InnBucks number' },
+  { id: 'bank', label: 'Bank transfer', hint: 'Bank, branch, account name and number' },
+  { id: 'other', label: 'Other', hint: 'How you would like to be paid' },
+] as const;
+export type PayoutMethod = (typeof PAYOUT_METHODS)[number]['id'];
+export type PayoutStatus = 'pending' | 'paid' | 'rejected' | 'cancelled';
+export interface PayoutRequest {
+  id: string;
+  amountCents: number;
+  method: PayoutMethod;
+  details: string;
+  note: string;
+  status: PayoutStatus;
+  adminNote: string;
+  reference: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  /** Admin views only. */
+  teacher?: { id: string; name: string; email: string; balanceCents: number };
+}
+
 export interface NotificationItem { id: string; kind: string; title: string; body: string; link: string; read: boolean; createdAt: string }
 
 /** An assignment as a student sees it on "Assigned to me". */

@@ -6,13 +6,16 @@
  * tokens) are never readable or editable here, and the audit log itself is read-only.
  */
 import { createRouter, body, requirePermission, type Ctx } from '../app';
-import { commissionOverrideSchema, dataRowSchema, linkSchema, platformSettingsSchema, walletEntrySchema } from '@shared/schemas';
+import { commissionOverrideSchema, payoutDecisionSchema, dataRowSchema, linkSchema, platformSettingsSchema, walletEntrySchema } from '@shared/schemas';
 import { z } from 'zod';
 import { PLANS, isPurchasable } from '@shared/config';
 import { audit, nowIso, parseJson } from '../lib/db';
 import { newId, randomCode } from '../lib/crypto';
 import { badRequest, notFound, forbidden } from '../lib/errors';
-import { commissionRateBp, linkStudent, reassignCommission, walletBalance } from '../lib/teaching';
+import { commissionRateBp, linkStudent, notify, reassignCommission, walletBalance } from '../lib/teaching';
+import { toPayout, usd, type PayoutRow } from '../lib/payouts';
+import { PAYOUT_METHODS } from '@shared/teaching';
+import { appBase } from '../lib/urls';
 import { studentDetail } from '../lib/students';
 import { settle, type PaymentRow } from './payments';
 
@@ -118,6 +121,64 @@ console_.post('/wallets/entries', async (c) => {
   await c.env.DB.prepare('INSERT INTO wallet_entries (id, teacher_id, kind, amount_cents, note, created_by) VALUES (?, ?, ?, ?, ?, ?)').bind(id, input.teacherId, input.kind, amount, input.note, actor.id).run();
   await audit(c.env.DB, actor.id, `wallet.${input.kind}`, input.teacherId, { amount, note: input.note });
   return c.json({ id, balanceCents: (await walletBalance(c.env.DB, input.teacherId)).balanceCents }, 201);
+});
+
+// ── Payout requests ───────────────────────────────────────────────────────
+
+console_.get('/payouts', async (c) => {
+  adminOnly(c);
+  const status = c.req.query('status');
+  const rows = await c.env.DB.prepare(
+    `SELECT r.*, u.name AS teacher_name, u.email AS teacher_email,
+       (SELECT COALESCE(SUM(amount_cents),0) FROM wallet_entries w WHERE w.teacher_id = r.teacher_id) AS balance
+     FROM payout_requests r JOIN users u ON u.id = r.teacher_id
+     ${status ? 'WHERE r.status = ?' : ''} ORDER BY r.status = 'pending' DESC, r.created_at DESC LIMIT 100`,
+  ).bind(...(status ? [status] : [])).all<PayoutRow>();
+  return c.json({ requests: rows.results.map((r) => toPayout(r, true)) });
+});
+
+async function pendingPayout(db: D1Database, id: string) {
+  const r = await db.prepare("SELECT * FROM payout_requests WHERE id = ? AND status = 'pending'").bind(id).first<PayoutRow>();
+  if (!r) throw notFound('That request is not waiting any more.');
+  return r;
+}
+
+/** The admin has sent the money: record the payout in the wallet ledger and tell the teacher. */
+console_.post('/payouts/:id/pay', async (c) => {
+  const actor = adminOnly(c);
+  const input = await body(c, payoutDecisionSchema);
+  const db = c.env.DB;
+  const r = await pendingPayout(db, c.req.param('id'));
+  const { balanceCents } = await walletBalance(db, r.teacher_id);
+  if (r.amount_cents > balanceCents) throw badRequest(`This is more than the teacher’s balance (${usd(balanceCents)}). Reject it, or adjust the wallet first.`);
+  const entryId = newId();
+  const method = PAYOUT_METHODS.find((m) => m.id === r.method)?.label ?? r.method;
+  const note = [`Payout by ${method}`, input.reference && `ref ${input.reference}`, input.note].filter(Boolean).join(' · ').slice(0, 300);
+  // Only the request that is still pending is paid, so a double click can't pay twice.
+  const [done] = await db.batch([
+    db.prepare("UPDATE payout_requests SET status = 'paid', reference = ?, admin_note = ?, wallet_entry_id = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ? AND status = 'pending'")
+      .bind(input.reference, input.note, entryId, actor.id, nowIso(), r.id),
+    db.prepare("INSERT INTO wallet_entries (id, teacher_id, kind, amount_cents, note, created_by) SELECT ?, ?, 'payout', ?, ?, ? WHERE changes() = 1")
+      .bind(entryId, r.teacher_id, -r.amount_cents, note, actor.id),
+  ]);
+  if (!done!.meta.changes) throw notFound('That request is not waiting any more.');
+  await audit(db, actor.id, 'payout.pay', r.id, { teacherId: r.teacher_id, amountCents: r.amount_cents, reference: input.reference });
+  await notify(c.env, [r.teacher_id], { kind: 'payout_paid', title: `${usd(r.amount_cents)} is on its way`, body: `We sent your payout by ${method}${input.reference ? ` (reference ${input.reference})` : ''}.${input.note ? ` ${input.note}` : ''}`, link: '/teach/wallet' },
+    { email: { base: appBase(c.req.url, c.env.APP_URL), cta: 'Open your wallet', outro: 'You get this email because you teach on the Academy.' }, wait: (p) => c.executionCtx.waitUntil(p.catch((e) => console.error('[payout:email]', e))) });
+  return c.json({ ok: true, balanceCents: (await walletBalance(db, r.teacher_id)).balanceCents });
+});
+
+console_.post('/payouts/:id/reject', async (c) => {
+  const actor = adminOnly(c);
+  const input = await body(c, payoutDecisionSchema);
+  if (input.note.length < 3) throw badRequest('Tell the teacher why.', { note: 'Tell the teacher why' });
+  const db = c.env.DB;
+  const r = await pendingPayout(db, c.req.param('id'));
+  await db.prepare("UPDATE payout_requests SET status = 'rejected', admin_note = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ? AND status = 'pending'").bind(input.note, actor.id, nowIso(), r.id).run();
+  await audit(db, actor.id, 'payout.reject', r.id, { note: input.note });
+  await notify(c.env, [r.teacher_id], { kind: 'payout_rejected', title: `Your ${usd(r.amount_cents)} payout request needs a change`, body: input.note, link: '/teach/wallet' },
+    { email: { base: appBase(c.req.url, c.env.APP_URL), cta: 'Open your wallet', outro: 'You get this email because you teach on the Academy.' }, wait: (p) => c.executionCtx.waitUntil(p.catch((e) => console.error('[payout:email]', e))) });
+  return c.json({ ok: true });
 });
 
 console_.get('/settings', async (c) => {

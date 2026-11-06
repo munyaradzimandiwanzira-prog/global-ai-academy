@@ -316,6 +316,19 @@ export const lessonPlanContentSchema = z.object({
 });
 export const lessonPlanUpdateSchema = z.object({ content: lessonPlanContentSchema });
 
+export const payoutRequestSchema = z.object({
+  amountCents: z.number().int().min(500, 'The smallest payout is $5.00').max(10_000_000),
+  method: z.enum(['ecocash', 'onemoney', 'innbucks', 'bank', 'other']),
+  details: z.string().trim().min(5, 'Say where to send the money').max(300),
+  note: z.string().trim().max(300).optional().default(''),
+});
+
+export const payoutDecisionSchema = z.object({
+  /** Mobile-money or bank reference, for "paid". */
+  reference: z.string().trim().max(120).optional().default(''),
+  note: z.string().trim().max(300).optional().default(''),
+});
+
 export const walletEntrySchema = z.object({
   teacherId: z.string().max(40),
   kind: z.enum(['adjustment', 'payout']),

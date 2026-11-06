@@ -35,7 +35,7 @@ A hands-on AI and software engineering school for Zimbabwean learners, from a ch
 - **Teacher portal (`/teach`):** invite links, codes and QR codes (`/join/:code`); learners join free, or pick listed teachers at sign-up. A roster of every linked learner with search, filters and CSV export, and a page per learner (courses, Kids Zone stages, assignments, activity).
 - **Zuva for teachers:** a separate teacher agent (`mode: 'teacher'`) with its own prompt and tools scoped to that teacher's learners. It writes learner reports (pain points with evidence, next steps with real links, a parent note), timed lesson plans grounded on the course content (edit and print at `/teach/plans/:id`), and assignment drafts that are only sent when the teacher presses Assign. Learners' private Zuva chats are never shown to teachers.
 - **Assign anything:** a lesson, a Kids Zone level, a code task or a written task, to a class or chosen learners. Learners get an in-app notification (header bell) and an email; lesson and Kids work ticks off by itself.
-- **Teacher wallets:** each paid plan credits the learner's teachers with a commission (default 10%, set in Admin → Finance), split equally. Admins record payouts and adjustments and can reassign any payment's commission; all of it is a ledger, never edited in place.
+- **Teacher wallets:** each paid plan credits the learner's teachers with a commission (default 10%, set in Admin → Finance), split equally. Teachers ask for a payout (EcoCash, OneMoney, InnBucks or bank; from $5, one request at a time) from their wallet; admins see the queue in Admin → Finance, send the money, then mark it paid with the reference, which writes the payout to the ledger and tells the teacher. Admins can also record adjustments and reassign any payment's commission; all of it is a ledger, never edited in place.
 - **Capstones:** Academy learners plan, build and submit; their teacher reviews, grades and signs off (+300 XP).
 - **Admin:** finance (MRR, revenue by month and plan, commission owed, manual payments, payouts, overrides), anonymous traffic (pages, sources, countries, devices; no cookies), users and a full record per learner, teachers (open any teacher's portal read-only with `?teacher=<id>`), teacher requests, classrooms, payments, promo codes, scholarships, Premium waitlist, announcements, contact inbox, a data explorer (create, read, update and delete any row; secrets hidden; every change audited) and the audit log.
 
@@ -119,7 +119,7 @@ npx wrangler d1 execute global_ai_academy --local --command "DELETE FROM rate_li
 node tests/e2e-api.mjs
 ```
 
-Teaching, money and admin console end to end (71 checks), against the built worker with the local OpenAI mock:
+Teaching, money, payouts and admin console end to end (88 checks), against the built worker with the local OpenAI mock:
 
 ```bash
 npm run build && bash scripts/dev-mock.sh   # wrangler dev on :8787 with a scripted OpenAI mock
