@@ -3,6 +3,7 @@ import { Link, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { RequireAuth, RequireRole } from '@/components/layout/guards';
+import { usePageViews } from '@/lib/traffic';
 import { PageLoader } from '@/components/ui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/lib/auth';
@@ -32,6 +33,13 @@ const Classes = lazy(() => import('@/pages/classroom/Classes'));
 const ClassroomPage = lazy(() => import('@/pages/classroom/ClassroomPage'));
 const AssignmentPage = lazy(() => import('@/pages/classroom/AssignmentPage'));
 const TeachHome = lazy(() => import('@/pages/teacher/TeachHome'));
+const TeachStudents = lazy(() => import('@/pages/teacher/TeachStudents'));
+const TeachStudent = lazy(() => import('@/pages/teacher/TeachStudent'));
+const TeachInvites = lazy(() => import('@/pages/teacher/TeachInvites'));
+const TeachPlans = lazy(() => import('@/pages/teacher/TeachPlans'));
+const TeachPlan = lazy(() => import('@/pages/teacher/TeachPlan'));
+const TeachZuva = lazy(() => import('@/pages/teacher/TeachZuva'));
+const TeachWallet = lazy(() => import('@/pages/teacher/TeachWallet'));
 const AdminHome = lazy(() => import('@/pages/admin/AdminHome'));
 const KidsHome = lazy(() => import('@/features/kids/KidsHome'));
 const KidsGame = lazy(() => import('@/features/kids/KidsGame'));
@@ -39,6 +47,7 @@ const KidsCurriculum = lazy(() => import('@/features/kids/KidsCurriculum'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const About = lazy(() => import('@/pages/About'));
 const Legal = lazy(() => import('@/pages/Legal'));
+const JoinTeacher = lazy(() => import('@/pages/JoinTeacher'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const StartPage = lazy(() => import('@/pages/practice/StartPage'));
 const ReferenceIndex = lazy(() => import('@/pages/practice/ReferencePage').then((m) => ({ default: m.ReferenceIndex })));
@@ -55,6 +64,7 @@ const GraphLabScenario = lazy(() => import('@/pages/lab/GraphLab'));
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  usePageViews();
   return null;
 }
 
@@ -122,6 +132,7 @@ export default function App() {
           <Route path="careers/:careerId" element={<CareerDetail />} />
           <Route path="pricing" element={<Pricing />} />
           <Route path="leaderboard" element={<Leaderboard />} />
+          <Route path="join/:code" element={<JoinTeacher />} />
           <Route path="verify" element={<Verify />} />
           <Route path="verify/:id" element={<Verify />} />
           <Route path="contact" element={<Contact />} />
@@ -148,6 +159,13 @@ export default function App() {
           </Route>
           <Route element={<RequireRole roles={['teacher', 'admin']} />}>
             <Route path="teach" element={<TeachHome />} />
+            <Route path="teach/students" element={<TeachStudents />} />
+            <Route path="teach/students/:id" element={<TeachStudent />} />
+            <Route path="teach/invites" element={<TeachInvites />} />
+            <Route path="teach/plans" element={<TeachPlans />} />
+            <Route path="teach/plans/:id" element={<TeachPlan />} />
+            <Route path="teach/zuva" element={<TeachZuva />} />
+            <Route path="teach/wallet" element={<TeachWallet />} />
           </Route>
           <Route element={<RequireRole roles={['admin']} />}>
             <Route path="admin/*" element={<AdminHome />} />

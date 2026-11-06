@@ -4,7 +4,7 @@
  * The chat endpoint streams newline-delimited JSON events, so the UI can show what Zuva is doing
  * ("looking at your progress…") while it works, then render the answer, buttons and cards.
  */
-export type ZuvaMode = 'kids' | 'learner';
+export type ZuvaMode = 'kids' | 'learner' | 'teacher';
 
 /** Something Zuva offers to do in the app. The learner always taps to accept; Zuva never navigates on its own. */
 export interface ZuvaAction { kind: 'open'; to: string; label: string }
@@ -24,7 +24,23 @@ export interface ExperimentCard {
   game?: string;
 }
 export interface QuizCard { kind: 'quiz'; title: string; questions: { q: string; options: string[]; answer: number; why: string }[] }
-export type ZuvaCard = ExperimentCard | QuizCard;
+/** Teacher mode: an assignment Zuva drafted. Nothing is sent until the teacher presses Assign. */
+export interface AssignmentDraftCard {
+  kind: 'assignment_draft';
+  classroomId: string; classroomName: string;
+  studentIds: string[]; studentNames: string[];
+  title: string; instructions: string;
+  assignmentKind: 'code' | 'lesson' | 'kids' | 'task';
+  resource: string; resourceTitle: string; language: string; dueAt: string | null;
+}
+/** Teacher mode: a saved lesson plan. */
+export interface LessonPlanCard { kind: 'lesson_plan'; id: string; title: string; trackTitle: string; minutes: number; objectives: string[] }
+/** Teacher mode: a saved Zuva report on a learner. */
+export interface ReportCard {
+  kind: 'report'; studentId: string; studentName: string; reportId: string; summary: string;
+  painPoints: { area: string; evidence: string }[]; nextSteps: { action: string; why: string; resource?: { title: string; path: string } }[];
+}
+export type ZuvaCard = ExperimentCard | QuizCard | AssignmentDraftCard | LessonPlanCard | ReportCard;
 
 export type ZuvaEvent =
   | { t: 'status'; text: string }
@@ -57,5 +73,5 @@ export interface ZuvaActivity {
 }
 
 /** Paths Zuva may offer as buttons. Anything else is dropped, so a model can't send learners elsewhere. */
-export const ZUVA_SAFE_PATHS = [/^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/];
+export const ZUVA_SAFE_PATHS = [/^\/teach(\/[a-z-]+(\/[A-Za-z0-9-]{1,40})?)?$/, /^\/classes(\/[A-Za-z0-9-]{1,40})?$/, /^\/assignments\/[A-Za-z0-9-]{1,40}$/, /^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/];
 export const isSafeZuvaPath = (p: string) => ZUVA_SAFE_PATHS.some((r) => r.test(p));

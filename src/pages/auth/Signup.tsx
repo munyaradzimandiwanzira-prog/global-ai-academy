@@ -9,6 +9,8 @@ import { useAuth } from '@/lib/auth';
 import { safeNext, cn } from '@/lib/utils';
 import { Field, Input } from '@/components/ui';
 import { useTurnstile } from '@/components/Turnstile';
+import type { ListedTeacher } from '@shared/teaching';
+import { InvitePreviewLine, TeacherSearch } from '@/features/teachers/TeacherPicker';
 import { AuthShell } from './AuthShell';
 
 const LEVELS: { id: Level; title: string; text: string; icon: string }[] = [
@@ -22,7 +24,10 @@ export default function Signup() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { setUser } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', city: '', level: 'beginner' as Level, wantsToTeach: false, acceptTerms: false });
+  const invite = params.get('invite') ?? '';
+  const [form, setForm] = useState({ name: '', email: '', password: '', city: '', level: 'beginner' as Level, wantsToTeach: false, acceptTerms: false, inviteCode: invite });
+  const [teachers, setTeachers] = useState<ListedTeacher[]>([]);
+  const [hasTeacher, setHasTeacher] = useState(!!invite);
   const bot = useTurnstile('signup');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -32,7 +37,11 @@ export default function Signup() {
     setBusy(true);
     setErrors({});
     try {
-      const { user, devVerifyUrl } = await api.post<{ user: PublicUser; devVerifyUrl?: string }>('/api/auth/signup', { ...form, city: form.city || undefined, turnstileToken: bot.token });
+      const { user, devVerifyUrl } = await api.post<{ user: PublicUser; devVerifyUrl?: string }>('/api/auth/signup', {
+        ...form, city: form.city || undefined, turnstileToken: bot.token,
+        inviteCode: hasTeacher && !form.wantsToTeach ? form.inviteCode.trim() : '',
+        teacherIds: hasTeacher && !form.wantsToTeach ? teachers.map((t) => t.id) : [],
+      });
       setUser(user);
       toast.success('Account created. Welcome to the Academy!', { description: devVerifyUrl ? `Dev mode: confirm your email at ${devVerifyUrl}` : 'Check your inbox to confirm your email.' });
       const fallback = form.level === 'kids' ? '/kids' : ROLE_HOME[user.role];
@@ -74,6 +83,27 @@ export default function Signup() {
             ))}
           </div>
         </fieldset>
+        {!form.wantsToTeach && (
+          <fieldset className="rounded-xl border border-border p-3">
+            <label className="flex items-start gap-2.5 text-sm font-medium">
+              <input type="checkbox" checked={hasTeacher} onChange={(e) => setHasTeacher(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal" />
+              <span>I’m joining a teacher or class <span className="font-normal text-muted-fg">(free)</span></span>
+            </label>
+            {hasTeacher && (
+              <div className="mt-3 space-y-3">
+                <Field label="Invite code" error={errors.inviteCode} htmlFor="invite" hint={form.inviteCode ? undefined : 'Your teacher gives you this, e.g. T-7KQ2XM.'}>
+                  <Input id="invite" autoCapitalize="characters" autoComplete="off" value={form.inviteCode} onChange={(e) => setForm({ ...form, inviteCode: e.target.value.toUpperCase() })} />
+                </Field>
+                <InvitePreviewLine code={form.inviteCode} />
+                <div>
+                  <p className="label">No code? Find your teacher <span className="font-normal text-muted-fg">(up to 3)</span></p>
+                  <TeacherSearch value={teachers} onChange={setTeachers} />
+                  {errors.teacherIds && <p className="mt-1 text-xs font-medium text-red-600">{errors.teacherIds}</p>}
+                </div>
+              </div>
+            )}
+          </fieldset>
+        )}
         <label className="flex items-start gap-2.5 text-sm">
           <input type="checkbox" checked={form.wantsToTeach} onChange={(e) => setForm({ ...form, wantsToTeach: e.target.checked })} className="mt-0.5 h-4 w-4 accent-teal" />
           <span>I’m a teacher and want to run classes <span className="text-muted-fg">(an administrator reviews teaching requests)</span></span>

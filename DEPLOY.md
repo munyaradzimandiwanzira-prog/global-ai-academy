@@ -78,6 +78,8 @@ The OpenAI project behind `OPENAI_API_KEY` must have access to all four models, 
    - Return: `https://<your-domain>/billing/return`
 3. Paynow integrations start in **test mode**. Make a test payment, then ask Paynow to activate live mode.
 
+Paynow has no automatic recurring billing, so a "monthly subscription" is a 31-day plan per payment: learners get a reminder and pay again each month. Each settled payment credits the learner's teachers with the commission rate in Admin → Finance (10% by default). Money received another way (bank transfer, cash) is recorded in Admin → Finance → Record a payment, which activates the plan and pays commission the same way.
+
 Webhooks are checked with Paynow's SHA-512 hash and the paid amount must match before a plan is extended. Learners can also pay by mobile money directly on the pricing page (express checkout).
 
 ## 7. Email (Brevo)

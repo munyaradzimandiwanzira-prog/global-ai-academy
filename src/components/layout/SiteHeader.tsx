@@ -5,6 +5,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Avatar, TrackMark } from '@/components/ui';
 import { SearchDialog } from './SearchDialog';
 import { CategoryBar } from './CategoryBar';
+import { NotificationBell } from './NotificationBell';
 import { useAuth } from '@/lib/auth';
 import { tracksByCategory, lessonPath } from '@/lib/catalog';
 import { CATEGORY_LABELS } from '@shared/content';
@@ -152,6 +153,7 @@ export function SiteHeader() {
             {user ? (
               <>
                 <Link to={ROLE_HOME[user.role]} className="btn-outline btn-sm hidden sm:inline-flex">{user.role === 'student' ? 'My learning' : user.role === 'teacher' ? 'Teaching' : 'Admin'}</Link>
+                <NotificationBell />
                 <UserMenu />
               </>
             ) : (

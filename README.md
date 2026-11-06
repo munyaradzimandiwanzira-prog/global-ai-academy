@@ -32,8 +32,12 @@ A hands-on AI and software engineering school for Zimbabwean learners, from a ch
 - **Classrooms:** join codes, assignments with AI-drafted briefs and AI pre-marking, announcements, discussion, class insights.
 - **Live sessions:** Zoom, Meet or Teams links on learners' dashboards. After class the teacher pastes notes and AI writes the recap: where the class stopped and what to do next.
 - **AI learner reports:** strengths, gaps with evidence, and a two-week plan for each learner, private to teachers.
+- **Teacher portal (`/teach`):** invite links, codes and QR codes (`/join/:code`); learners join free, or pick listed teachers at sign-up. A roster of every linked learner with search, filters and CSV export, and a page per learner (courses, Kids Zone stages, assignments, activity).
+- **Zuva for teachers:** a separate teacher agent (`mode: 'teacher'`) with its own prompt and tools scoped to that teacher's learners. It writes learner reports (pain points with evidence, next steps with real links, a parent note), timed lesson plans grounded on the course content (edit and print at `/teach/plans/:id`), and assignment drafts that are only sent when the teacher presses Assign. Learners' private Zuva chats are never shown to teachers.
+- **Assign anything:** a lesson, a Kids Zone level, a code task or a written task, to a class or chosen learners. Learners get an in-app notification (header bell) and an email; lesson and Kids work ticks off by itself.
+- **Teacher wallets:** each paid plan credits the learner's teachers with a commission (default 10%, set in Admin → Finance), split equally. Admins record payouts and adjustments and can reassign any payment's commission; all of it is a ledger, never edited in place.
 - **Capstones:** Academy learners plan, build and submit; their teacher reviews, grades and signs off (+300 XP).
-- **Admin:** users and roles, teacher requests, classrooms, payments, promo codes, scholarships, Premium waitlist (CSV export), announcements, contact inbox and audit log.
+- **Admin:** finance (MRR, revenue by month and plan, commission owed, manual payments, payouts, overrides), anonymous traffic (pages, sources, countries, devices; no cookies), users and a full record per learner, teachers (open any teacher's portal read-only with `?teacher=<id>`), teacher requests, classrooms, payments, promo codes, scholarships, Premium waitlist, announcements, contact inbox, a data explorer (create, read, update and delete any row; secrets hidden; every change audited) and the audit log.
 
 **Design:** the brand is navy ink on Great Zimbabwe granite, with teal for actions and gold for Zuva. The site uses self-hosted Bricolage Grotesque, Inter and JetBrains Mono (Fredoka in the Kids Zone), a pill-shaped button system (`src/components/ui/Button.tsx`) and drawn track marks instead of emoji. The homepage idea is a dry-stone wall of real tracks, laid course by course from the Kids Zone ground up to lead engineer. The rules come from the `premium-frontend` skill.
 
@@ -113,6 +117,13 @@ End-to-end API checks against a running dev server (38 checks: sign-up, RBAC, CS
 npm run dev
 npx wrangler d1 execute global_ai_academy --local --command "DELETE FROM rate_limits"
 node tests/e2e-api.mjs
+```
+
+Teaching, money and admin console end to end (71 checks), against the built worker with the local OpenAI mock:
+
+```bash
+npm run build && bash scripts/dev-mock.sh   # wrangler dev on :8787 with a scripted OpenAI mock
+node tests/e2e-teaching.mjs
 ```
 
 ## Deploy

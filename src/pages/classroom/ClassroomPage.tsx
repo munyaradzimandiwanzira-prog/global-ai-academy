@@ -10,6 +10,7 @@ import { getCatalogTrack, lessonPath } from '@/lib/catalog';
 import { Avatar, Dialog, Empty, Field, Input, LevelBadge, PageLoader, ProgressBar, Select, Spinner, Textarea } from '@/components/ui';
 import { Markdown } from '@/components/Markdown';
 import { ClassroomForm } from './Classes';
+import { AssignForm } from '@/pages/teacher/AssignForm';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/lib/utils';
 
 type Tab = 'stream' | 'sessions' | 'assignments' | 'learners' | 'discussion' | 'settings';
@@ -168,27 +169,41 @@ function AssignmentEditor({ classroomId, onDone }: { classroomId: string; onDone
 function Assignments({ id, manager }: { id: string; manager: boolean }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const { data } = useQuery({ queryKey: ['assignments', id], queryFn: () => api.get<{ assignments: Assignment[] }>(`/api/classrooms/${id}/assignments`) });
+  const room = useQuery({ queryKey: ['classroom', id], queryFn: () => api.get<{ classroom: Classroom }>(`/api/classrooms/${id}`), enabled: manager });
+  const KIND = { lesson: 'Lesson', kids: 'Kids Zone', code: 'Code', task: 'Task' } as const;
   return (
     <div className="max-w-4xl">
-      {manager && <button onClick={() => setOpen(true)} className="btn-primary mb-5"><Plus className="h-4 w-4" /> New assignment</button>}
+      {manager && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          <button onClick={() => setLinkOpen(true)} className="btn-primary"><Plus className="h-4 w-4" /> Assign a lesson or level</button>
+          <button onClick={() => setOpen(true)} className="btn-outline"><Sparkles className="h-4 w-4" /> Write a code task</button>
+        </div>
+      )}
       {data?.assignments.length ? (
         <ul className="card divide-y divide-border overflow-hidden">
           {data.assignments.map((a) => {
-            const overdue = a.dueAt && a.dueAt < new Date().toISOString() && !a.mySubmission;
+            const done = a.myStatus ? a.myStatus !== 'open' : !!a.mySubmission;
+            const overdue = a.dueAt && a.dueAt < new Date().toISOString() && !done;
+            const linked = a.kind === 'lesson' || a.kind === 'kids';
             return (
               <li key={a.id}>
-                <Link to={`/assignments/${a.id}`} className="flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-muted">
+                <Link to={!manager && linked && !done ? a.href : `/assignments/${a.id}`} className="flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-muted">
                   <ClipboardList className="h-5 w-5 text-teal" />
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold">{a.title}</div>
                     <div className="mt-0.5 flex flex-wrap gap-3 text-xs text-muted-fg">
-                      <span className="font-mono">{a.language}</span>
+                      <span className="chip bg-muted">{KIND[a.kind] ?? 'Code'}</span>
+                      {!linked && <span className="font-mono">{a.language}</span>}
+                      {manager && a.studentIds && a.studentIds.length > 0 && <span>{a.studentIds.length} learner{a.studentIds.length === 1 ? '' : 's'}</span>}
                       {a.dueAt && <span className={cn('flex items-center gap-1', overdue && 'font-semibold text-red-600')}><CalendarClock className="h-3.5 w-3.5" /> Due {formatDateTime(a.dueAt)}</span>}
                     </div>
                   </div>
                   {manager ? (
-                    <span className="chip bg-muted">{a.submissionCount ?? 0} submitted</span>
+                    linked ? <span className="chip bg-muted">See who’s done</span> : <span className="chip bg-muted">{a.submissionCount ?? 0} submitted</span>
+                  ) : linked ? (
+                    done ? <span className="chip bg-teal-100 text-teal-600"><CheckCircle2 className="h-3.5 w-3.5" /> Done</span> : <span className="chip bg-gold-100 text-gold-600">To do</span>
                   ) : a.mySubmission ? (
                     a.mySubmission.status === 'graded'
                       ? <span className="chip bg-teal-100 text-teal-600">Graded {a.mySubmission.score}/{a.maxScore}</span>
@@ -202,6 +217,9 @@ function Assignments({ id, manager }: { id: string; manager: boolean }) {
       ) : <Empty icon={<ClipboardList className="h-8 w-8" />} title="No assignments yet">{manager ? 'Create one — or let AI draft it from a topic.' : 'Assignments from your teacher will show up here.'}</Empty>}
       <Dialog open={open} onOpenChange={setOpen} title="New assignment" wide>
         <AssignmentEditor classroomId={id} onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ['assignments', id] }); }} />
+      </Dialog>
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen} title="Assign work" wide>
+        <AssignForm classes={[{ id, name: room.data?.classroom.name ?? 'This class' }]} onDone={() => { setLinkOpen(false); qc.invalidateQueries({ queryKey: ['assignments', id] }); }} />
       </Dialog>
     </div>
   );

@@ -10,6 +10,7 @@ import { sendEmail, actionEmail, emailConfigured } from '../lib/email';
 import { assertPasswordNotBreached } from '../lib/password-policy';
 import { assertHuman, turnstileEnabled } from '../lib/turnstile';
 import { createChallenge, limitCodeAttempts, MFA_CHALLENGE_ATTEMPTS, verifySecondFactor } from '../lib/mfa';
+import { findInvite, inviteProblem, linkChosenTeachers, redeemInvite, tellAdminsAboutTeacherRequest } from '../lib/teaching';
 
 const AVATAR_COLORS = ['#23807F', '#142B52', '#6B3A1E', '#B88A2E', '#5B8C3A', '#8C3A5B', '#3A5B8C'];
 
@@ -64,6 +65,12 @@ auth.post('/signup', async (c) => {
   const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(input.email).first();
   if (existing) throw conflict('An account with this email already exists. Sign in instead.');
   await assertPasswordNotBreached(input.password);
+  // Check a teacher's invite before creating the account, so a typo shows on the form.
+  const inviteCode = input.inviteCode?.trim() || '';
+  if (inviteCode) {
+    const problem = inviteProblem(await findInvite(c.env.DB, inviteCode));
+    if (problem) throw badRequest(problem, { inviteCode: problem });
+  }
 
   // Everyone starts as a student. Admin is granted only once the address is proven (see promoteIfAdmin),
   // so nobody can claim admin by signing up first with an owner's email they do not control.
@@ -78,7 +85,11 @@ auth.post('/signup', async (c) => {
 
   if (input.wantsToTeach && role === 'student') {
     await c.env.DB.prepare('INSERT INTO teacher_requests (id, user_id, message) VALUES (?, ?, ?)').bind(newId(), id, 'Requested at sign-up').run();
+    c.executionCtx.waitUntil(tellAdminsAboutTeacherRequest(c.env, appBase(c.req.url, c.env.APP_URL), input.name, input.email).catch((e) => console.error('[teacher-request:email]', e)));
   }
+  // Joining a teacher is free: by invite code, and/or teachers picked from the list.
+  if (inviteCode) await redeemInvite(c.env.DB, inviteCode, { id });
+  if (input.teacherIds?.length) await linkChosenTeachers(c.env.DB, id, input.teacherIds);
   await audit(c.env.DB, id, 'user.signup', id, { role });
   await createSession(c, id);
   const user = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(id).first<UserRow>();

@@ -26,6 +26,9 @@ export const CHILD_HELP =
 export const ADULT_HELP =
   'I’m sorry you’re going through this, and I’m glad you said something. You don’t have to handle it alone. If you might be in danger, please contact local emergency services or go to your nearest clinic now, and reach out to someone you trust today. If you are under 18 in Zimbabwe, Childline is free on 116, any time.';
 
+export const TEACHER_SAFEGUARDING =
+  'SAFEGUARDING: this message may involve harm, abuse, self-harm or danger. If it concerns a learner, start with clear steps: if anyone is in immediate danger contact emergency services; follow the school safeguarding procedure and tell the designated safeguarding lead today; Childline Zimbabwe is free on 116 for children. Do not advise questioning the child in detail. If it concerns the teacher personally, respond with care and encourage them to reach someone they trust or local emergency services if in danger. Never provide harmful details.';
+
 const CHILD_DECLINE = 'That’s not something I can help with. Let’s find something fun to learn instead! Want to try a game, or build an experiment together?';
 const LEARNER_DECLINE = 'I can’t help with that one. I’m happy to help with coding, AI, data, engineering or anything you’re learning here.';
 
@@ -38,6 +41,13 @@ export async function checkInput(env: Env, mode: ZuvaMode, raw: string): Promise
     const s = scrubForChild(raw);
     text = s.text;
     if (s.removed) note = 'The child typed a phone number or email; it was removed. Gently remind them to keep such details private.';
+  }
+  // Teachers often need to talk about a learner at risk; a canned self-help reply would be wrong.
+  // Their message goes through, with a note that makes safeguarding the first thing Zuva covers.
+  if (mode === 'teacher') {
+    const m = await moderate(env, raw);
+    if (CRISIS.test(raw) || m?.flagged) note = TEACHER_SAFEGUARDING;
+    return { action: 'allow', text, note };
   }
   if (CRISIS.test(raw)) return { action: 'respond', reply: mode === 'kids' ? CHILD_HELP : ADULT_HELP };
   const m = await moderate(env, raw);

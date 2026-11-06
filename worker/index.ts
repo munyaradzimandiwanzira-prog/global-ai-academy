@@ -19,6 +19,10 @@ import content from './routes/content';
 import account from './routes/account';
 import zuva from './routes/zuva';
 import mcp from './routes/mcp';
+import teach from './routes/teach';
+import adminConsole from './routes/admin-console';
+import notifications from './routes/notifications';
+import traffic from './routes/traffic';
 import { sandboxResponse } from './sandbox';
 import { withRanges } from './lib/ranges';
 
@@ -44,6 +48,7 @@ app.route('/api/ai', ai);
 app.route('/api/classrooms', classrooms);
 app.route('/api/exams', exams);
 app.route('/api/admin', admin);
+app.route('/api/admin', adminConsole);
 app.route('/api/payments', payments);
 app.route('/api/projects', projects);
 app.route('/api/capstones', capstones);
@@ -51,6 +56,9 @@ app.route('/api/content', content);
 app.route('/api/account', account);
 app.route('/api/zuva', zuva);
 app.route('/api/mcp', mcp);
+app.route('/api/teach', teach);
+app.route('/api/notifications', notifications);
+app.route('/api/t', traffic);
 app.route('/api', pub);
 
 app.get('/sandbox/preview', () => sandboxResponse());

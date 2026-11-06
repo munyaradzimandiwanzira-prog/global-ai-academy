@@ -82,6 +82,51 @@ function StudentView({ a }: { a: Assignment }) {
   );
 }
 
+const STATUS_TEXT = { open: 'Not done yet', done: 'Done', submitted: 'Handed in', graded: 'Marked' } as const;
+
+/** Lesson and Kids Zone work: the learner does it where it lives, and it ticks off by itself. */
+function LinkedWorkStudent({ a }: { a: Assignment }) {
+  const done = a.myStatus && a.myStatus !== 'open';
+  return (
+    <div className={cn('card p-6', done && 'border-teal/50')}>
+      {done ? (
+        <p className="flex items-center gap-2 text-lg font-semibold text-teal-600"><CheckCircle2 className="h-6 w-6" /> Done. Nice work!</p>
+      ) : (
+        <p className="text-lg font-semibold">{a.kind === 'kids' ? 'Play this Kids Zone level.' : 'Work through this lesson.'} It ticks off here by itself when you finish.</p>
+      )}
+      <Link to={a.href} className={cn('mt-4', done ? 'btn-outline' : 'btn-primary btn-lg')}>{done ? 'Open it again' : a.kind === 'kids' ? 'Play the level' : 'Start the lesson'}</Link>
+    </div>
+  );
+}
+
+function LinkedWorkManager({ a }: { a: Assignment }) {
+  const navigate = useNavigate();
+  const { data } = useQuery({ queryKey: ['assignment-progress', a.id], queryFn: () => api.get<{ learners: { id: string; name: string; status: keyof typeof STATUS_TEXT; score: number | null }[] }>(`/api/classrooms/assignments/${a.id}/progress`) });
+  const del = useMutation({ mutationFn: () => api.del(`/api/classrooms/assignments/${a.id}`), onSuccess: () => { toast.success('Assignment deleted'); navigate(`/classes/${a.classroomId}`); } });
+  const learners = data?.learners ?? [];
+  const done = learners.filter((l) => l.status !== 'open').length;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Link to={a.href} className="btn-outline btn-sm">Preview the {a.kind === 'kids' ? 'level' : 'lesson'}</Link>
+        <span className="text-sm text-muted-fg">{done} of {learners.length} done</span>
+        <button onClick={() => confirm('Delete this assignment?') && del.mutate()} className="btn-ghost btn-sm ml-auto text-red-600"><Trash2 className="h-4 w-4" /> Delete</button>
+      </div>
+      {learners.length ? (
+        <ul className="card divide-y divide-border">
+          {learners.map((l) => (
+            <li key={l.id} className="flex items-center gap-3 px-4 py-3">
+              <Avatar name={l.name} size={28} />
+              <Link to={`/teach/students/${l.id}`} className="min-w-0 flex-1 truncate text-sm font-medium hover:underline">{l.name}</Link>
+              <span className={cn('chip', l.status === 'open' ? 'bg-muted' : 'bg-teal-100 text-teal-600')}>{STATUS_TEXT[l.status]}{l.score != null && a.kind === 'kids' ? ` · ${l.score}★` : ''}</span>
+            </li>
+          ))}
+        </ul>
+      ) : <Empty title="Nobody in this class yet">Invite learners to the class and they’ll be listed here.</Empty>}
+    </div>
+  );
+}
+
 function ManagerView({ a }: { a: Assignment }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -142,12 +187,13 @@ export default function AssignmentPage() {
   if (isLoading) return <PageLoader />;
   if (error || !data) return <div className="container py-16"><Empty title="Assignment not available">{errorMessage(error)}</Empty></div>;
   const a = data.assignment;
+  const linked = a.kind === 'lesson' || a.kind === 'kids';
   return (
     <div className="container py-8">
       <Link to={`/classes/${a.classroomId}`} className="text-sm text-muted-fg hover:text-fg">Back to class</Link>
       <h1 className="mt-2 text-3xl font-bold">{a.title}</h1>
       <p className="mt-1 flex flex-wrap gap-4 text-sm text-muted-fg">
-        <span className="font-mono">{a.language}</span><span>Max score {a.maxScore}</span>
+        {linked ? <span>{a.kind === 'kids' ? 'Kids Zone level' : 'Lesson'}</span> : <><span className="font-mono">{a.language}</span><span>Max score {a.maxScore}</span></>}
         {a.dueAt && <span className="flex items-center gap-1"><CalendarClock className="h-4 w-4" /> Due {formatDateTime(a.dueAt)}</span>}
       </p>
       <div className="mt-6 grid gap-8 xl:grid-cols-[minmax(0,420px)_1fr]">
@@ -155,7 +201,7 @@ export default function AssignmentPage() {
           <div className="card p-5"><Markdown>{a.instructions}</Markdown></div>
           {a.rubric && <details className="card p-5"><summary className="cursor-pointer font-semibold">Marking rubric</summary><Markdown className="mt-3 prose-sm">{a.rubric}</Markdown></details>}
         </div>
-        <div>{data.manager ? <ManagerView a={a} /> : <StudentView a={a} />}</div>
+        <div>{linked ? (data.manager ? <LinkedWorkManager a={a} /> : <LinkedWorkStudent a={a} />) : data.manager ? <ManagerView a={a} /> : <StudentView a={a} />}</div>
       </div>
     </div>
   );

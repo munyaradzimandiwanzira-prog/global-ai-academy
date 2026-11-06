@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, Route, Routes, Link } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LayoutDashboard, Users, UserCheck, GraduationCap, CreditCard, Megaphone, Inbox, ScrollText, Search, Check, X, HeartPulse, Tag, HandHeart, ListOrdered } from '@/components/icons';
+import { LayoutDashboard, Users, UserCheck, GraduationCap, CreditCard, Megaphone, Inbox, ScrollText, Search, Check, X, HeartPulse, Tag, HandHeart, ListOrdered, TrendingUp, BarChart, Table, Person } from '@/components/icons';
 import type { PublicUser, PromoCode, Scholarship, WaitlistEntry } from '@shared/api-types';
 import { PLANS, type PlanId } from '@shared/config';
 import type { Role } from '@shared/rbac';
@@ -11,10 +11,14 @@ import { useAuth } from '@/lib/auth';
 import { getCatalogTrack } from '@/lib/catalog';
 import { Avatar, Dialog, Empty, Field, Input, PageLoader, Select, Stat, Textarea } from '@/components/ui';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/lib/utils';
+import { DataAdmin, FinanceAdmin, LearnerAdmin, TeachersAdmin, TrafficAdmin } from './AdminConsole';
 
 const NAV = [
   { to: '', label: 'Overview', icon: LayoutDashboard, end: true },
+  { to: 'finance', label: 'Finance', icon: TrendingUp },
+  { to: 'traffic', label: 'Traffic', icon: BarChart },
   { to: 'users', label: 'Users', icon: Users },
+  { to: 'all-teachers', label: 'Teachers', icon: Person },
   { to: 'teachers', label: 'Teacher requests', icon: UserCheck },
   { to: 'classes', label: 'Classrooms', icon: GraduationCap },
   { to: 'payments', label: 'Payments', icon: CreditCard },
@@ -23,6 +27,7 @@ const NAV = [
   { to: 'waitlist', label: 'Premium waitlist', icon: ListOrdered },
   { to: 'announcements', label: 'Announcements', icon: Megaphone },
   { to: 'inbox', label: 'Contact inbox', icon: Inbox },
+  { to: 'data', label: 'Data', icon: Table },
   { to: 'audit', label: 'Audit log', icon: ScrollText },
 ];
 
@@ -33,7 +38,7 @@ export default function AdminHome() {
         <h1 className="mb-4 font-display text-2xl font-bold">Administration</h1>
         <nav className="flex gap-1 overflow-x-auto scrollbar-none lg:flex-col" aria-label="Admin">
           {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => cn('flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium', isActive ? 'bg-ink text-white dark:bg-gold dark:text-ink' : 'hover:bg-muted')}>
+            <NavLink key={n.to} to={n.to ? `/admin/${n.to}` : '/admin'} end={n.end} className={({ isActive }) => cn('flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium', isActive ? 'bg-ink text-white dark:bg-gold dark:text-ink' : 'hover:bg-muted')}>
               <n.icon className="h-4 w-4" /> {n.label}
             </NavLink>
           ))}
@@ -42,7 +47,12 @@ export default function AdminHome() {
       <div className="min-w-0">
         <Routes>
           <Route index element={<Overview />} />
+          <Route path="finance" element={<FinanceAdmin />} />
+          <Route path="traffic" element={<TrafficAdmin />} />
           <Route path="users" element={<UsersAdmin />} />
+          <Route path="learners/:id" element={<LearnerAdmin />} />
+          <Route path="all-teachers" element={<TeachersAdmin />} />
+          <Route path="data" element={<DataAdmin />} />
           <Route path="teachers" element={<TeacherRequests />} />
           <Route path="classes" element={<ClassesAdmin />} />
           <Route path="payments" element={<PaymentsAdmin />} />
@@ -148,7 +158,7 @@ function UsersAdmin() {
           <tbody>
             {data?.users.map((u) => (
               <tr key={u.id} className={cn('border-t border-border', u.disabled && 'opacity-50')}>
-                <td className="px-4 py-2.5"><div className="flex items-center gap-2.5"><Avatar name={u.name} color={u.avatarColor} size={28} /><div><div className="font-medium">{u.name}</div><div className="text-xs text-muted-fg">{u.email}{u.mfaEnabled && <span className="ml-1.5 font-medium text-teal-700 dark:text-teal-300">· 2-step on</span>}</div></div></div></td>
+                <td className="px-4 py-2.5"><div className="flex items-center gap-2.5"><Avatar name={u.name} color={u.avatarColor} size={28} /><div><Link to={`/admin/learners/${u.id}`} className="font-medium hover:underline">{u.name}</Link><div className="text-xs text-muted-fg">{u.email}{u.mfaEnabled && <span className="ml-1.5 font-medium text-teal-700 dark:text-teal-300">· 2-step on</span>}</div></div></div></td>
                 <td className="px-4 capitalize">{u.role}</td>
                 <td className="px-4">{PLANS[u.plan].name}{u.planExpiresAt && u.plan !== 'free' && <div className="text-xs text-muted-fg">to {formatDate(u.planExpiresAt)}</div>}</td>
                 <td className="px-4 tabular-nums">{u.xp}</td>

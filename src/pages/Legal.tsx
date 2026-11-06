@@ -10,8 +10,10 @@ ${SITE.name} is the data controller for your account. Contact: ${SITE.contact.em
 ## What we collect
 - **Account details:** your name, email, password (stored only as a salted hash — we can never see it), and optional town, school and bio.
 - **Learning data:** lessons completed, exercise and challenge results, exam scores, XP and streaks, and code you choose to save.
-- **Class data:** if you join a class, your teacher can see your name, email, progress and submissions for that class.
+- **Class and teacher data:** if you join a teacher (by invite code, by choosing them at sign-up, or through a class), that teacher can see your name, email, progress, Kids Zone stars and submitted work, and can ask our AI assistant Zuva for a short report on how you are doing. Teachers never see your private chats with Zuva. You can leave a teacher at any time from your dashboard.
+- **Teacher earnings:** when a learner linked to a teacher pays for a plan, part of the payment is credited to that teacher. We record which payment it came from.
 - **Security data:** when and from which browser you signed in, so you can see and sign out your devices, and a log of security events (for example a failed sign-in).
+- **Page counts:** we count which pages are visited, where visitors came from (the referring site), the country, and the type of device. We use no tracking cookies and store no IP addresses; a random id that lasts only for your browser tab is stored as a one-day hash, so visits can’t be linked from day to day. We skip this entirely if your browser sends Do Not Track or Global Privacy Control.
 - **Payments:** handled by Paynow Zimbabwe. We store the plan, amount, status and reference — never your card number or PIN.
 
 ## Why we use it

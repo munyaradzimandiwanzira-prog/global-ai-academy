@@ -8,13 +8,18 @@ import { XP } from '@shared/config';
 import { can } from '@shared/rbac';
 import { audit, effectivePlan, nowIso, parseJson, type UserRow } from '../lib/db';
 import { newId, randomCode } from '../lib/crypto';
-import { badRequest, forbidden, notFound, conflict, upgradeRequired } from '../lib/errors';
+import { badRequest, forbidden, notFound, conflict } from '../lib/errors';
 import { chatJson } from '../lib/openai';
 import { consumeAiQuota } from '../lib/ai-quota';
 import { asData, ASSIGNMENT_GENERATOR_PROMPT, GRADER_SYSTEM_PROMPT, INSIGHTS_PROMPT, SESSION_SUMMARY_PROMPT, LEARNER_REPORT_PROMPT } from '../lib/prompts';
 import { awardXp } from '../lib/xp';
 import { getTrack } from '../lib/catalog';
 import { hit } from '../lib/ratelimit';
+import { z } from 'zod';
+import type { AssignmentKind } from '@shared/teaching';
+import { appBase } from '../lib/urls';
+import { canSeeStudent, linkStudent, notify } from '../lib/teaching';
+import { audienceOf, resourceProblem, workHref, workMatrix } from '../lib/assignments';
 
 const classrooms = createRouter();
 
@@ -105,16 +110,15 @@ classrooms.post('/', async (c) => {
 });
 
 classrooms.post('/join', async (c) => {
+  // Joining a teacher's class is free; paid plans unlock extra courses and features, not classes.
   const user = requireUser(c);
-  if (!can({ role: user.role, plan: effectivePlan(user) }, 'classroom.join') && user.role === 'student') {
-    throw upgradeRequired('Classrooms are part of the Academy plan. Upgrade, or ask your school for a sponsored seat.');
-  }
   await hit(c.env.DB, `join:${user.id}`, 20, 3600, 'Too many join attempts. Try again later.');
   const { code } = await body(c, joinClassSchema);
   const room = await c.env.DB.prepare('SELECT id, teacher_id, archived_at FROM classrooms WHERE join_code = ?').bind(code).first<{ id: string; teacher_id: string; archived_at: string | null }>();
   if (!room || room.archived_at) throw notFound('No active classroom uses that code. Check it with your teacher.');
   if (room.teacher_id === user.id) throw badRequest('You teach this classroom.');
   await c.env.DB.prepare('INSERT OR IGNORE INTO classroom_members (classroom_id, user_id) VALUES (?, ?)').bind(room.id, user.id).run();
+  await linkStudent(c.env.DB, room.teacher_id, user.id, 'class');
   return c.json({ id: room.id });
 });
 
@@ -193,6 +197,19 @@ classrooms.get('/:id/members', async (c) => {
       avgScore: subs.results.find((s) => s.user_id === m.id)?.avg_score ?? null,
     })),
   });
+});
+
+/** Put one of your own learners (linked by invite) into this class. */
+classrooms.post('/:id/members', async (c) => {
+  const { user, room } = await manage(c, c.req.param('id'));
+  const { userId } = await body(c, z.object({ userId: z.string().max(40) }));
+  if (!(await canSeeStudent(c.env.DB, { id: room.teacher_id, role: 'teacher' }, userId)) && user.role !== 'admin') throw forbidden('Invite this learner first; then you can add them to a class.');
+  const r = await c.env.DB.prepare('INSERT OR IGNORE INTO classroom_members (classroom_id, user_id) VALUES (?, ?)').bind(room.id, userId).run();
+  if (r.meta.changes) {
+    await linkStudent(c.env.DB, room.teacher_id, userId, 'class');
+    await notify(c.env, [userId], { kind: 'class_added', title: `You were added to ${room.name}`, body: `${room.teacher_name} added you to their class.`, link: `/classes/${room.id}` });
+  }
+  return c.json({ ok: true });
 });
 
 classrooms.delete('/:id/members/:userId', async (c) => {
@@ -341,12 +358,33 @@ classrooms.post('/:id/sessions/:sid/summary', async (c) => {
 interface AssignmentRow {
   id: string; classroom_id: string; title: string; instructions: string; language: string; starter_code: string;
   rubric: string; due_at: string | null; max_score: number; created_at: string; submission_count?: number;
+  kind: AssignmentKind; resource: string;
 }
-const toAssignment = (r: AssignmentRow): Assignment => ({
+const toAssignment = (r: AssignmentRow, studentIds?: string[]): Assignment => ({
   id: r.id, classroomId: r.classroom_id, title: r.title, instructions: r.instructions, language: r.language,
   starterCode: r.starter_code, rubric: r.rubric, dueAt: r.due_at, maxScore: r.max_score, createdAt: r.created_at,
-  submissionCount: r.submission_count,
+  submissionCount: r.submission_count, kind: r.kind ?? 'code', resource: r.resource ?? '', href: workHref(r), studentIds,
 });
+
+async function targetsOf(db: D1Database, ids: string[]) {
+  const map = new Map<string, string[]>();
+  if (!ids.length) return map;
+  const rows = await db.prepare(`SELECT assignment_id, user_id FROM assignment_targets WHERE assignment_id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all<{ assignment_id: string; user_id: string }>();
+  for (const r of rows.results) (map.get(r.assignment_id) ?? map.set(r.assignment_id, []).get(r.assignment_id)!).push(r.user_id);
+  return map;
+}
+
+/** Checks the resource and that every chosen learner is in the class. */
+async function checkAssignmentInput(db: D1Database, roomId: string, input: { kind: AssignmentKind; resource: string; studentIds: string[] }) {
+  const problem = resourceProblem(input.kind, input.resource);
+  if (problem) throw badRequest(problem, { resource: problem });
+  const ids = [...new Set(input.studentIds)];
+  if (ids.length) {
+    const ok = await db.prepare(`SELECT COUNT(*) AS n FROM classroom_members WHERE classroom_id = ? AND user_id IN (${ids.map(() => '?').join(',')})`).bind(roomId, ...ids).first<{ n: number }>();
+    if ((ok?.n ?? 0) !== ids.length) throw badRequest('Choose learners from this class.', { studentIds: 'Not in this class' });
+  }
+  return ids;
+}
 
 interface SubmissionRow {
   id: string; assignment_id: string; user_id: string; user_name?: string; code: string; text: string; status: Submission['status'];
@@ -363,23 +401,44 @@ classrooms.get('/:id/assignments', async (c) => {
   const rows = await c.env.DB.prepare(
     `SELECT a.*, (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id) AS submission_count FROM assignments a WHERE a.classroom_id = ? ORDER BY a.created_at DESC`,
   ).bind(room.id).all<AssignmentRow>();
-  let mine: Record<string, Submission> = {};
-  if (!manager) {
-    const subs = await c.env.DB.prepare('SELECT s.* FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE a.classroom_id = ? AND s.user_id = ?').bind(room.id, user.id).all<SubmissionRow>();
-    mine = Object.fromEntries(subs.results.map((s) => [s.assignment_id, toSubmission(s)]));
-  }
-  return c.json({ assignments: rows.results.map((r) => ({ ...toAssignment(r), mySubmission: manager ? undefined : mine[r.id] ?? null })) });
+  const targets = await targetsOf(c.env.DB, rows.results.map((r) => r.id));
+  if (manager) return c.json({ assignments: rows.results.map((r) => toAssignment(r, targets.get(r.id) ?? [])) });
+  // Learners see whole-class work and work set for them, with its status.
+  const visible = rows.results.filter((r) => !targets.has(r.id) || targets.get(r.id)!.includes(user.id));
+  const status = new Map(((await workMatrix(c.env.DB, [room.id], [user.id])).get(user.id) ?? []).map((w) => [w.a.id, w.status]));
+  const subs = await c.env.DB.prepare('SELECT s.* FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE a.classroom_id = ? AND s.user_id = ?').bind(room.id, user.id).all<SubmissionRow>();
+  const mine: Record<string, Submission> = Object.fromEntries(subs.results.map((s) => [s.assignment_id, toSubmission(s)]));
+  return c.json({ assignments: visible.map((r) => ({ ...toAssignment(r), mySubmission: mine[r.id] ?? null, myStatus: status.get(r.id) ?? 'open' })) });
 });
 
 classrooms.post('/:id/assignments', async (c) => {
   const { user, room } = await manage(c, c.req.param('id'));
   const input = await body(c, assignmentSchema);
-  const id = newId();
-  await c.env.DB.prepare(
-    'INSERT INTO assignments (id, classroom_id, title, instructions, language, starter_code, rubric, due_at, max_score, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-  ).bind(id, room.id, input.title, input.instructions, input.language, input.starterCode, input.rubric, input.dueAt ?? null, input.maxScore, user.id).run();
-  return c.json({ id }, 201);
+  return c.json(await createAssignment(c, room, user.id, input), 201);
 });
+
+/**
+ * Creates an assignment, targets it, and tells each learner (in the app and by email).
+ * Shared by the class page and Zuva's teacher agent (after the teacher confirms).
+ */
+export async function createAssignment(c: Ctx, room: { id: string; name: string }, authorId: string, input: z.infer<typeof assignmentSchema>) {
+  const db = c.env.DB;
+  const ids = await checkAssignmentInput(db, room.id, input);
+  const id = newId();
+  await db.batch([
+    db.prepare('INSERT INTO assignments (id, classroom_id, title, instructions, language, starter_code, rubric, due_at, max_score, created_by, kind, resource) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(id, room.id, input.title, input.instructions, input.language, input.starterCode, input.rubric, input.dueAt ?? null, input.maxScore, authorId, input.kind, input.resource),
+    ...ids.map((uid) => db.prepare('INSERT INTO assignment_targets (assignment_id, user_id) VALUES (?, ?)').bind(id, uid)),
+  ]);
+  const audience = await audienceOf(db, id, room.id);
+  const due = input.dueAt ? ` Due ${new Date(input.dueAt).toUTCString().slice(0, 16)}.` : '';
+  await notify(c.env, audience, { kind: 'assignment', title: `New work: ${input.title}`, body: `Your teacher set new work in ${room.name}.${due}`, link: workHref({ id, kind: input.kind, resource: input.resource }) }, {
+    email: { base: appBase(c.req.url, c.env.APP_URL), cta: 'Open the work' },
+    wait: (p) => c.executionCtx.waitUntil(p.catch((e) => console.error('[assign:email]', e))),
+  });
+  await audit(db, authorId, 'assignment.create', id, { classroom: room.id, kind: input.kind, targets: ids.length || 'class' });
+  return { id, notified: audience.length };
+}
 
 async function loadAssignment(c: Ctx, assignmentId: string) {
   const a = await c.env.DB.prepare('SELECT * FROM assignments WHERE id = ?').bind(assignmentId).first<AssignmentRow>();
@@ -390,17 +449,25 @@ async function loadAssignment(c: Ctx, assignmentId: string) {
 classrooms.get('/assignments/:aid', async (c) => {
   const a = await loadAssignment(c, c.req.param('aid'));
   const { user, manager } = await access(c, a.classroom_id);
+  const targets = (await targetsOf(c.env.DB, [a.id])).get(a.id) ?? [];
+  if (!manager && targets.length && !targets.includes(user.id)) throw forbidden('This work was set for other learners.');
   const mine = manager ? null : await c.env.DB.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND user_id = ?').bind(a.id, user.id).first<SubmissionRow>();
-  return c.json({ assignment: { ...toAssignment(a), mySubmission: mine ? toSubmission(mine) : null }, manager });
+  const myStatus = manager ? undefined : (((await workMatrix(c.env.DB, [a.classroom_id], [user.id])).get(user.id) ?? []).find((w) => w.a.id === a.id)?.status ?? 'open');
+  return c.json({ assignment: { ...toAssignment(a, manager ? targets : undefined), mySubmission: mine ? toSubmission(mine) : null, myStatus }, manager });
 });
 
 classrooms.put('/assignments/:aid', async (c) => {
   const a = await loadAssignment(c, c.req.param('aid'));
   await manage(c, a.classroom_id);
   const input = await body(c, assignmentSchema);
-  await c.env.DB.prepare('UPDATE assignments SET title = ?, instructions = ?, language = ?, starter_code = ?, rubric = ?, due_at = ?, max_score = ? WHERE id = ?')
-    .bind(input.title, input.instructions, input.language, input.starterCode, input.rubric, input.dueAt ?? null, input.maxScore, a.id)
-    .run();
+  const ids = await checkAssignmentInput(c.env.DB, a.classroom_id, input);
+  const db = c.env.DB;
+  await db.batch([
+    db.prepare('UPDATE assignments SET title = ?, instructions = ?, language = ?, starter_code = ?, rubric = ?, due_at = ?, max_score = ?, kind = ?, resource = ? WHERE id = ?')
+      .bind(input.title, input.instructions, input.language, input.starterCode, input.rubric, input.dueAt ?? null, input.maxScore, input.kind, input.resource, a.id),
+    db.prepare('DELETE FROM assignment_targets WHERE assignment_id = ?').bind(a.id),
+    ...ids.map((uid) => db.prepare('INSERT INTO assignment_targets (assignment_id, user_id) VALUES (?, ?)').bind(a.id, uid)),
+  ]);
   return c.json({ ok: true });
 });
 
@@ -456,6 +523,8 @@ classrooms.post('/assignments/:aid/submit', async (c) => {
   const a = await loadAssignment(c, c.req.param('aid'));
   const { user, manager } = await access(c, a.classroom_id);
   if (manager) throw badRequest('Teachers cannot submit to their own assignments.');
+  const targets = (await targetsOf(c.env.DB, [a.id])).get(a.id) ?? [];
+  if (targets.length && !targets.includes(user.id)) throw forbidden('This work was set for other learners.');
   const input = await body(c, submissionSchema);
   if (!input.code.trim() && !input.text.trim()) throw badRequest('Add your code or a written answer before submitting.');
   const existing = await c.env.DB.prepare('SELECT status FROM submissions WHERE assignment_id = ? AND user_id = ?').bind(a.id, user.id).first<{ status: string }>();
@@ -478,6 +547,23 @@ classrooms.get('/assignments/:aid/submissions', async (c) => {
   return c.json({ submissions: rows.results.map(toSubmission) });
 });
 
+/** Who has done a piece of work: every learner it was set for, with their status. */
+classrooms.get('/assignments/:aid/progress', async (c) => {
+  const a = await loadAssignment(c, c.req.param('aid'));
+  await manage(c, a.classroom_id);
+  const audience = await audienceOf(c.env.DB, a.id, a.classroom_id);
+  if (!audience.length) return c.json({ learners: [] });
+  const [matrix, names] = await Promise.all([
+    workMatrix(c.env.DB, [a.classroom_id], audience),
+    c.env.DB.prepare(`SELECT id, name FROM users WHERE id IN (${audience.map(() => '?').join(',')})`).bind(...audience).all<{ id: string; name: string }>(),
+  ]);
+  const learners = names.results.map((u) => {
+    const w = (matrix.get(u.id) ?? []).find((x) => x.a.id === a.id);
+    return { id: u.id, name: u.name, status: w?.status ?? 'open', score: w?.score ?? null };
+  }).sort((x, y) => x.name.localeCompare(y.name));
+  return c.json({ learners });
+});
+
 classrooms.post('/submissions/:sid/grade', async (c) => {
   const sub = await c.env.DB.prepare('SELECT s.*, a.classroom_id, a.max_score FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE s.id = ?')
     .bind(c.req.param('sid')).first<SubmissionRow & { classroom_id: string; max_score: number }>();
@@ -489,6 +575,7 @@ classrooms.post('/submissions/:sid/grade', async (c) => {
   await c.env.DB.prepare("UPDATE submissions SET status = 'graded', score = ?, teacher_feedback = ?, graded_at = ? WHERE id = ?")
     .bind(input.score, input.feedback, nowIso(), sub.id).run();
   await audit(c.env.DB, user.id, 'submission.grade', sub.id, { score: input.score });
+  await notify(c.env, [sub.user_id], { kind: 'graded', title: 'Your work was marked', body: `You scored ${input.score} out of ${sub.max_score}.${input.feedback ? ' Your teacher left feedback.' : ''}`, link: `/assignments/${sub.assignment_id}` });
   return c.json({ ok: true });
 });
 

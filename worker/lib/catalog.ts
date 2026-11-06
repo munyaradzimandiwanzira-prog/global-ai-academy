@@ -1,4 +1,5 @@
 import catalog from 'virtual:catalog';
+import outlines from 'virtual:lesson-outlines';
 import type { CatalogTrack } from '@shared/content';
 
 const byId = new Map<string, CatalogTrack>(catalog.map((t) => [t.id, t]));
@@ -13,3 +14,6 @@ export function lessonExists(trackId: string, slug: string): boolean {
 export function lessonMinutes(trackId: string, slug: string): number {
   return byId.get(trackId)?.lessons.find((l) => l.slug === slug)?.minutes ?? 0;
 }
+
+/** Short outline of a lesson's content, for grounding Zuva's lesson plans. */
+export const lessonOutline = (trackId: string, slug: string) => outlines[`${trackId}/${slug}`] ?? '';

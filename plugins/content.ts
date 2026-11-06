@@ -2,12 +2,13 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
 import { activityIds, parseTrack, proLessons, publicTrack, toCatalogEntry } from './content-parser';
-import type { QuizQuestion, Track } from '../shared/content';
+import type { Block, QuizQuestion, Track } from '../shared/content';
 
 const VIRTUAL_CATALOG = 'virtual:catalog';
 const VIRTUAL_QUIZ_BANK = 'virtual:quiz-bank';
 const VIRTUAL_PRO = 'virtual:pro-lessons';
 const VIRTUAL_ACTIVITY = 'virtual:activity-ids';
+const VIRTUAL_OUTLINES = 'virtual:lesson-outlines';
 const RESOLVED = (id: string) => '\0' + id;
 
 /**
@@ -38,7 +39,7 @@ export function contentPlugin(): Plugin {
     name: 'gaa-content',
     enforce: 'pre',
     resolveId(id) {
-      if (id === VIRTUAL_CATALOG || id === VIRTUAL_QUIZ_BANK || id === VIRTUAL_PRO || id === VIRTUAL_ACTIVITY) return RESOLVED(id);
+      if (id === VIRTUAL_CATALOG || id === VIRTUAL_QUIZ_BANK || id === VIRTUAL_PRO || id === VIRTUAL_ACTIVITY || id === VIRTUAL_OUTLINES) return RESOLVED(id);
       return null;
     },
     load(id) {
@@ -64,6 +65,12 @@ export function contentPlugin(): Plugin {
         // Server-only: the Worker validates activity ids against this before awarding XP.
         return `export default ${JSON.stringify(activityIds(loadAll()))};`;
       }
+      if (id === RESOLVED(VIRTUAL_OUTLINES)) {
+        // Server-only: a short outline of every lesson so Zuva can ground lesson plans in the real content.
+        const out: Record<string, string> = {};
+        for (const t of loadAll()) for (const l of t.lessons) out[`${t.meta.id}/${l.slug}`] = lessonOutline(l.blocks);
+        return `export default ${JSON.stringify(out)};`;
+      }
       if (id.endsWith('.md?track')) {
         const file = id.slice(0, -'?track'.length);
         this.addWatchFile(file);
@@ -79,7 +86,7 @@ export function contentPlugin(): Plugin {
         if (!file.startsWith(dir)) return;
         cache = null;
         for (const env of Object.values(server.environments)) {
-          for (const v of [VIRTUAL_CATALOG, VIRTUAL_QUIZ_BANK, VIRTUAL_PRO, VIRTUAL_ACTIVITY]) {
+          for (const v of [VIRTUAL_CATALOG, VIRTUAL_QUIZ_BANK, VIRTUAL_PRO, VIRTUAL_ACTIVITY, VIRTUAL_OUTLINES]) {
             const mod = env.moduleGraph.getModuleById(RESOLVED(v));
             if (mod) env.moduleGraph.invalidateModule(mod);
           }
@@ -87,4 +94,31 @@ export function contentPlugin(): Plugin {
       });
     },
   };
+}
+
+/**
+ * A lesson in about 700 characters: its headings, the first sentence under each, and what the
+ * learner practises. Enough for planning a class, far smaller than the lesson itself.
+ */
+export function lessonOutline(blocks: Block[], max = 700): string {
+  const parts: string[] = [];
+  for (const b of blocks) {
+    if (b.type === 'md') {
+      for (const para of b.md.split(/\n{2,}/)) {
+        const line = para.trim();
+        if (!line || line.startsWith('```') || line.startsWith('|') || line.startsWith('<')) continue;
+        if (/^#{1,4}\s/.test(line)) parts.push(`# ${line.replace(/^#+\s*/, '')}`);
+        else parts.push(line.replace(/[*_`>]/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').split(/(?<=[.!?])\s/)[0]!.slice(0, 160));
+      }
+    } else if (b.type === 'run') parts.push(`Runs ${b.lang}: ${b.code.split('\n').slice(0, 2).join(' / ').slice(0, 100)}`);
+    else if (b.type === 'exercise') parts.push(`Exercise: ${b.prompt.slice(0, 120)}`);
+    else if (b.type === 'challenge') parts.push(`Challenge: ${b.challenge.title}`);
+    else if (b.type === 'quiz' && !b.examOnly) parts.push(`Quiz: ${b.questions.length} questions`);
+  }
+  let out = '';
+  for (const p of parts) {
+    if (out.length + p.length + 1 > max) break;
+    out += (out ? '\n' : '') + p;
+  }
+  return out;
 }

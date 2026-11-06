@@ -31,4 +31,7 @@ export async function peek(db: D1Database, key: string, windowSeconds: number): 
 export async function sweep(db: D1Database) {
   await db.prepare('DELETE FROM rate_limits WHERE expires_at < ?').bind(Math.floor(Date.now() / 1000)).run();
   await db.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(new Date().toISOString()).run();
+  // Traffic: keep about 13 months, enough to compare with the same month last year.
+  const cutoff = new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10);
+  await db.batch(['traffic_daily', 'traffic_dims', 'traffic_visitors'].map((t) => db.prepare(`DELETE FROM ${t} WHERE day < ?`).bind(cutoff)));
 }

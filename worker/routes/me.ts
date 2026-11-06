@@ -1,5 +1,10 @@
 import { createRouter, body, requireUser, requirePermission } from '../app';
-import { profileSchema, progressSchema, activitySchema, goalSchema, KIDS_ACTIVITY_KEY } from '@shared/schemas';
+import { profileSchema, progressSchema, activitySchema, goalSchema, addTeacherSchema } from '@shared/schemas';
+import type { MyAssignment, MyTeacher } from '@shared/teaching';
+import { appBase } from '../lib/urls';
+import { linkChosenTeachers, redeemInvite, tellAdminsAboutTeacherRequest } from '../lib/teaching';
+import { classroomsOf, workHref, workMatrix } from '../lib/assignments';
+import { KID_LEVELS } from '@shared/kids-curriculum';
 import { XP, TRIAL, PLANS } from '@shared/config';
 import type { ActivityRow, Goal, ProgressRow } from '@shared/api-types';
 import { audit, effectivePlan, nowIso, toPublicUser, todayUtc, type UserRow } from '../lib/db';
@@ -9,6 +14,9 @@ import { badRequest, notFound, conflict, forbidden } from '../lib/errors';
 import { getTrack, lessonExists, lessonMinutes } from '../lib/catalog';
 import { newId } from '../lib/crypto';
 import { hit } from '../lib/ratelimit';
+
+/** Every real Kids Zone level key ("maze:3", "math:×:1", "turtle:square"). */
+const KID_LEVEL_KEYS = new Set(KID_LEVELS.map((l) => l.key));
 import activityIds from 'virtual:activity-ids';
 
 const me = createRouter();
@@ -74,7 +82,54 @@ me.post('/teacher-request', async (c) => {
   await c.env.DB.prepare('INSERT INTO teacher_requests (id, user_id, message) VALUES (?, ?, ?)')
     .bind(newId(), user.id, String(message ?? '').slice(0, 1000))
     .run();
+  c.executionCtx.waitUntil(tellAdminsAboutTeacherRequest(c.env, appBase(c.req.url, c.env.APP_URL), user.name, user.email).catch((e) => console.error('[teacher-request:email]', e)));
   return c.json({ ok: true }, 201);
+});
+
+// ── My teachers ────────────────────────────────────────────────────────────
+
+me.get('/teachers', async (c) => {
+  const user = requireUser(c);
+  const rows = await c.env.DB.prepare(
+    `SELECT u.id, u.name, u.school, u.city, ts.created_at AS since, ts.source FROM teacher_students ts JOIN users u ON u.id = ts.teacher_id
+     WHERE ts.student_id = ? AND u.deleted_at IS NULL ORDER BY ts.created_at`,
+  ).bind(user.id).all<MyTeacher>();
+  return c.json({ teachers: rows.results });
+});
+
+/** Add a teacher by invite code (or, for listed teachers, by picking them). Always free. */
+me.post('/teachers', async (c) => {
+  const user = requireUser(c);
+  await hit(c.env.DB, `add-teacher:${user.id}`, 20, 3600, 'Too many tries. Wait a little and try again.');
+  const input = await body(c, addTeacherSchema);
+  if ('code' in input) {
+    const r = await redeemInvite(c.env.DB, input.code, user);
+    return c.json({ teacherName: r.teacherName, classroomId: r.classroomId });
+  }
+  const linked = await linkChosenTeachers(c.env.DB, user.id, [input.teacherId]);
+  if (!linked.length) throw notFound('That teacher can’t be added. Ask them for an invite code.');
+  return c.json({ ok: true });
+});
+
+me.delete('/teachers/:id', async (c) => {
+  const user = requireUser(c);
+  await c.env.DB.batch([
+    c.env.DB.prepare('DELETE FROM teacher_students WHERE teacher_id = ? AND student_id = ?').bind(c.req.param('id'), user.id),
+    c.env.DB.prepare('DELETE FROM classroom_members WHERE user_id = ? AND classroom_id IN (SELECT id FROM classrooms WHERE teacher_id = ?)').bind(user.id, c.req.param('id')),
+  ]);
+  await audit(c.env.DB, user.id, 'student.leave_teacher', c.req.param('id'));
+  return c.json({ ok: true });
+});
+
+/** Everything teachers have set this learner, newest first, with where to do it and its status. */
+me.get('/assignments', async (c) => {
+  const user = requireUser(c);
+  const work = (await workMatrix(c.env.DB, await classroomsOf(c.env.DB, user.id), [user.id])).get(user.id) ?? [];
+  const items: MyAssignment[] = work.map(({ a, status }) => ({
+    id: a.id, title: a.title, kind: a.kind, resource: a.resource, href: workHref(a), classroomId: a.classroom_id, classroomName: a.classroom_name,
+    teacherName: a.teacher_name, dueAt: a.due_at, status, createdAt: a.created_at,
+  }));
+  return c.json({ assignments: items });
 });
 
 // ── Progress ────────────────────────────────────────────────────────────────
@@ -117,7 +172,7 @@ me.post('/activity', async (c) => {
   // XP feeds the public leaderboard, so only real activities count. Content ids come from the build;
   // Kids Zone level keys are shaped like "maze:3" and capped per day instead.
   if (input.kind === 'kids') {
-    if (!KIDS_ACTIVITY_KEY.test(input.refId)) throw notFound('Unknown game level.');
+    if (!KID_LEVEL_KEYS.has(input.refId)) throw notFound('Unknown game level.');
     input.trackId = 'kids';
     await hit(c.env.DB, `kids-activity:${user.id}`, 60, 86400, 'That is plenty of play for today. Come back tomorrow for more stars.');
   } else {

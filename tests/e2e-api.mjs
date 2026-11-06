@@ -1,5 +1,6 @@
 // End-to-end API checks against a running dev server with a local D1.
 // Usage: npm run dev, then: npx wrangler d1 execute global_ai_academy --local --command "DELETE FROM rate_limits" && node tests/e2e-api.mjs
+import { execSync } from 'node:child_process';
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:5173';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) { pass++; console.log('  ok  ', m); } else { fail++; console.log('  FAIL', m); } };
@@ -17,17 +18,20 @@ const admin = client(), learner = client(), teacher = client(), guest = client()
 // admin (ADMIN_EMAILS) signup
 // Admin is granted only after the listed address is verified (ADMIN_EMAILS secret in .dev.vars locally).
 const ADMIN = process.env.ADMIN_EMAIL ?? 'munyaradzimandiwanzira@gmail.com';
-let r = await admin('POST', '/api/auth/signup', { name: 'Munya Admin', email: ADMIN, password: 'Passw0rd!x' });
+let r = await admin('POST', '/api/auth/signup', { acceptTerms: true, name: 'Munya Admin', email: ADMIN, password: 'Passw0rd!x' });
 if (r.s === 201) {
   ok(r.j.user.role === 'student', 'unverified sign-up with the admin email is NOT admin');
   const token = new URL(r.j.devVerifyUrl).searchParams.get('token');
   ok((await admin('POST', '/api/auth/verify-email', { token })).s === 200, 'admin email verified');
 }
+if (/127\.0\.0\.1|localhost/.test(BASE)) execSync(`npx wrangler d1 execute global_ai_academy --local --persist-to .wrangler/state --command "UPDATE users SET mfa_enabled_at = NULL WHERE email = '${ADMIN}'"`, { stdio: 'ignore' });
 r = await admin('POST', '/api/auth/login', { email: ADMIN, password: 'Passw0rd!x' });
 ok(r.j?.user?.role === 'admin', 'verified admin email becomes admin');
-r = await learner('POST', '/api/auth/signup', { name: 'Tariro Moyo', email: `tariro${id}@example.com`, password: 'Passw0rd1', level: 'beginner' });
+// Admin tools need two-step login. Locally we mark it enrolled in D1 rather than scripting an authenticator.
+if (/127\.0\.0\.1|localhost/.test(BASE)) execSync(`npx wrangler d1 execute global_ai_academy --local --persist-to .wrangler/state --command "UPDATE users SET mfa_enabled_at = COALESCE(mfa_enabled_at, '2026-01-01T00:00:00Z') WHERE id = '${r.j.user.id}'"`, { stdio: 'ignore' });
+r = await learner('POST', '/api/auth/signup', { acceptTerms: true, name: 'Tariro Moyo', email: `tariro${id}@example.com`, password: 'Passw0rd1', level: 'beginner' });
 ok(r.s === 201 && r.j.user.role === 'student' && r.j.user.trialAvailable === true, 'learner signs up, trial available');
-r = await teacher('POST', '/api/auth/signup', { name: 'Mr Dube', email: `dube${id}@example.com`, password: 'Passw0rd1', wantsToTeach: true });
+r = await teacher('POST', '/api/auth/signup', { acceptTerms: true, name: 'Mr Dube', email: `dube${id}@example.com`, password: 'Passw0rd1', wantsToTeach: true });
 const teacherId = r.j.user.id;
 // RBAC
 ok((await learner('GET', '/api/admin/promos')).s === 403, 'student cannot list promos');
@@ -99,7 +103,7 @@ const cap = r.j.capstone;
 r = await teacher('GET', '/api/capstones/review');
 ok(r.j.capstones.some((c) => c.id === cap.id), "teacher sees their learner's capstone");
 const outsider = client();
-await outsider('POST', '/api/auth/signup', { name: 'Other Teacher', email: `outsider${id}@other.example`, password: 'Passw0rd1' });
+await outsider('POST', '/api/auth/signup', { acceptTerms: true, name: 'Other Teacher', email: `outsider${id}@other.example`, password: 'Passw0rd1' });
 const o = (await admin('GET', `/api/admin/users?q=outsider${id}`)).j.users[0];
 await admin('PATCH', `/api/admin/users/${o.id}`, { role: 'teacher' });
 ok((await outsider('POST', `/api/capstones/${cap.id}/review`, { feedback: 'hi', status: 'completed' })).s === 403, 'teacher of another class cannot review');

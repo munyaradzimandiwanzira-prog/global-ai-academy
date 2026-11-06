@@ -5,42 +5,19 @@
  * Knowledge tools go through the Academy MCP server (callAcademyTool); personal tools read and
  * write this learner's own data directly, always filtered by their user id.
  */
-import type { ToolSpec } from '../lib/openai';
-import type { UserRow } from '../lib/db';
 import { getTrack } from '../lib/catalog';
-import { isSafeZuvaPath, MEMORY_KINDS, type MemoryKind, type ZuvaActivity, type ZuvaEvent, type ZuvaMode } from '@shared/zuva';
+import { isSafeZuvaPath, MEMORY_KINDS, type MemoryKind } from '@shared/zuva';
 import { KID_GAMES, kidGame } from '@shared/kids-games';
-import { KID_LEVELS, levelHref, levelsAt, stageOf, type StageId } from '@shared/kids-curriculum';
-import type { LearnerContext } from './profile';
+import { KID_LEVELS, levelHref, levelsAt, stageOf } from '@shared/kids-curriculum';
 import { callAcademyTool } from './mcp';
 import { forgetMatching, writeMemory } from './memory';
 import { makeQuiz, planExperiment } from './subagents';
 import { getExperiment, type Experiment } from './experiments';
+import { HttpError } from '../lib/errors';
+import { TEACHER_TOOLS } from './teacher-tools';
+import { obj, str, type ToolCtx, type ZuvaTool } from './tool-kit';
 
-export interface ToolCtx {
-  /** Kids Zone stage the child picked, if any. */
-  stage?: StageId;
-  env: Env;
-  user: UserRow | null;
-  learner: LearnerContext | null;
-  mode: ZuvaMode;
-  activity?: ZuvaActivity;
-  memoryEnabled: boolean;
-  emit: (e: ZuvaEvent) => void;
-}
-
-interface ZuvaTool {
-  spec: ToolSpec;
-  /** Status line shown while the tool runs. */
-  label: string;
-  modes: ZuvaMode[];
-  signedIn?: boolean;
-  needsMemory?: boolean;
-  run: (ctx: ToolCtx, args: Record<string, unknown>) => Promise<string>;
-}
-
-const str = (v: unknown, max = 300) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
-const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', properties, required, additionalProperties: false });
+export type { ToolCtx, ZuvaTool } from './tool-kit';
 
 function pageExists(full: string): boolean {
   const [path = '', query] = full.split('?');
@@ -56,7 +33,7 @@ function pageExists(full: string): boolean {
   return true;
 }
 
-const TOOLS: ZuvaTool[] = [
+const BASE_TOOLS: ZuvaTool[] = [
   {
     label: 'Looking at your progress',
     modes: ['kids', 'learner'],
@@ -102,7 +79,7 @@ const TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Getting a button ready',
-    modes: ['kids', 'learner'],
+    modes: ['kids', 'learner', 'teacher'],
     spec: { name: 'open_page', description: 'Show the learner a button that opens a page in the Academy (a Kids Zone game like /kids/bridge, a lesson like /learn/python/lists, /tutorials, /playground). They choose whether to tap it.', parameters: obj({ path: { type: 'string' }, label: { type: 'string', description: 'Short button text, e.g. "Play Bridge Builder"' } }, ['path', 'label']) },
     run: async ({ emit }, args) => {
       const path = str(args.path, 120);
@@ -113,13 +90,13 @@ const TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Searching the lessons',
-    modes: ['kids', 'learner'],
+    modes: ['kids', 'learner', 'teacher'],
     spec: { name: 'search_lessons', description: 'Search Academy lessons by topic. Returns titles and paths.', parameters: obj({ query: { type: 'string' } }, ['query']) },
     run: async (_c, args) => callAcademyTool('search_lessons', { query: str(args.query, 120), limit: 5 }).text,
   },
   {
     label: 'Looking through the games',
-    modes: ['kids', 'learner'],
+    modes: ['kids', 'learner', 'teacher'],
     spec: { name: 'list_kids_games', description: 'List Kids Zone games and what they teach, optionally by topic. Give a Cambridge stage (1-7) to get that stage\'s levels with direct links.', parameters: obj({ topic: { type: 'string' }, stage: { type: 'integer', minimum: 1, maximum: 7 } }) },
     run: async ({ stage }, args) => callAcademyTool('list_kids_games', { topic: str(args.topic, 60), ...(args.stage || stage ? { stage: Number(args.stage) || stage } : {}) }).text,
   },
@@ -168,7 +145,7 @@ const TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Saving that to memory',
-    modes: ['kids', 'learner'],
+    modes: ['kids', 'learner', 'teacher'],
     signedIn: true,
     needsMemory: true,
     spec: { name: 'remember', description: 'Save one lasting, learning-related fact the learner asked you to remember (an interest, goal, preference or struggle). Never personal details.', parameters: obj({ kind: { type: 'string', enum: MEMORY_KINDS }, content: { type: 'string', description: 'One short sentence, e.g. "Wants to build a weather station"' } }, ['kind', 'content']) },
@@ -180,7 +157,7 @@ const TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Forgetting that',
-    modes: ['kids', 'learner'],
+    modes: ['kids', 'learner', 'teacher'],
     signedIn: true,
     spec: { name: 'forget', description: 'Delete memories about something when the learner asks you to forget it.', parameters: obj({ about: { type: 'string' } }, ['about']) },
     run: async ({ env, user }, args) => {
@@ -191,6 +168,7 @@ const TOOLS: ZuvaTool[] = [
 ];
 
 export function toolsFor(ctx: Pick<ToolCtx, 'mode' | 'user' | 'memoryEnabled'>): ZuvaTool[] {
+  const TOOLS = [...BASE_TOOLS, ...TEACHER_TOOLS];
   return TOOLS.filter((t) => t.modes.includes(ctx.mode) && (!t.signedIn || ctx.user) && (!t.needsMemory || ctx.memoryEnabled));
 }
 
@@ -209,6 +187,7 @@ export async function runTool(ctx: ToolCtx, tools: ZuvaTool[], name: string, raw
     return `<tool_result>${(await tool.run(ctx, args)).slice(0, 4000)}</tool_result>`;
   } catch (e) {
     console.error('[zuva:tool]', name, e);
-    return `<tool_result>The ${name} tool failed. Carry on without it.</tool_result>`;
+    // Our own errors (not your class, unknown lesson...) are safe and useful to pass on.
+    return `<tool_result>The ${name} tool failed${e instanceof HttpError ? `: ${e.message}` : ''}. Carry on without it.</tool_result>`;
   }
 }

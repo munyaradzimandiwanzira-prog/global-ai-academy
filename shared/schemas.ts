@@ -20,6 +20,9 @@ export const signupSchema = z.object({
   city: z.string().trim().max(60).optional(),
   // Teachers request elevated access; an admin approves it.
   wantsToTeach: z.boolean().optional(),
+  // A teacher's invite code (from a shared link), and/or listed teachers the student picked.
+  inviteCode: z.string().trim().regex(/^[A-Za-z0-9-]{4,32}$/, 'That invite code doesn’t look right').optional().or(z.literal('')),
+  teacherIds: z.array(z.string().max(40)).max(3).optional(),
   // Consent record (Cyber and Data Protection Act): terms + privacy, and a guardian's agreement for under-18s.
   acceptTerms: z.literal(true, { error: 'Please agree to the terms and privacy policy to continue' }),
   turnstileToken,
@@ -56,7 +59,7 @@ export const progressSchema = z.object({
 });
 
 /** Kids Zone level keys the games report, e.g. "maze:3", "math:×:2", "turtle:square". */
-export const KIDS_ACTIVITY_KEY = /^(maze|bug|turtle|pixel|binary|circuit|math|safari):[^\s:]{1,24}(:[^\s:]{1,8})?$/u;
+export const KIDS_ACTIVITY_KEY = /^(maze|bug|turtle|pixel|binary|circuit|math|safari|sorting|pcbuilder|terminal|functions|launch|bridge|packets|linebot|gamemaker|teachai):[^\s:]{1,24}(:[^\s:]{1,8})?$/u;
 
 export const activitySchema = z.object({
   kind: z.enum(['exercise', 'challenge', 'quiz', 'kids']),
@@ -97,7 +100,7 @@ export const tutorSchema = z.object({
 
 /** Zuva agent chat. Guests send their short history; signed-in learners send a threadId instead. */
 export const zuvaChatSchema = z.object({
-  mode: z.enum(['kids', 'learner']),
+  mode: z.enum(['kids', 'learner', 'teacher']),
   message: z.string().trim().min(1, 'Type or say something first').max(2000),
   threadId: z.string().max(40).optional(),
   history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(2000) })).max(8).optional(),
@@ -134,7 +137,13 @@ export const joinClassSchema = z.object({ code: z.string().trim().toUpperCase().
 
 export const assignmentSchema = z.object({
   title: z.string().trim().min(3).max(150),
-  instructions: z.string().trim().min(10).max(10000),
+  instructions: z.string().trim().min(3).max(10000),
+  /** code | lesson | kids | task. Lesson and Kids Zone work ticks off by itself. */
+  kind: z.enum(['code', 'lesson', 'kids', 'task']).default('code'),
+  /** "track/lesson" for a lesson, a level key such as "launch:2" for the Kids Zone. */
+  resource: z.string().trim().max(120).optional().default(''),
+  /** Only these class members; empty means the whole class. */
+  studentIds: z.array(z.string().max(40)).max(300).optional().default([]),
   language: z.string().max(20).default('python'),
   starterCode: z.string().max(10000).optional().default(''),
   rubric: z.string().max(4000).optional().default(''),
@@ -267,3 +276,67 @@ export const contactSchema = z.object({
 
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+
+// ── Teaching platform ─────────────────────────────────────────────────────
+
+export const inviteCreateSchema = z.object({
+  label: z.string().trim().max(80).optional().default(''),
+  classroomId: z.string().max(40).nullable().optional(),
+  maxUses: z.number().int().min(1).max(1000).nullable().optional(),
+  expiresInDays: z.number().int().min(1).max(365).nullable().optional(),
+});
+
+export const addTeacherSchema = z.union([
+  z.object({ code: z.string().trim().regex(/^[A-Za-z0-9-]{4,32}$/, 'That invite code doesn’t look right') }),
+  z.object({ teacherId: z.string().max(40) }),
+]);
+
+export const teacherSettingsSchema = z.object({ listed: z.boolean() });
+
+export const lessonPlanRequestSchema = z.object({
+  trackId: z.string().max(60),
+  lessonSlugs: z.array(z.string().max(80)).max(5).optional().default([]),
+  classroomId: z.string().max(40).nullable().optional(),
+  minutes: z.number().int().min(20).max(240).default(60),
+  focus: z.string().trim().max(600).optional().default(''),
+});
+
+const planItems = (max: number, len = 400) => z.array(z.string().trim().max(len)).max(max);
+export const lessonPlanContentSchema = z.object({
+  title: z.string().trim().min(3).max(150),
+  overview: z.string().trim().max(1500),
+  objectives: planItems(8),
+  priorKnowledge: planItems(8),
+  materials: planItems(12),
+  timeline: z.array(z.object({ minutes: z.number().int().min(1).max(240), phase: z.string().trim().max(80), teacher: z.string().trim().max(800), learners: z.string().trim().max(800) })).max(12),
+  differentiation: z.object({ support: planItems(6), stretch: planItems(6) }),
+  assessment: planItems(8),
+  homework: z.string().trim().max(800),
+  resources: z.array(z.object({ title: z.string().trim().max(150), path: z.string().trim().max(200) })).max(10),
+});
+export const lessonPlanUpdateSchema = z.object({ content: lessonPlanContentSchema });
+
+export const walletEntrySchema = z.object({
+  teacherId: z.string().max(40),
+  kind: z.enum(['adjustment', 'payout']),
+  amountCents: z.number().int().min(-10_000_000).max(10_000_000).refine((n) => n !== 0, 'Enter an amount'),
+  note: z.string().trim().min(3, 'Say what this is for').max(300),
+});
+
+export const commissionOverrideSchema = z.object({
+  /** Teachers who should share this payment's commission (empty = no commission). */
+  teacherIds: z.array(z.string().max(40)).max(5),
+  note: z.string().trim().min(3).max(300),
+});
+
+export const platformSettingsSchema = z.object({ commissionRatePercent: z.number().min(0).max(50) });
+
+export const linkSchema = z.object({ teacherId: z.string().max(40), studentId: z.string().max(40) });
+
+export const dataRowSchema = z.object({ values: z.record(z.string(), z.union([z.string(), z.number(), z.null()])) });
+
+export const trafficSchema = z.object({
+  p: z.string().max(300),
+  r: z.string().max(500).optional().default(''),
+  v: z.string().regex(/^[a-z0-9]{8,40}$/i),
+});

@@ -27,6 +27,8 @@ import { checkInput, checkOutput } from './safety';
 import { runTool, toolsFor, type ToolCtx } from './tools';
 import { curateMemories, summarize } from './subagents';
 import { stageOf } from '@shared/kids-curriculum';
+import type { UserRow } from '../lib/db';
+import type { TeacherContext } from './persona';
 
 type ChatInput = z.infer<typeof zuvaChatSchema>;
 const MAX_STEPS = 4;
@@ -34,9 +36,9 @@ const HISTORY = 10;
 
 interface ThreadState { id: string; summary: string | null; count: number; history: { role: 'user' | 'assistant'; content: string }[]; isNew: boolean }
 
-async function loadThread(db: D1Database, userId: string, threadId?: string): Promise<ThreadState> {
+async function loadThread(db: D1Database, userId: string, agent: string, threadId?: string): Promise<ThreadState> {
   if (threadId) {
-    const t = await db.prepare('SELECT id, summary, message_count FROM zuva_threads WHERE id = ? AND user_id = ?').bind(threadId, userId).first<{ id: string; summary: string | null; message_count: number }>();
+    const t = await db.prepare('SELECT id, summary, message_count FROM zuva_threads WHERE id = ? AND user_id = ? AND agent = ?').bind(threadId, userId, agent).first<{ id: string; summary: string | null; message_count: number }>();
     if (t) {
       const rows = await db.prepare('SELECT role, content FROM zuva_messages WHERE thread_id = ? ORDER BY id DESC LIMIT ?').bind(t.id, HISTORY).all<{ role: 'user' | 'assistant'; content: string }>();
       return { id: t.id, summary: t.summary, count: t.message_count, history: rows.results.reverse(), isNew: false };
@@ -63,6 +65,15 @@ function situationBlock(input: ChatInput): string {
   return parts.length ? `What is happening in the app right now (data):\n${parts.join('\n')}` : '';
 }
 
+/** What Zuva knows about a teacher in teacher mode: their classes and how many learners. */
+async function loadTeacherContext(db: D1Database, user: UserRow): Promise<TeacherContext> {
+  const [classes, students] = await Promise.all([
+    db.prepare('SELECT c.name, c.level, (SELECT COUNT(*) FROM classroom_members m WHERE m.classroom_id = c.id) AS learners FROM classrooms c WHERE c.teacher_id = ? AND c.archived_at IS NULL ORDER BY c.created_at DESC LIMIT 12').bind(user.id).all<{ name: string; level: string; learners: number }>(),
+    db.prepare(`SELECT COUNT(*) AS n FROM (SELECT student_id FROM teacher_students WHERE teacher_id = ?1 UNION SELECT m.user_id FROM classroom_members m JOIN classrooms c ON c.id = m.classroom_id WHERE c.teacher_id = ?1)`).bind(user.id).first<{ n: number }>(),
+  ]);
+  return { firstName: user.name.split(/\s+/)[0] ?? user.name, school: user.school, classes: classes.results, students: students?.n ?? 0 };
+}
+
 export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limit: number }): Response {
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
@@ -71,6 +82,9 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
   const env = c.env;
   const user = c.get('user');
   const background: Promise<unknown>[] = [];
+  const teacherMode = input.mode === 'teacher';
+  const agentName = teacherMode ? 'teacher' : 'tutor';
+  const speakerTag = teacherMode ? 'teacher_message' : 'learner_message';
 
   const work = async () => {
     let learner: LearnerContext | null = null;
@@ -79,7 +93,8 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       if (!user || !thread) return;
       const db = env.DB;
       const title = userText.replace(/\s+/g, ' ').slice(0, 60);
-      if (thread.isNew) await db.prepare('INSERT INTO zuva_threads (id, user_id, mode, title) VALUES (?, ?, ?, ?)').bind(thread.id, user.id, input.mode, title || 'Chat with Zuva').run();
+      // The mode column predates teacher mode; teacher threads are marked by the agent column.
+      if (thread.isNew) await db.prepare('INSERT INTO zuva_threads (id, user_id, mode, title, agent) VALUES (?, ?, ?, ?, ?)').bind(thread.id, user.id, input.mode === 'kids' ? 'kids' : 'learner', title || 'Chat with Zuva', agentName).run();
       await db.batch([
         db.prepare('INSERT INTO zuva_messages (thread_id, role, content) VALUES (?, ?, ?)').bind(thread.id, 'user', userText),
         db.prepare('INSERT INTO zuva_messages (thread_id, role, content) VALUES (?, ?, ?)').bind(thread.id, 'assistant', reply),
@@ -94,7 +109,7 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       const verdict = await checkInput(env, input.mode, input.message);
       if (user) {
         learner = await loadLearnerContext(env.DB, user);
-        thread = await loadThread(env.DB, user.id, input.threadId);
+        thread = await loadThread(env.DB, user.id, agentName, input.threadId);
       }
       if (verdict.action === 'respond') {
         emit({ t: 'text', text: verdict.reply });
@@ -106,11 +121,12 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       const memories = user && memoryEnabled ? await recall(env.DB, user.id, verdict.text) : [];
       const history = thread ? thread.history : (input.history ?? []).slice(-6);
 
-      const messages: AgentMessage[] = [{ role: 'system', content: systemPrompt(input.mode, learner, memories, thread?.summary) }];
+      const teacher = teacherMode && user ? await loadTeacherContext(env.DB, user) : null;
+      const messages: AgentMessage[] = [{ role: 'system', content: systemPrompt(input.mode, learner, memories, thread?.summary, teacher) }];
       const situation = situationBlock(input);
       if (situation || verdict.note) messages.push({ role: 'system', content: [situation, verdict.note].filter(Boolean).join('\n') });
-      for (const m of history) messages.push(m.role === 'user' ? { role: 'user', content: `<learner_message>${asData(m.content)}</learner_message>` } : { role: 'assistant', content: m.content });
-      messages.push({ role: 'user', content: `<learner_message>${asData(verdict.text)}</learner_message>` });
+      for (const m of history) messages.push(m.role === 'user' ? { role: 'user', content: `<${speakerTag}>${asData(m.content)}</${speakerTag}>` } : { role: 'assistant', content: m.content });
+      messages.push({ role: 'user', content: `<${speakerTag}>${asData(verdict.text)}</${speakerTag}>` });
 
       const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, stage: stageOf(input.stage)?.id, memoryEnabled, emit };
       const tools = toolsFor(ctx);
@@ -132,7 +148,8 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       emit({ t: 'done', threadId: thread?.id, quota });
 
       // ── After the reply: memory curation and episodic summary (never blocks the learner) ──
-      if (user && learner && memoryEnabled && verdict.text.length >= 12) {
+      // Teacher chats are about learners, so nothing is curated into memory automatically there.
+      if (user && learner && memoryEnabled && !teacherMode && verdict.text.length >= 12) {
         background.push(
           (async () => {
             const existing = (await listMemories(env.DB, user.id)).map((m) => m.content);

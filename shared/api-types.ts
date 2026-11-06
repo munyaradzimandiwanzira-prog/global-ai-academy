@@ -95,6 +95,16 @@ export interface Assignment {
   createdAt: string;
   submissionCount?: number;
   mySubmission?: Submission | null;
+  /** code | lesson | kids | task */
+  kind: import('./teaching').AssignmentKind;
+  /** "track/lesson" or a Kids Zone level key */
+  resource: string;
+  /** Where the learner does the work. */
+  href: string;
+  /** Teacher view: learners it is set for (empty = whole class). */
+  studentIds?: string[];
+  /** Learner view: open, done (lesson/level finished), submitted or graded. */
+  myStatus?: 'open' | 'done' | 'submitted' | 'graded';
 }
 
 export interface AiFeedback {

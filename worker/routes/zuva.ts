@@ -24,6 +24,8 @@ zuva.post('/chat', async (c) => {
   const input = await body(c, zuvaChatSchema);
   // The grown-up lesson tutor stays a Plus feature; Zuva in the Kids Zone is open to every child.
   if (input.mode === 'learner') requirePermission(c, 'ai.tutor', 'Chatting with Professor Zuva in lessons is part of Plus. Coach hints on challenges stay free.');
+  // Teacher mode is the teacher's own agent: teachers and admins only.
+  if (input.mode === 'teacher') requirePermission(c, 'ai.teacher_assist', 'Zuva’s teacher mode is for teachers.');
   const user = c.get('user');
   await hit(c.env.DB, `zuva:burst:${user?.id ?? clientKey(c)}`, 8, 60, 'Slow down a little! Wait a minute, then ask again.');
   const quota = await consumeAiQuota(c);
@@ -83,7 +85,7 @@ zuva.delete('/memories', async (c) => {
 
 zuva.get('/threads', async (c) => {
   const user = requireUser(c);
-  const rows = await c.env.DB.prepare('SELECT id, mode, title, message_count, updated_at FROM zuva_threads WHERE user_id = ? ORDER BY updated_at DESC LIMIT 20').bind(user.id).all();
+  const rows = await c.env.DB.prepare('SELECT id, mode, agent, title, message_count, updated_at FROM zuva_threads WHERE user_id = ? ORDER BY updated_at DESC LIMIT 20').bind(user.id).all();
   return c.json({ threads: rows.results });
 });
 

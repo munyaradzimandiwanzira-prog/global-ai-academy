@@ -144,6 +144,14 @@ export const ICONS = {
   ShieldX: 'gpp_bad',
   Smartphone: 'smartphone',
   History: 'history',
+  Bell: 'notifications',
+  Wallet: 'account_balance_wallet',
+  BarChart: 'bar_chart',
+  Table: 'table',
+  TrendingUp: 'trending_up',
+  Ticket: 'confirmation_number',
+  Pencil: 'edit',
+  Person: 'person',
   Sparkles: 'auto_awesome',
   Star: 'star',
   StopCircle: 'stop_circle',
@@ -184,6 +192,14 @@ export const ShoppingBasket = icon(ICONS.ShoppingBasket);
 export const StopCircle = icon(ICONS.StopCircle);
 export const Quiz = icon(ICONS.Quiz);
 export const History = icon(ICONS.History);
+export const Bell = icon(ICONS.Bell);
+export const Wallet = icon(ICONS.Wallet);
+export const BarChart = icon(ICONS.BarChart);
+export const Table = icon(ICONS.Table);
+export const TrendingUp = icon(ICONS.TrendingUp);
+export const Ticket = icon(ICONS.Ticket);
+export const Pencil = icon(ICONS.Pencil);
+export const Person = icon(ICONS.Person);
 export const Briefcase = icon(ICONS.Briefcase);
 export const CalendarClock = icon(ICONS.CalendarClock);
 export const Check = icon(ICONS.Check);

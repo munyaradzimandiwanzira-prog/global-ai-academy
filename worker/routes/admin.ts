@@ -6,6 +6,8 @@ import { audit, nowIso, toPublicUser, type UserRow } from '../lib/db';
 import { badRequest, notFound, conflict } from '../lib/errors';
 import { newId } from '../lib/crypto';
 import { destroyAllSessions } from '../lib/session';
+import { notify } from '../lib/teaching';
+import { appBase } from '../lib/urls';
 
 const admin = createRouter();
 
@@ -113,6 +115,10 @@ admin.post('/teacher-requests/:id/:decision', async (c) => {
   if (decision === 'approve') stmts.push(c.env.DB.prepare("UPDATE users SET role = 'teacher' WHERE id = ? AND role = 'student'").bind(req.user_id));
   await c.env.DB.batch(stmts);
   await audit(c.env.DB, actor.id, `teacher_request.${decision}`, req.user_id);
+  await notify(c.env, [req.user_id], decision === 'approve'
+    ? { kind: 'teacher_approved', title: 'You can now teach on the Academy', body: 'Your teacher account is ready. Create a class, make invite links for your learners, and ask Zuva for lesson plans.', link: '/teach' }
+    : { kind: 'teacher_declined', title: 'Your teaching request', body: 'We could not approve your teaching request this time. Reply through the contact page if you have questions.', link: '/contact' },
+    { email: { base: appBase(c.req.url, c.env.APP_URL), cta: decision === 'approve' ? 'Open your teacher portal' : 'Contact us' } }).catch((e) => console.error('[teacher-approval:notify]', e));
   return c.json({ ok: true });
 });
 

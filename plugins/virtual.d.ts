@@ -26,3 +26,9 @@ declare module 'virtual:activity-ids' {
   const ids: Record<string, { kind: 'exercise' | 'challenge' | 'quiz'; trackId: string }>;
   export default ids;
 }
+
+declare module 'virtual:lesson-outlines' {
+  /** "track/lesson" → a short text outline of the lesson (server only). */
+  const outlines: Record<string, string>;
+  export default outlines;
+}
