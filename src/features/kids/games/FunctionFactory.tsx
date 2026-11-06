@@ -5,7 +5,7 @@ import { Zuva, SpeechBubble } from '../Zuva';
 import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 /** A block is one step of a function: "+ 3", "× 2" … */
@@ -28,7 +28,8 @@ const LEVELS: Level[] = [
 export default function FunctionFactory() {
   const { award } = useKidsStars();
   const coach = useCoach('functions');
-  const [li, setLi] = useState(0);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLi(i));
+  const [li, setLi] = useState(start);
   const L = LEVELS[li]!;
   const [seen, setSeen] = useState<[number, number][]>([]);
   const [probe, setProbe] = useState('');

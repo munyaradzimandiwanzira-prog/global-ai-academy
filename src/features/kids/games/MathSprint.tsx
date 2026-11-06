@@ -5,6 +5,7 @@ import { useKidsStars } from '../kidsStore';
 import { Zuva, SpeechBubble } from '../Zuva';
 import { celebrate } from '@/lib/celebrate';
 import { storage, cn } from '@/lib/utils';
+import { useSearchParams } from 'react-router-dom';
 
 type Op = '+' | '−' | '×' | '÷' | 'mix';
 interface Q { a: number; b: number; op: Exclude<Op, 'mix'>; answer: number }
@@ -16,6 +17,8 @@ const MODES: { op: Op; label: string; color: string }[] = [
   { op: '÷', label: 'Sharing', color: '#B88A2E' },
   { op: 'mix', label: 'Mix it up!', color: '#2E4A62' },
 ];
+/** Words used in links (?mode=times) for each game, so URLs stay plain ASCII. */
+const LINK_MODES: Record<string, Op> = { add: '+', subtract: '−', times: '×', share: '÷', mix: 'mix' };
 const best = storage<Record<string, number>>('gaa:kids:math:best', {});
 const DURATION = 60;
 
@@ -34,8 +37,12 @@ function makeQuestion(op: Op, level: number): Q {
 
 export default function MathSprint() {
   const { award } = useKidsStars();
+  const [params] = useSearchParams();
+  const linkedMode = LINK_MODES[params.get('mode') ?? ''] ?? null;
+  const linkedLevel = /^[1-4]$/.test(params.get('level') ?? '') ? Number(params.get('level')) - 1 : null;
   const [mode, setMode] = useState<Op | null>(null);
-  const [level, setLevel] = useState(0);
+  const [level, setLevel] = useState(linkedLevel ?? 0);
+  useEffect(() => { if (linkedLevel !== null) setLevel(linkedLevel); }, [linkedLevel]);
   const [q, setQ] = useState<Q | null>(null);
   const [input, setInput] = useState('');
   const [score, setScore] = useState(0);
@@ -105,10 +112,11 @@ export default function MathSprint() {
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {MODES.map((m) => (
-            <motion.button key={m.op} whileHover={{ y: -4 }} whileTap={{ scale: 0.95 }} onClick={() => start(m.op)} className="rounded-3xl border-4 border-ink bg-white p-5 shadow-[5px_5px_0_#142B52]">
+            <motion.button key={m.op} whileHover={{ y: -4 }} whileTap={{ scale: 0.95 }} onClick={() => start(m.op)} className={cn('rounded-3xl border-4 border-ink bg-white p-5 shadow-[5px_5px_0_#142B52]', linkedMode === m.op && 'ring-4 ring-gold ring-offset-4 ring-offset-[#EEF4F3]')} aria-describedby={linkedMode === m.op ? 'math-suggested' : undefined}>
               <div className="text-5xl font-bold" style={{ color: m.color }}>{m.op === 'mix' ? '?' : m.op}</div>
               <div className="mt-2 text-lg font-bold">{m.label}</div>
               <div className="text-sm text-ink/60">Best: {best.get()[`${m.op}:${level}`] ?? 0}</div>
+              {linkedMode === m.op && <div id="math-suggested" className="mt-1 text-sm font-bold text-[#8A6417]">Your level</div>}
             </motion.button>
           ))}
         </div>

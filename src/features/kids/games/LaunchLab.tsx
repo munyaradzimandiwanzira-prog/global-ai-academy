@@ -5,7 +5,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { simulate, describeMiss, type World, type Point } from './engines/physics';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 
 interface LevelDef { name: string; world: World; size: number; maxSpeed: number; intro: string; fact: string; hints: string[] }
 
@@ -49,7 +49,8 @@ const GROUND = 260;
 export default function LaunchLab() {
   const { award } = useKidsStars();
   const coach = useCoach('launch');
-  const [li, setLi] = useState(0);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLi(i));
+  const [li, setLi] = useState(start);
   const L = LEVELS[li]!;
   const [angle, setAngle] = useState(40);
   const [speed, setSpeed] = useState(15);

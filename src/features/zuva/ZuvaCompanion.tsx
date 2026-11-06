@@ -8,6 +8,7 @@ import { kidGame } from '@shared/kids-games';
 import { Zuva } from '@/features/kids/Zuva';
 import { speak } from '@/features/kids/sfx';
 import { coachSnapshot, resetCoach, subscribeCoach } from '@/features/kids/coach';
+import { getKidsStage } from '@/features/kids/stage';
 import { answerOffer, initialCoachState, onEvent, onTick, onVisit, type CoachMove, type CoachState } from './coachEngine';
 import { ZuvaChat } from './ZuvaChat';
 
@@ -84,6 +85,7 @@ export function ZuvaCompanion({ game }: { game?: string }) {
   const getContext = useCallback(() => {
     const s = coachSnapshot();
     return {
+      stage: getKidsStage() ?? undefined,
       page: { path: pathname, title: meta ? `${meta.title} (Kids Zone game)` : 'Kids Zone' },
       activity: s.game ? {
         game: s.game, level: s.level, goal: s.goal?.slice(0, 400), attempts: s.attempts, fails: s.fails, failStreak: s.failStreak,

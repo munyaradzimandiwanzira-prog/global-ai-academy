@@ -6,7 +6,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { fastest, findLink, linkKey, routeCost, type Link } from './engines/network';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 /** Town positions on the map, plus where each name label sits so nothing overlaps. */
@@ -75,7 +75,8 @@ const LEVELS: Level[] = [
 export default function PacketPost() {
   const { award } = useKidsStars();
   const coach = useCoach('packets');
-  const [li, setLi] = useState(0);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLi(i));
+  const [li, setLi] = useState(start);
   const L = LEVELS[li]!;
   const [dnsPick, setDnsPick] = useState<string | null>(null);
   const target = L.dns ? L.dns.entries.find((e) => e.ip === L.dns!.answer)!.town : L.to!;

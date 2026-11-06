@@ -57,5 +57,5 @@ export interface ZuvaActivity {
 }
 
 /** Paths Zuva may offer as buttons. Anything else is dropped, so a model can't send learners elsewhere. */
-export const ZUVA_SAFE_PATHS = [/^\/kids(\/[a-z]+)?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/];
+export const ZUVA_SAFE_PATHS = [/^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/];
 export const isSafeZuvaPath = (p: string) => ZUVA_SAFE_PATHS.some((r) => r.test(p));

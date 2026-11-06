@@ -9,6 +9,7 @@ import { play } from '../sfx';
 import { useCoach } from '../coach';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
+import { useLevelFromUrl } from './common';
 
 const CELL = 64;
 let uid = 0;
@@ -71,7 +72,8 @@ export default function RoboMaze() {
   const coach = useCoach('maze');
   const { stars, award } = useKidsStars();
   const firstUnsolved = LEVELS.findIndex((_, i) => !stars[`maze:${i + 1}`]);
-  const [li, setLi] = useState(firstUnsolved === -1 ? 0 : firstUnsolved);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLi(i), firstUnsolved === -1 ? 0 : firstUnsolved);
+  const [li, setLi] = useState(start);
   const level = LEVELS[li]!;
   const [program, setProgram] = useState<Node[]>([]);
   const [target, setTarget] = useState<string | null>(null);

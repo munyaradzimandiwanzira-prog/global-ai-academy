@@ -11,6 +11,9 @@ import { Photo } from '@/components/Photo';
 import { cn } from '@/lib/utils';
 import { KID_GAMES as SHARED_GAMES } from '@shared/kids-games';
 import { ZuvaCompanion } from '@/features/zuva/ZuvaCompanion';
+import { SUBJECTS, levelsFor, stageLabel, stageRange, subjectsFor } from '@shared/kids-curriculum';
+import { StagePath, StagePicker } from './StagePath';
+import { useKidsStage } from './stage';
 
 type Art = ComponentType<{ size?: number; className?: string }>;
 
@@ -32,7 +35,9 @@ export function MuteButton({ className }: { className?: string }) {
 export default function KidsHome() {
   const { total, stars } = useKidsStars();
   const { user } = useAuth();
-  const starsFor = (id: string) => Object.entries(stars).filter(([k]) => k.startsWith(`${id === 'pixels' ? 'pixel' : id === 'bugs' ? 'bug' : id}:`)).reduce((n, [, v]) => n + v, 0);
+  const [stage] = useKidsStage();
+  // Stars come from the curriculum's own level keys, so every game counts exactly its levels.
+  const starsFor = (id: string) => levelsFor(id).reduce((n, l) => n + (stars[l.key] ?? 0), 0);
 
   return (
     <div className="min-h-screen bg-[#EEF4F3] font-kids text-ink">
@@ -68,14 +73,23 @@ export default function KidsHome() {
 
       <main className="relative bg-[#D6EBE8] px-5 pb-20 pt-14">
         <svg className="absolute -top-px left-0 h-10 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 H1440 V10 Q1080 40 720 18 T0 22 Z" fill="#EEF4F3" /></svg>
-        <h2 className="mx-auto max-w-6xl text-3xl font-bold sm:text-4xl">Zuva’s journey</h2>
+        <section aria-labelledby="stage-pick" className="mx-auto max-w-6xl">
+          <h2 id="stage-pick" className="text-3xl font-bold sm:text-4xl">Which stage are you in?</h2>
+          <p className="mt-2 max-w-2xl text-[17px] text-ink/75">Pick your stage and Zuva shows the levels made for you. Stages follow the Cambridge Primary curriculum: Stage 1 is about age 5, Stage 6 about age 10. Not sure? Ask a grown-up, or try one and move up or down.</p>
+          <div className="mt-5"><StagePicker /></div>
+        </section>
+        <StagePath art={ART} stars={stars} />
+
+        <h2 className="mx-auto mt-14 max-w-6xl text-3xl font-bold sm:text-4xl">Zuva’s journey: all {KID_GAMES.length} games</h2>
         <ol className="relative mx-auto mt-10 max-w-6xl">
           {/* The road: a real path the stops sit on (desktop), a simple line on phones. */}
           <span aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-3 rounded-full bg-[#9CCBC6] md:left-1/2 md:-ml-1.5" />
           {KID_GAMES.map((g, i) => {
             const right = i % 2 === 1;
             const earned = starsFor(g.id);
-            const max = g.levels * 3;
+            const max = levelsFor(g.id).length * 3;
+            const range = stageRange(g.id);
+            const hasStage = stage !== null && levelsFor(g.id).some((l) => l.stage === stage);
             return (
               <motion.li
                 key={g.id}
@@ -97,6 +111,10 @@ export default function KidsHome() {
                     <span className="mt-2 flex items-center gap-1.5 text-sm font-semibold tabular">
                       <Star className={cn('h-4 w-4', earned ? 'fill-gold text-gold' : 'text-ink/40')} /> {earned} of {max} stars · {g.skill}
                     </span>
+                    <span className="mt-2 flex flex-wrap gap-1.5 text-[13px] font-bold">
+                      <span className={cn('rounded-full px-2.5 py-0.5', hasStage ? 'bg-gold text-ink' : 'bg-[#EEF4F3] text-ink/70')}>{stageLabel(range)}</span>
+                      {subjectsFor(g.id).map((sub) => <span key={sub} className="rounded-full bg-[#EEF4F3] px-2.5 py-0.5 text-ink/70">{SUBJECTS.find((x) => x.id === sub)!.name}</span>)}
+                    </span>
                   </span>
                 </Link>
               </motion.li>
@@ -113,7 +131,8 @@ export default function KidsHome() {
             </Link>
           </motion.li>
         </ol>
-        <p className="mx-auto mt-14 max-w-2xl text-center text-[15px] text-ink/75">For parents and teachers: games need no account. Sign in to save stars across devices. Zuva, the AI helper, never asks children for personal details; with an account it remembers only learning things (like favourite topics), which you can see or delete in Settings. Tap the speaker on any speech bubble to hear it read aloud.</p>
+        <p className="mx-auto mt-14 max-w-2xl text-center text-[15px] text-ink/75"><Link to="/kids/curriculum" className="font-semibold text-[#1F6F6E] underline underline-offset-4">See how every level maps to the Cambridge curriculum</Link>.</p>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-[15px] text-ink/75">For parents and teachers: games need no account. Sign in to save stars across devices. Zuva, the AI helper, never asks children for personal details; with an account it remembers only learning things (like favourite topics), which you can see or delete in Settings. Tap the speaker on any speech bubble to hear it read aloud.</p>
       </main>
       <ZuvaCompanion />
     </div>

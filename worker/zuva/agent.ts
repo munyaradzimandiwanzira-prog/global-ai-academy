@@ -26,6 +26,7 @@ import { listMemories, recall, writeMemory } from './memory';
 import { checkInput, checkOutput } from './safety';
 import { runTool, toolsFor, type ToolCtx } from './tools';
 import { curateMemories, summarize } from './subagents';
+import { stageOf } from '@shared/kids-curriculum';
 
 type ChatInput = z.infer<typeof zuvaChatSchema>;
 const MAX_STEPS = 4;
@@ -57,6 +58,8 @@ function situationBlock(input: ChatInput): string {
       `<activity>Playing ${asData(a.game)}${a.level ? `, level ${asData(a.level)}` : ''}. Goal: ${asData(a.goal ?? 'unknown')}. Tries: ${a.attempts ?? 0}, misses: ${a.fails ?? 0} (${a.failStreak ?? 0} in a row). ${a.secondsOnLevel ? `About ${Math.round(a.secondsOnLevel / 60)} min on this level. ` : ''}${a.lastDetail ? `Last try: ${asData(a.lastDetail)}. ` : ''}Hints already shown: ${a.hintsShown ?? 0}.</activity>`,
     );
   }
+  const st = stageOf(input.stage);
+  if (st) parts.push(`<stage>The child picked Cambridge ${st.name} (usually ages ${st.ages}, ${st.grade}). Pitch words, numbers and examples to that age, and suggest levels from that stage first.</stage>`);
   return parts.length ? `What is happening in the app right now (data):\n${parts.join('\n')}` : '';
 }
 
@@ -109,7 +112,7 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       for (const m of history) messages.push(m.role === 'user' ? { role: 'user', content: `<learner_message>${asData(m.content)}</learner_message>` } : { role: 'assistant', content: m.content });
       messages.push({ role: 'user', content: `<learner_message>${asData(verdict.text)}</learner_message>` });
 
-      const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, memoryEnabled, emit };
+      const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, stage: stageOf(input.stage)?.id, memoryEnabled, emit };
       const tools = toolsFor(ctx);
       const model = env.ZUVA_MODEL || 'gpt-5.5';
       // Children get quick, short answers; grown-up learners get deeper reasoning.

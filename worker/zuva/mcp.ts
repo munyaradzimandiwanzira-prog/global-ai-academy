@@ -15,6 +15,7 @@ import { allTracks, getTrack } from '../lib/catalog';
 import { KID_GAMES, kidGame } from '@shared/kids-games';
 import { EXPERIMENTS, getExperiment, searchExperiments } from './experiments';
 import { CATEGORY_LABELS, type CatalogTrack } from '@shared/content';
+import { STRANDS, levelHref, levelsAt, stageLabel, stageOf, stageRange, strandsFor } from '@shared/kids-curriculum';
 
 export const MODERN = '2026-07-28';
 export const SUPPORTED_VERSIONS = [MODERN, '2025-11-25', '2025-06-18', '2025-03-26'];
@@ -77,13 +78,27 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: 'list_kids_games',
     title: 'Kids Zone games',
-    description: 'List the Kids Zone learning games (coding, physics, Linux, networking, hardware, engineering, robotics, AI) with what each teaches. Optionally filter by topic.',
-    inputSchema: { type: 'object', properties: { topic: { type: 'string', description: 'Optional topic filter, e.g. "robots"' } }, additionalProperties: false },
+    description: 'List the Kids Zone learning games (coding, physics, Linux, networking, hardware, engineering, robotics, AI) with what each teaches and the Cambridge Primary stages its levels suit. Optionally filter by topic, or give a stage (1-6 Primary, 7 Lower Secondary) to get that stage\'s levels with direct links.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        topic: { type: 'string', description: 'Optional topic filter, e.g. "robots"' },
+        stage: { type: 'integer', minimum: 1, maximum: 7, description: 'Optional Cambridge stage: returns the levels pitched at that stage' },
+      },
+      additionalProperties: false,
+    },
     run: (a) => {
       const t = str(a.topic, 60).toLowerCase();
+      const stage = stageOf(typeof a.stage === 'number' ? a.stage : Number(a.stage));
       const games = KID_GAMES.filter((g) => !t || `${g.title} ${g.skill} ${g.topics.join(' ')} ${g.text}`.toLowerCase().includes(t) || g.topics.some((x) => t.includes(x)));
-      const list = games.map((g) => ({ id: g.id, title: g.title, skill: g.skill, levels: g.levels, place: g.place, about: g.text, path: `/kids/${g.id}` }));
-      return { text: list.map((g) => `${g.title}: ${g.skill} (${g.levels} levels) → ${g.path}`).join('\n') || 'No games matched.', data: list };
+      if (stage) {
+        const ids = new Set(games.map((g) => g.id));
+        const levels = levelsAt(stage.id).filter((l) => ids.has(l.game)).map((l) => ({ game: kidGame(l.game)!.title, level: l.name, learns: l.goal, strands: l.strands.map((x) => STRANDS[x].name), path: levelHref(l) }));
+        const head = `${stage.name}, ages ${stage.ages} (${stage.grade}): ${levels.length} levels`;
+        return { text: [head, ...levels.map((l) => `${l.game}, ${l.level}: ${l.learns} → ${l.path}`)].join('\n'), data: { stage: stage.id, ages: stage.ages, levels } };
+      }
+      const list = games.map((g) => ({ id: g.id, title: g.title, skill: g.skill, levels: g.levels, stages: stageLabel(stageRange(g.id)), strands: strandsFor(g.id).map((x) => STRANDS[x].name), place: g.place, about: g.text, path: `/kids/${g.id}` }));
+      return { text: list.map((g) => `${g.title}: ${g.skill}, ${g.stages} (${g.levels} levels) → ${g.path}`).join('\n') || 'No games matched.', data: list };
     },
   },
   {

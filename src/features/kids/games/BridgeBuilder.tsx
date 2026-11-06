@@ -6,7 +6,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { beamLength, bridgeCost, checkBridge, makeNodes, BRIDGE_LEVELS, type Beam, type Node } from './engines/bridge';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 
 const S = 60; // pixels per metre
 const MAX_LEN = 2.3;
@@ -15,7 +15,8 @@ const key = (b: Beam) => [b.a, b.b].sort((p, q) => p - q).join('-');
 export default function BridgeBuilder() {
   const { award } = useKidsStars();
   const coach = useCoach('bridge');
-  const [li, setLi] = useState(0);
+  const start = useLevelFromUrl(BRIDGE_LEVELS.length, (i) => setLi(i));
+  const [li, setLi] = useState(start);
   const L = BRIDGE_LEVELS[li]!;
   const nodes = useMemo(() => makeNodes(L), [L]);
   const [beams, setBeams] = useState<Beam[]>([]);

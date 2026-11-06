@@ -5,7 +5,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { BOARD, PARTS, part, powerNeeded, powerOn, price, type Build, type Slot } from './engines/pcbuild';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 interface Mission { name: string; brief: string; start?: Build; budget?: number; extra: (b: Build) => string | null; hints: string[] }
@@ -50,7 +50,8 @@ const SLOTS: { slot: Slot; label: string; x: number; y: number; w: number; h: nu
 export default function PCBuilder() {
   const { award } = useKidsStars();
   const coach = useCoach('pcbuilder');
-  const [mi, setMi] = useState(0);
+  const start = useLevelFromUrl(MISSIONS.length, (i) => setMi(i));
+  const [mi, setMi] = useState(start);
   const M = MISSIONS[mi]!;
   const [build, setBuild] = useState<Build>({});
   const [tests, setTests] = useState(0);

@@ -10,6 +10,7 @@ import type { UserRow } from '../lib/db';
 import { getTrack } from '../lib/catalog';
 import { isSafeZuvaPath, MEMORY_KINDS, type MemoryKind, type ZuvaActivity, type ZuvaEvent, type ZuvaMode } from '@shared/zuva';
 import { KID_GAMES, kidGame } from '@shared/kids-games';
+import { KID_LEVELS, levelHref, levelsAt, stageOf, type StageId } from '@shared/kids-curriculum';
 import type { LearnerContext } from './profile';
 import { callAcademyTool } from './mcp';
 import { forgetMatching, writeMemory } from './memory';
@@ -17,6 +18,8 @@ import { makeQuiz, planExperiment } from './subagents';
 import { getExperiment, type Experiment } from './experiments';
 
 export interface ToolCtx {
+  /** Kids Zone stage the child picked, if any. */
+  stage?: StageId;
   env: Env;
   user: UserRow | null;
   learner: LearnerContext | null;
@@ -39,9 +42,13 @@ interface ZuvaTool {
 const str = (v: unknown, max = 300) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', properties, required, additionalProperties: false });
 
-function pageExists(path: string): boolean {
+function pageExists(full: string): boolean {
+  const [path = '', query] = full.split('?');
   const [, a, b, c] = path.split('/');
-  if (a === 'kids') return !b || !!kidGame(b);
+  if (a === 'kids') {
+    if (query !== undefined) return KID_LEVELS.some((l) => l.game === b && l.query === `?${query}`);
+    return !b || b === 'curriculum' || !!kidGame(b);
+  }
   if (a === 'learn') {
     const t = getTrack(b ?? '');
     return !!t && (!c || t.lessons.some((l) => l.slug === c));
@@ -65,8 +72,16 @@ const TOOLS: ZuvaTool[] = [
     label: 'Choosing what to try next',
     modes: ['kids', 'learner'],
     spec: { name: 'recommend_next', description: 'Suggest what to do next: games or lessons that fit the learner’s progress and interests. Optionally focus on a topic.', parameters: obj({ topic: { type: 'string', description: 'Optional topic, e.g. "robots" or "web"' } }) },
-    run: async ({ learner, mode }, args) => {
+    run: async ({ learner, mode, stage }, args) => {
       const topic = str(args.topic, 60).toLowerCase();
+      if (mode === 'kids' && stage) {
+        // A stage is set: suggest that stage's levels the child hasn't starred yet, topic first.
+        const done = new Set(learner?.kidsLevels ?? []);
+        const open = levelsAt(stage).filter((l) => !done.has(l.key));
+        const pick = (topic ? open.filter((l) => `${l.game} ${l.name} ${l.goal}`.toLowerCase().includes(topic)) : []).concat(open).slice(0, 3);
+        const s = stageOf(stage)!;
+        return JSON.stringify({ stage: `${s.name} (ages ${s.ages})`, suggestions: pick.map((l) => ({ game: kidGame(l.game)!.title, level: l.name, learns: l.goal, path: levelHref(l) })), allDone: open.length === 0 });
+      }
       if (mode === 'kids') {
         const interests = (learner?.profile.interests ?? []).join(' ').toLowerCase();
         const ranked = KID_GAMES.map((g) => {
@@ -105,8 +120,8 @@ const TOOLS: ZuvaTool[] = [
   {
     label: 'Looking through the games',
     modes: ['kids', 'learner'],
-    spec: { name: 'list_kids_games', description: 'List Kids Zone games and what they teach, optionally by topic.', parameters: obj({ topic: { type: 'string' } }) },
-    run: async (_c, args) => callAcademyTool('list_kids_games', { topic: str(args.topic, 60) }).text,
+    spec: { name: 'list_kids_games', description: 'List Kids Zone games and what they teach, optionally by topic. Give a Cambridge stage (1-7) to get that stage\'s levels with direct links.', parameters: obj({ topic: { type: 'string' }, stage: { type: 'integer', minimum: 1, maximum: 7 } }) },
+    run: async ({ stage }, args) => callAcademyTool('list_kids_games', { topic: str(args.topic, 60), ...(args.stage || stage ? { stage: Number(args.stage) || stage } : {}) }).text,
   },
   {
     label: 'Finding the next clue',

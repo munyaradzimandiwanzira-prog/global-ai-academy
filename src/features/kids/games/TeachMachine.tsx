@@ -6,7 +6,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { accuracy, makeFruit, predict, type Example } from './engines/ml';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 type Label = Example['label'];
@@ -58,7 +58,8 @@ function Squeeze({ v }: { v: number }) {
 export default function TeachMachine() {
   const { award } = useKidsStars();
   const coach = useCoach('teachai');
-  const [li, setLi] = useState(0);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLi(i));
+  const [li, setLi] = useState(start);
   const L = LEVELS[li]!;
   const [basket, setBasket] = useState(0);
   const [labelled, setLabelled] = useState<Example[]>([]);

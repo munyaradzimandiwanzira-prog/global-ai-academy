@@ -5,7 +5,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { blankLevel, count, newGame, solve, step, type Dir, type Level, type PlayState, type Rules, type Tile } from './engines/gamemaker';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 interface Challenge { name: string; brief: string; rules: Partial<Rules>; check: (l: Level, r: Rules) => string | null; hints: string[] }
@@ -64,7 +64,8 @@ function TileFace({ t, here }: { t: Tile; here?: boolean }) {
 export default function GameMaker() {
   const { award } = useKidsStars();
   const coach = useCoach('gamemaker');
-  const [ci, setCi] = useState(0);
+  const start = useLevelFromUrl(CHALLENGES.length, (i) => setCi(i));
+  const [ci, setCi] = useState(start);
   const C = CHALLENGES[ci]!;
   const rules: Rules = { lavaRestart: false, needAllCoins: false, ...C.rules };
   const [level, setLevel] = useState<Level>(() => blankLevel());

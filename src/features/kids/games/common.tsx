@@ -1,6 +1,27 @@
+import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Star } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
 import { cn } from '@/lib/utils';
+
+/**
+ * The level a link asked for (`?level=N`, counted from 1), so a stage path or a teacher can open a
+ * game on the right level. Returns the starting index; if the link changes while the game is open
+ * (another level picked from the "What you'll learn" panel), `go` moves the game there.
+ */
+export function useLevelFromUrl(count: number, go: (index: number) => void, fallback = 0): number {
+  const [params] = useSearchParams();
+  const raw = params.get('level');
+  const index = raw && /^\d{1,3}$/.test(raw) ? Math.min(Math.max(Number(raw) - 1, 0), count - 1) : null;
+  const first = useRef(true);
+  const goRef = useRef(go);
+  goRef.current = go;
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    if (index !== null) goRef.current(index);
+  }, [index]);
+  return index ?? fallback;
+}
 
 /** Level buttons used by every game: big touch targets, stars earned shown on each. */
 export function LevelTabs({ prefix, count, current, onPick, labels }: { prefix: string; count: number; current: number; onPick: (i: number) => void; labels?: string[] }) {

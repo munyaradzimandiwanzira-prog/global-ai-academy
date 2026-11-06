@@ -7,6 +7,7 @@ import { Zuva, SpeechBubble } from '../Zuva';
 import { TurtleArt as TurtleIcon } from '../KidsArt';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
+import { useSearchParams } from 'react-router-dom';
 
 const SIZE = 420;
 const SNIPPETS = ['forward 50', 'right 90', 'left 90', 'repeat 4 [ ]', 'color red', 'penup', 'pendown', 'width 6'];
@@ -18,7 +19,11 @@ const FREE_EXAMPLES = [
 
 export default function TurtleArt() {
   const { stars, award } = useKidsStars();
-  const [mode, setMode] = useState<number | 'free'>(0);
+  // ?challenge=square opens that challenge (from a stage path or the "What you'll learn" panel).
+  const [params] = useSearchParams();
+  const linked = CHALLENGES.findIndex((c) => c.id === params.get('challenge'));
+  const [mode, setMode] = useState<number | 'free'>(linked >= 0 ? linked : 0);
+  useEffect(() => { if (linked >= 0) setMode(linked); }, [linked]);
   const challenge = mode === 'free' ? null : CHALLENGES[mode]!;
   const [code, setCode] = useState<string>(challenge?.starter ?? FREE_EXAMPLES[0]!.code);
   const [msg, setMsg] = useState<{ text: string; mood: 'happy' | 'wow' | 'oops' | 'think' }>({ text: challenge?.goal ?? 'Draw anything you like!', mood: 'think' });

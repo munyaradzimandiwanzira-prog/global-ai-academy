@@ -6,6 +6,7 @@ import { useKidsStars } from './kidsStore';
 import { Spinner } from '@/components/ui';
 import { ZuvaCompanion } from '@/features/zuva/ZuvaCompanion';
 import { emitCoach, GENERIC_COACHING } from './coach';
+import { LearnPanel } from './LearnPanel';
 
 const GAMES = {
   maze: lazy(() => import('./games/RoboMaze')),
@@ -50,6 +51,7 @@ export default function KidsGame() {
         <Suspense fallback={<div className="flex justify-center py-20"><Spinner label="Loading game…" /></div>}>
           <Game />
         </Suspense>
+        <LearnPanel game={game} />
       </main>
       <ZuvaCompanion game={game} />
     </div>

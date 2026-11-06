@@ -112,6 +112,8 @@ export const zuvaChatSchema = z.object({
       hints: z.array(z.string().max(300)).max(6).optional(),
     })
     .optional(),
+  /** Kids Zone: the Cambridge stage the child picked (1–6 Primary, 7 Lower Secondary). */
+  stage: z.number().int().min(1).max(7).optional(),
 });
 export const zuvaSettingsSchema = z.object({ memoryEnabled: z.boolean() });
 

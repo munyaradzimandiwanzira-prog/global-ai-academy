@@ -6,7 +6,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { parseTrack, runBot, type Action, type BotStep, type Heading, type RuleSet, type Situation } from './engines/linebot';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 interface Level { name: string; rows: string[]; heading: Heading; situations: Situation[]; brief: string; hints: string[] }
@@ -26,7 +26,8 @@ const DEFAULT: RuleSet = { ahead: 'stop', leftOnly: 'stop', rightOnly: 'stop', b
 export default function LineBot() {
   const { award } = useKidsStars();
   const coach = useCoach('linebot');
-  const [li, setLi] = useState(0);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLi(i));
+  const [li, setLi] = useState(start);
   const L = LEVELS[li]!;
   const track = useMemo(() => parseTrack(L.rows, L.heading), [L]);
   const [rules, setRules] = useState<RuleSet>(DEFAULT);

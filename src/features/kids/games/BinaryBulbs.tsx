@@ -7,6 +7,7 @@ import { BulbArt } from '../KidsArt';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
+import { useLevelFromUrl } from './common';
 
 const ROUNDS = [
   { bits: 3, targets: [1, 2, 4, 3, 5, 7] },
@@ -17,7 +18,8 @@ const ROUNDS = [
 
 export default function BinaryBulbs() {
   const { stars, award } = useKidsStars();
-  const [round, setRound] = useState(0);
+  const start = useLevelFromUrl(ROUNDS.length, (i) => { setRound(i); setQi(0); setSolved(0); });
+  const [round, setRound] = useState(start);
   const [qi, setQi] = useState(0);
   const [on, setOn] = useState<boolean[]>([]);
   const [solved, setSolved] = useState(0);

@@ -9,6 +9,7 @@ import { useCoach } from '../coach';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
 import { BUG_LEVELS } from './bug-levels';
+import { useLevelFromUrl } from './common';
 
 /**
  * Bug Hunt: every program has exactly one bug. Find the line, then choose the fix.
@@ -17,7 +18,8 @@ import { BUG_LEVELS } from './bug-levels';
 export default function BugHunt() {
   const coach = useCoach('bugs');
   const { stars, award } = useKidsStars();
-  const [level, setLevel] = useState(0);
+  const start = useLevelFromUrl(BUG_LEVELS.length, (i) => reset(i));
+  const [level, setLevel] = useState(start);
   const [picked, setPicked] = useState<number | null>(null);
   const [fix, setFix] = useState<number | null>(null);
   const [mistakes, setMistakes] = useState(0);

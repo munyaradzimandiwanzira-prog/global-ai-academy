@@ -6,6 +6,7 @@ import { Zuva, SpeechBubble } from '../Zuva';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
+import { useLevelFromUrl } from './common';
 
 /**
  * Circuit Lab: electricity for kids. Level 1 closes a switch, level 2 sorts conductors from
@@ -76,7 +77,8 @@ const LEVELS = ['Switch it on', 'Conductor or insulator?', 'Power from the sun']
 
 export default function CircuitLab() {
   const { stars, award } = useKidsStars();
-  const [level, setLevel] = useState(0);
+  const start = useLevelFromUrl(LEVELS.length, (i) => setLevel(i));
+  const [level, setLevel] = useState(start);
   const [closed, setClosed] = useState(false);
   const [gap, setGap] = useState<(typeof MATERIALS)[number] | null>(null);
   const [answers, setAnswers] = useState<Record<string, boolean>>({});

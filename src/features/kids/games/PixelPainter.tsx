@@ -7,6 +7,7 @@ import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { cn } from '@/lib/utils';
 import { COLOURS, PICTURES } from './pixel-pictures';
+import { useLevelFromUrl } from './common';
 
 /**
  * Pixel Painter: copy the picture on a grid. Painting a whole row at once is a loop,
@@ -19,7 +20,8 @@ const blank = () => Array.from({ length: H }, () => Array<string>(W).fill(''));
 
 export default function PixelPainter() {
   const { stars, award } = useKidsStars();
-  const [pi, setPi] = useState(0);
+  const start = useLevelFromUrl(PICTURES.length, (i) => setPi(i));
+  const [pi, setPi] = useState(start);
   const [grid, setGrid] = useState<string[][]>(blank);
   const [colour, setColour] = useState('G');
   const [rowMode, setRowMode] = useState(true);

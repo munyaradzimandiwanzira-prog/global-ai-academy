@@ -35,6 +35,7 @@ const TeachHome = lazy(() => import('@/pages/teacher/TeachHome'));
 const AdminHome = lazy(() => import('@/pages/admin/AdminHome'));
 const KidsHome = lazy(() => import('@/features/kids/KidsHome'));
 const KidsGame = lazy(() => import('@/features/kids/KidsGame'));
+const KidsCurriculum = lazy(() => import('@/features/kids/KidsCurriculum'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const About = lazy(() => import('@/pages/About'));
 const Legal = lazy(() => import('@/pages/Legal'));
@@ -163,6 +164,7 @@ export default function App() {
 
         <Route element={<BareLayout />}>
           <Route path="kids" element={<KidsHome />} />
+          <Route path="kids/curriculum" element={<KidsCurriculum />} />
           <Route path="kids/:game" element={<KidsGame />} />
         </Route>
       </Routes>

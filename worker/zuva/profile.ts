@@ -7,6 +7,9 @@ import type { UserRow } from '../lib/db';
 import { effectivePlan, parseJson } from '../lib/db';
 import { getTrack } from '../lib/catalog';
 import type { ZuvaProfile } from '@shared/zuva';
+import { KID_LEVELS } from '@shared/kids-curriculum';
+
+const LEVEL_GAME = new Map(KID_LEVELS.map((l) => [l.key, l.game]));
 
 export interface LearnerContext {
   userId: string;
@@ -19,6 +22,8 @@ export interface LearnerContext {
   lastLesson?: string;
   kidsStars: number;
   kidsGames: Record<string, number>;
+  /** Kids Zone level keys with at least one star (see shared/kids-curriculum). */
+  kidsLevels: string[];
   tracks: { id: string; title: string; done: number; total: number }[];
   struggles: string[];
   goals: string[];
@@ -60,12 +65,15 @@ export async function loadLearnerContext(db: D1Database, user: UserRow): Promise
   ]);
 
   const kidsGames: Record<string, number> = {};
+  const kidsLevels: string[] = [];
   let kidsStars = 0;
   for (const r of kids.results) {
     const stars = Math.round(((r.score ?? 0) / 100) * 3);
     kidsStars += stars;
-    const game = r.ref_id.split(':')[0]!;
+    // Star keys don't always start with the game id (bug:3 is Bug Hunt), so look the level up.
+    const game = LEVEL_GAME.get(r.ref_id) ?? r.ref_id.split(':')[0]!;
     kidsGames[game] = (kidsGames[game] ?? 0) + stars;
+    if (stars > 0) kidsLevels.push(r.ref_id);
   }
   const tracks = progress.results.flatMap((p) => {
     const t = getTrack(p.track_id);
@@ -86,6 +94,7 @@ export async function loadLearnerContext(db: D1Database, user: UserRow): Promise
     lastLesson,
     kidsStars,
     kidsGames,
+    kidsLevels,
     tracks,
     struggles: struggles.results.map((s) => `${s.kind} "${s.ref_id}"${s.track_id ? ` in ${getTrack(s.track_id)?.title ?? s.track_id}` : ''} (${s.attempts} tries)`),
     goals: goals.results.map((g) => g.title),

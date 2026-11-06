@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, Star } from '@/components/icons';
 import { useKidsStars } from '../kidsStore';
@@ -68,7 +69,9 @@ const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 export default function StemSafari() {
   const coach = useCoach('safari');
   const { award } = useKidsStars();
-  const [topic, setTopic] = useState<Topic | 'all' | null>(null);
+  const [params] = useSearchParams();
+  const linked = (['science', 'maths', 'tech', 'world'] as const).find((t) => t === params.get('topic')) ?? null;
+  const [topic, setTopic] = useState<Topic | 'all' | null>(linked);
   const [seed, setSeed] = useState(0);
   const questions = useMemo(() => (topic ? shuffle(BANK.filter((q) => topic === 'all' || q.topic === topic)).slice(0, 10) : []), [topic, seed]);
   const [i, setI] = useState(0);
@@ -95,6 +98,7 @@ export default function StemSafari() {
     }
   };
   const restart = (t: Topic | 'all' | null) => { setTopic(t); setSeed((x) => x + 1); setI(0); setLives(3); setScore(0); setPicked(null); };
+  useEffect(() => { if (linked) restart(linked); }, [linked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!topic) {
     return (

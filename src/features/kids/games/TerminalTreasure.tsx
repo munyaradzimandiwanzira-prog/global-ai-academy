@@ -5,7 +5,7 @@ import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
 import { dir, file, nodeAt, pathString, run, type Shell } from './engines/terminal';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 
 interface Mission {
   name: string;
@@ -63,7 +63,8 @@ interface Line { kind: 'in' | 'out'; text: string; cwd?: string }
 export default function TerminalTreasure() {
   const { award } = useKidsStars();
   const coach = useCoach('terminal');
-  const [mi, setMi] = useState(0);
+  const start = useLevelFromUrl(MISSIONS.length, (i) => setMi(i));
+  const [mi, setMi] = useState(start);
   const M = MISSIONS[mi]!;
   const [shell, setShell] = useState<Shell>(M.make);
   const [lines, setLines] = useState<Line[]>([]);

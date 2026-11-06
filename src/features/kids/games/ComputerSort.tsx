@@ -5,7 +5,7 @@ import { Zuva, SpeechBubble } from '../Zuva';
 import { useCoach } from '../coach';
 import { play } from '../sfx';
 import { celebrate } from '@/lib/celebrate';
-import { LevelTabs, StarRow, kidButton } from './common';
+import { LevelTabs, StarRow, kidButton, useLevelFromUrl } from './common';
 import { cn } from '@/lib/utils';
 
 interface Item { name: string; bin: string; why: string }
@@ -82,7 +82,8 @@ const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 export default function ComputerSort() {
   const { award } = useKidsStars();
   const coach = useCoach('sorting');
-  const [ri, setRi] = useState(0);
+  const start = useLevelFromUrl(ROUNDS.length, (i) => setRi(i));
+  const [ri, setRi] = useState(start);
   const R = ROUNDS[ri]!;
   const [seed, setSeed] = useState(0);
   const deck = useMemo(() => shuffle(R.items), [R, seed]); // eslint-disable-line react-hooks/exhaustive-deps
