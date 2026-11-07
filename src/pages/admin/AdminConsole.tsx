@@ -12,6 +12,7 @@ import { api, ApiError, errorMessage } from '@/lib/api';
 import { Avatar, Dialog, Empty, Field, Input, PageLoader, Select, Stat, Textarea } from '@/components/ui';
 import { ArrowLeft, Copy, Eye, Pencil, Plus, Search, Trash2, Wallet, X } from '@/components/icons';
 import { cn, formatDate, formatDateTime } from '@/lib/utils';
+import { copyText } from '@/lib/clipboard';
 
 const money = (cents: number | null | undefined) => {
   const n = cents ?? 0;
@@ -154,7 +155,7 @@ export function FinanceAdmin() {
 
       <Section title="Teacher wallets">
         {data.teachers.length ? (
-          <div className="overflow-x-auto">
+          <div tabIndex={0} className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="text-left text-muted-fg"><tr><th className="py-1 font-medium">Teacher</th><th className="font-medium">Learners</th><th className="font-medium">Paying</th><th className="text-right font-medium">Earned</th><th className="text-right font-medium">Paid out</th><th className="text-right font-medium">Balance</th><th /></tr></thead>
               <tbody className="divide-y divide-border">
@@ -177,7 +178,7 @@ export function FinanceAdmin() {
       </Section>
 
       <Section title="Recent payments">
-        <div className="overflow-x-auto">
+        <div tabIndex={0} className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="text-left text-muted-fg"><tr><th className="py-1 font-medium">When</th><th className="font-medium">Learner</th><th className="font-medium">Plan</th><th className="font-medium">Status</th><th className="text-right font-medium">Amount</th><th className="font-medium pl-4">Commission to</th><th /></tr></thead>
             <tbody className="divide-y divide-border">
@@ -290,11 +291,11 @@ function PayoutQueue() {
   const waiting = list.filter((r) => r.status === 'pending');
   // Notifications link to /admin/finance#payouts; scroll there once the list has loaded.
   useEffect(() => { if (data && window.location.hash === '#payouts') document.getElementById('payouts')?.scrollIntoView({ block: 'start' }); }, [data]);
-  const copy = async (text: string) => { try { await navigator.clipboard.writeText(text); toast.success('Copied'); } catch { /* clipboard blocked */ } };
+  const copy = (text: string) => void copyText(text);
   return (
     <section id="payouts" className="card scroll-mt-24 p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">Payout requests {waiting.length > 0 && <span className="chip bg-gold-100 text-gold-600">{waiting.length} waiting</span>}</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">Payout requests {waiting.length > 0 && <span className="chip bg-gold-100 text-gold-700">{waiting.length} waiting</span>}</h2>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-teal" checked={all} onChange={(e) => setAll(e.target.checked)} /> Show finished</label>
       </div>
       {list.length ? (
@@ -363,7 +364,7 @@ export function TeachersAdmin() {
       </div>
       <p className="text-sm text-muted-fg">Open any teacher’s portal to see exactly what they see. Pending requests are under Teacher requests.</p>
       {list.length ? (
-        <div className="card overflow-x-auto">
+        <div tabIndex={0} className="card overflow-x-auto">
           <table className="w-full min-w-[820px] text-sm">
             <thead className="border-b border-border text-left text-muted-fg"><tr>{['Teacher', 'Learners', 'Classes', 'Work set', 'Plans', 'Reports', 'Balance', 'Last active', ''].map((h) => <th key={h} className="px-4 py-2.5 font-medium">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">
@@ -417,7 +418,7 @@ export function LearnerAdmin() {
   const u = data.user;
   const d = data.detail;
   const facts: [string, React.ReactNode][] = [
-    ['Email', <>{u.email}{u.email_verified_at ? '' : <span className="ml-1 text-xs text-gold-600">(not confirmed)</span>}</>],
+    ['Email', <>{u.email}{u.email_verified_at ? '' : <span className="ml-1 text-xs text-gold-700 dark:text-gold">(not confirmed)</span>}</>],
     ['Role', <span className="capitalize">{u.role}</span>],
     ['Plan', <span className="capitalize">{u.plan}{u.plan_expires_at && u.plan !== 'free' ? ` until ${formatDate(String(u.plan_expires_at))}` : ''}</span>],
     ['Level', <span className="capitalize">{String(u.level ?? '—')}</span>],
@@ -479,7 +480,7 @@ export function LearnerAdmin() {
       )}
       <Section title="Payments">
         {data.payments.length ? (
-          <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-sm"><tbody className="divide-y divide-border">{data.payments.map((p) => <tr key={p.id}><td className="py-2 text-xs">{formatDateTime(p.created_at)}</td><td className="font-mono text-xs">{p.reference}</td><td className="capitalize">{p.plan} · {p.period}</td><td><span className="chip bg-muted">{p.status}</span></td><td className="text-right tabular-nums">{money(p.amount_cents)}</td><td className="text-right text-xs text-muted-fg">{p.commission_cents ? `${money(p.commission_cents)} to teachers` : ''}</td></tr>)}</tbody></table></div>
+          <div tabIndex={0} className="overflow-x-auto"><table className="w-full min-w-[520px] text-sm"><tbody className="divide-y divide-border">{data.payments.map((p) => <tr key={p.id}><td className="py-2 text-xs">{formatDateTime(p.created_at)}</td><td className="font-mono text-xs">{p.reference}</td><td className="capitalize">{p.plan} · {p.period}</td><td><span className="chip bg-muted">{p.status}</span></td><td className="text-right tabular-nums">{money(p.amount_cents)}</td><td className="text-right text-xs text-muted-fg">{p.commission_cents ? `${money(p.commission_cents)} to teachers` : ''}</td></tr>)}</tbody></table></div>
         ) : <p className="text-sm text-muted-fg">No payments.</p>}
       </Section>
       {data.reports.length > 0 && (
@@ -615,7 +616,7 @@ export function DataAdmin() {
                 {!data.readOnly && data.table !== 'users' && <button type="button" className="btn-primary btn-sm" onClick={() => setEditing('new')}><Plus className="h-4 w-4" /> New row</button>}
               </div>
               {data.rows.length ? (
-                <div className="card overflow-x-auto">
+                <div tabIndex={0} className="card overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead className="border-b border-border text-left text-muted-fg"><tr>{!data.readOnly && <th className="sticky left-0 bg-card px-2 py-2" />}{cols.map((c) => <th key={c.name} className="whitespace-nowrap px-3 py-2 font-mono font-medium">{c.name}{c.pk ? ' 🔑' : ''}</th>)}</tr></thead>
                     <tbody className="divide-y divide-border">
@@ -658,6 +659,11 @@ function RowEditor({ data, row, keyOf, onDone }: { data: TableData; row: Row | n
   const nulls0 = useMemo(() => new Set(data.columns.filter((c) => row && row[c.name] == null).map((c) => c.name)), [data.columns, row]);
   const [vals, setVals] = useState<Record<string, string>>(initial);
   const [nulls, setNulls] = useState<Set<string>>(nulls0);
+  /** Typing into a null field gives it a value; ticking "null" again clears it. */
+  const type = (name: string, v: string) => {
+    setVals((x) => ({ ...x, [name]: v }));
+    if (nulls.has(name)) setNulls((s) => { const n = new Set(s); n.delete(name); return n; });
+  };
   const save = useMutation({
     mutationFn: () => {
       const values: Record<string, string | number | null> = {};
@@ -686,11 +692,11 @@ function RowEditor({ data, row, keyOf, onDone }: { data: TableData; row: Row | n
             <div key={c.name} className={cn(long && 'sm:col-span-2')}>
               <div className="mb-1 flex items-center justify-between gap-2">
                 <label htmlFor={`col-${c.name}`} className="font-mono text-xs font-semibold">{c.name} <span className="font-normal text-muted-fg">{c.type || 'any'}{c.required ? ' · required' : ''}{c.pk ? ' · key' : ''}</span></label>
-                {!locked && !c.required && <label className="flex items-center gap-1 text-[11px] text-muted-fg"><input type="checkbox" className="accent-teal" checked={nulls.has(c.name)} onChange={(e) => setNulls((s) => { const n = new Set(s); if (e.target.checked) n.add(c.name); else n.delete(c.name); return n; })} /> null</label>}
+                {!locked && !c.required && <label className="flex items-center gap-1 text-[11px] text-muted-fg"><input type="checkbox" className="accent-teal" checked={nulls.has(c.name)} onChange={(e) => { const on = e.target.checked; setNulls((s) => { const n = new Set(s); if (on) n.add(c.name); else n.delete(c.name); return n; }); if (on) setVals((x) => ({ ...x, [c.name]: '' })); }} /> null</label>}
               </div>
               {long
-                ? <Textarea id={`col-${c.name}`} rows={4} className="font-mono text-xs" disabled={locked || nulls.has(c.name)} value={vals[c.name]} onChange={(e) => setVals({ ...vals, [c.name]: e.target.value })} />
-                : <Input id={`col-${c.name}`} className="font-mono text-xs" inputMode={isNum(c.type) ? 'decimal' : undefined} disabled={locked || nulls.has(c.name)} placeholder={!row && c.pk && c.name === 'id' ? 'Leave empty for a new id' : undefined} value={vals[c.name]} onChange={(e) => setVals({ ...vals, [c.name]: e.target.value })} />}
+                ? <Textarea id={`col-${c.name}`} rows={4} className="font-mono text-xs" disabled={locked} placeholder={nulls.has(c.name) ? 'null' : undefined} value={vals[c.name]} onChange={(e) => type(c.name, e.target.value)} />
+                : <Input id={`col-${c.name}`} className="font-mono text-xs" inputMode={isNum(c.type) ? 'decimal' : undefined} disabled={locked} placeholder={nulls.has(c.name) ? 'null' : !row && c.pk && c.name === 'id' ? 'Leave empty for a new id' : undefined} value={vals[c.name]} onChange={(e) => type(c.name, e.target.value)} />}
             </div>
           );
         })}

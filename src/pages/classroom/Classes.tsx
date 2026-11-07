@@ -48,7 +48,7 @@ function ClassCard({ c, teaching }: { c: Classroom; teaching: boolean }) {
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-fg">
           <LevelBadge level={c.level} />
           <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {c.memberCount}</span>
-          {teaching && c.joinCode && <span className="chip ml-auto bg-gold-100 font-mono text-gold-600">{c.joinCode}</span>}
+          {teaching && c.joinCode && <span className="chip ml-auto bg-gold-100 font-mono text-gold-700">{c.joinCode}</span>}
           {c.archived && <span className="chip bg-muted">Archived</span>}
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function Classes() {
 
       {user?.role === 'student' && (
         <section className="card mb-10 p-6">
-          <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><KeyRound className="h-5 w-5 text-gold-600" /> Join a class</h2>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><KeyRound className="h-5 w-5 text-gold-700 dark:text-gold" /> Join a class</h2>
           {canJoin ? (
             <form onSubmit={(e) => { e.preventDefault(); setJoinError(''); join.mutate(); }} className="mt-3 flex max-w-md gap-2">
               <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={6} placeholder="6-character code" className="font-mono uppercase tracking-widest" aria-label="Class code" />

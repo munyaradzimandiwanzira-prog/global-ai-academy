@@ -27,7 +27,7 @@ export function StagePicker() {
             className={cn('min-h-14 rounded-2xl border-4 px-4 py-1.5 text-left transition-transform active:scale-95', on ? 'border-ink bg-ink text-white' : 'border-ink/15 bg-white hover:border-ink/40')}
           >
             <span className="block text-lg font-bold leading-tight">{s.name}</span>
-            <span className={cn('block text-[13px] font-semibold leading-tight', on ? 'text-white/80' : 'text-ink/60')}>Ages {s.ages}</span>
+            <span className={cn('block text-[13px] font-semibold leading-tight', on ? 'text-white/80' : 'text-ink/75')}>Ages {s.ages}</span>
           </button>
         );
       })}
@@ -85,7 +85,7 @@ export function StagePath({ art, stars }: { art: Record<string, Art>; stars: Rec
                           <span className="block text-[17px] font-bold leading-snug">{l.name}</span>
                           <span className="mt-0.5 block text-[15px] leading-snug text-ink/75">{l.goal}</span>
                           <span className="mt-1.5 flex" aria-label={`${earned} of 3 stars`}>{[1, 2, 3].map((n) => <Star key={n} className={cn('h-4 w-4', n <= earned ? 'fill-gold text-gold' : 'text-ink/25')} />)}</span>
-                          <span className="mt-1 block text-[13px] font-semibold leading-snug text-ink/60">{l.strands.map((st) => STRANDS[st].name).join(' · ')}</span>
+                          <span className="mt-1 block text-[13px] font-semibold leading-snug text-ink/75">{l.strands.map((st) => STRANDS[st].name).join(' · ')}</span>
                         </span>
                         <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-ink/40 transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
                       </Link>

@@ -185,3 +185,14 @@
   body { background: white; }
   .certificate { break-inside: avoid; box-shadow: none; }
 }
+
+/* Teal-600 and gold-700 are tuned for light surfaces; on dark ones they fall below 4.5:1, so lighten them there.
+   (Light chips keep their own background in dark mode, so they keep the darker text.) */
+.dark .text-teal-600:not([class*="bg-teal-100"]):not([class*="bg-white"]) { color: #4FB3B0; }
+.dark .hover\:text-teal-600:hover { color: #4FB3B0; }
+
+/* Links inside running text are underlined, so they don't rely on colour alone (WCAG 1.4.1). */
+p > a[class*="text-teal"], li > a[class*="text-teal"]:not([class*="btn"]) { text-decoration-line: underline; text-underline-offset: 2px; }
+
+/* Red text for danger actions is tuned for light surfaces; lighten it in dark mode unless the element sets its own. */
+.dark .text-red-600:not([class*="dark:text-"]), .dark .text-red-700:not([class*="dark:text-"]) { color: #F87171; }

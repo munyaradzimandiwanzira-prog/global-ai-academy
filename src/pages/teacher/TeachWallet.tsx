@@ -36,7 +36,7 @@ export default function TeachWallet() {
       <section className="mt-8" aria-labelledby="ledger">
         <h2 id="ledger" className="font-display text-xl font-semibold">History</h2>
         {data.entries.length ? (
-          <div className="card mt-3 overflow-x-auto">
+          <div tabIndex={0} className="card mt-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-border text-left text-muted-fg"><tr><th className="px-4 py-2 font-medium">Date</th><th className="px-4 py-2 font-medium">What</th><th className="px-4 py-2 font-medium">Learner</th><th className="px-4 py-2 font-medium">Note</th><th className="px-4 py-2 text-right font-medium">Amount</th></tr></thead>
               <tbody className="divide-y divide-border">

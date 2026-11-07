@@ -84,7 +84,7 @@ export default function TeachStudents() {
               </li>
             ))}
           </ul>
-          <div className="card hidden overflow-x-auto md:block">
+          <div tabIndex={0} className="card hidden overflow-x-auto md:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">Students with progress</caption>
               <thead className="border-b border-border bg-muted/60 text-xs uppercase tracking-wide text-muted-fg">

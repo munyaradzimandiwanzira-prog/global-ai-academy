@@ -126,6 +126,21 @@ npm run build && bash scripts/dev-mock.sh   # wrangler dev on :8787 with a scrip
 node tests/e2e-teaching.mjs
 ```
 
+Every page (689 public pages, at phone and desktop width) for console errors, failed requests, error screens and sideways scrolling:
+
+```bash
+npx tsx scripts/list-urls.ts > /tmp/urls.txt
+node tests/e2e-crawl.cjs /tmp/urls.txt /tmp/crawl.json 390
+```
+
+Real browser flows (43: sign-up by invite, lessons, runners, quizzes, games, Zuva, teacher tools, payouts, admin forms, trial, projects, Graph Lab, challenges, class discussion and live sessions, two-step login, data export, account deletion), a click-everything test of interactive pages, and malformed input to every API route (no 5xx allowed):
+
+```bash
+node tests/e2e-ui.cjs && node tests/e2e-ui-2.cjs
+node tests/e2e-fuzz.cjs /tmp/fuzz-urls.txt - 390        # games, labs, editors, quizzes
+node tests/e2e-api-fuzz.mjs routes.json admin-cookie.json
+```
+
 ## Deploy
 
 See **[DEPLOY.md](DEPLOY.md)**.

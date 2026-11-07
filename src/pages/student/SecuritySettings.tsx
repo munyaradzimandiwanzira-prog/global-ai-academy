@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { Field, Input } from '@/components/ui';
 import { QrCode } from '@/components/QrCode';
 import { formatDate } from '@/lib/utils';
+import { copyText } from '@/lib/clipboard';
 
 /** Settings → Security: two-step login, signed-in devices, download or delete your data. */
 export function SecuritySettings() {
@@ -178,7 +179,7 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
       </ul>
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className="btn-outline btn-sm" onClick={download}>Download as a text file</button>
-        <button type="button" className="btn-outline btn-sm" onClick={() => void navigator.clipboard.writeText(text).then(() => toast.success('Copied'))}>Copy</button>
+        <button type="button" className="btn-outline btn-sm" onClick={() => void copyText(text)}>Copy</button>
         <button type="button" className="btn-primary btn-sm" onClick={onDone}>I’ve saved them</button>
       </div>
     </div>

@@ -28,7 +28,7 @@ export default function KidsCurriculum() {
         <Link to="/kids" className="flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold"><ArrowLeft className="h-4 w-4" /> Kids Zone</Link>
       </header>
       <main className="mx-auto max-w-6xl px-5 pb-20">
-        <p className="text-sm font-bold uppercase tracking-wide text-[#23807F]">For parents and teachers</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-[#1C6B6A]">For parents and teachers</p>
         <h1 className="mt-1 text-4xl font-extrabold leading-tight sm:text-5xl">Kids Zone curriculum map</h1>
         <p className="mt-4 max-w-3xl text-lg text-ink/80">
           Each of the {KID_LEVELS.length} levels across {KID_GAMES.length} games is placed on a Cambridge Primary stage and tagged with the curriculum strands it practises in Computing, Science and Maths. Children pick their stage in the Kids Zone and get the levels made for them; every level here links straight to it.
@@ -45,7 +45,7 @@ export default function KidsCurriculum() {
               <tbody className="divide-y-2 divide-ink/5">
                 {STAGES.map((s) => (
                   <tr key={s.id}>
-                    <th scope="row" className="px-4 py-3 font-bold">{s.name}<span className="block text-[12px] font-semibold text-ink/55">{s.programme}</span></th>
+                    <th scope="row" className="px-4 py-3 font-bold">{s.name}<span className="block text-[12px] font-semibold text-ink/75">{s.programme}</span></th>
                     <td className="px-4 py-3 tabular">{s.ages}</td>
                     <td className="hidden px-4 py-3 sm:table-cell">{s.grade}</td>
                     <td className="hidden px-4 py-3 text-ink/75 md:table-cell">{s.blurb}</td>
@@ -96,7 +96,7 @@ export default function KidsCurriculum() {
                   <details key={st} className="rounded-3xl border-4 border-ink bg-white">
                     <summary className="flex min-h-12 cursor-pointer items-center justify-between px-4 py-2.5 text-[17px] font-bold">
                       {STRANDS[st].name}
-                      <span className="text-sm font-semibold text-ink/60">{KID_LEVELS.filter((l) => l.strands.includes(st)).length} levels</span>
+                      <span className="text-sm font-semibold text-ink/75">{KID_LEVELS.filter((l) => l.strands.includes(st)).length} levels</span>
                     </summary>
                     <div className="space-y-3 border-t-2 border-ink/10 px-4 pb-4 pt-3">
                       {cols.filter((c) => at(st, c).length).map((c) => (

@@ -101,7 +101,7 @@ export function GraphView({ graph, className, height = 380 }: { graph: ViewGraph
         {[...colours].map(([label, c]) => (
           <span key={label} className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: c }} />{label || 'no label'}</span>
         ))}
-        <span className="ml-auto text-sand/40">{graph.nodes.length} nodes · {graph.rels.length} relationships{truncated ? ' (first 300)' : ''}</span>
+        <span className="ml-auto text-sand/60">{graph.nodes.length} nodes · {graph.rels.length} relationships{truncated ? ' (first 300)' : ''}</span>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img" aria-label={`Graph of ${graph.nodes.length} nodes and ${graph.rels.length} relationships`}>
         <defs>
@@ -168,7 +168,7 @@ export function GraphView({ graph, className, height = 380 }: { graph: ViewGraph
             {Object.entries(selected.v.props).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(' · ') || 'no properties'}
           </span>
         ) : (
-          <span className="text-sand/40">Click a node or relationship to see its properties.</span>
+          <span className="text-sand/60">Click a node or relationship to see its properties.</span>
         )}
       </div>
     </div>

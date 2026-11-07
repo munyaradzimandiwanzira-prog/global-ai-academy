@@ -97,7 +97,7 @@ export default function LessonPage() {
               <Link to={lessonPath(trackId)} className="flex items-center gap-2 font-display text-lg font-bold hover:text-teal-600"><TrackMark short={meta.short} color={meta.color} size={28} />{meta.title} tutorial</Link>
               <button onClick={() => setSidebar(false)} className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-muted lg:hidden" aria-label="Close lessons"><X className="h-5 w-5" /></button>
             </div>
-            <div className="mt-3 flex items-center gap-2 text-xs text-muted-fg"><ProgressBar value={progress.percent} className="h-1.5" /> <span className="shrink-0">{progress.done}/{progress.total}</span></div>
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-fg"><ProgressBar value={progress.percent} className="h-1.5" label="Course progress" /> <span className="shrink-0">{progress.done}/{progress.total}</span></div>
           </div>
           <nav className="flex-1 overflow-y-auto py-2">
             {track.lessons.map((l) => {

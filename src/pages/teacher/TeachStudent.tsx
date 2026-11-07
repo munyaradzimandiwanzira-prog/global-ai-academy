@@ -74,7 +74,7 @@ export default function TeachStudent() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Lessons done" value={s.lessonsDone} icon={<BookOpen className="h-4 w-4" />} />
-        <Stat label="Kids Zone stars" value={s.kidsStars} icon={<Star className="h-4 w-4 text-gold-600" />} />
+        <Stat label="Kids Zone stars" value={s.kidsStars} icon={<Star className="h-4 w-4 text-gold-700 dark:text-gold" />} />
         <Stat label="Your work done" value={`${s.assignmentsDone}/${s.assignmentsDone + s.assignmentsOpen}`} icon={<ClipboardList className="h-4 w-4" />} />
         <Stat label="Average score" value={s.avgScore === null ? '—' : `${s.avgScore}%`} icon={<Trophy className="h-4 w-4" />} />
         <Stat label="Streak" value={`${s.streak} day${s.streak === 1 ? '' : 's'}`} icon={<Flame className="h-4 w-4 text-red-600" />} />
@@ -84,7 +84,7 @@ export default function TeachStudent() {
         <div className="min-w-0 space-y-6">
           <section className="card p-5" aria-labelledby="zr">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="zr" className="flex items-center gap-2 font-display text-lg font-semibold"><Sparkles className="h-5 w-5 text-gold-600" /> Zuva’s report</h2>
+              <h2 id="zr" className="flex items-center gap-2 font-display text-lg font-semibold"><Sparkles className="h-5 w-5 text-gold-700 dark:text-gold" /> Zuva’s report</h2>
               {latest && <span className="flex items-center gap-3 text-xs text-muted-fg">{shortDate(latest.createdAt)} · confidence {latest.content.confidence}<button type="button" className="inline-flex items-center gap-1 font-medium hover:text-fg print:hidden" onClick={() => window.print()}><Printer className="h-3.5 w-3.5" /> Print</button></span>}
             </div>
             {latest ? (

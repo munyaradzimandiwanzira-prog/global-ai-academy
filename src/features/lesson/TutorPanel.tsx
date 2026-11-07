@@ -37,7 +37,7 @@ export function TutorPanel({ open, onClose, trackId, lessonTitle, excerpt }: { o
             <div className="chevron-band" />
             {!allowed ? (
               <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-                <Lock className="h-10 w-10 text-gold-600" />
+                <Lock className="h-10 w-10 text-gold-700 dark:text-gold" />
                 <h3 className="mt-3 font-display text-xl font-semibold">Chat with your AI tutor</h3>
                 <p className="mt-2 text-sm text-muted-fg">Professor Zuva explains any lesson your way, gives local examples and quizzes you. The tutor is included with Plus and Academy. Coach hints on challenges stay free.</p>
                 {user ? <Link to="/pricing" className="btn-gold mt-5">See Plus</Link> : <Link to="/signup" className="btn-primary mt-5">Create a free account</Link>}

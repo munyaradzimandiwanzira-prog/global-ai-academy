@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { readableOn } from './TrackMark';
+import { markColors } from './TrackMark';
 
 /** Drawn marks for career paths: a monogram on the colour of the level the path starts at. */
 const CAREER_MARKS: Record<string, string> = {
@@ -17,7 +17,7 @@ export function CareerMark({ id, level, size = 44, className }: { id: string; le
   const fontSize = size * (text.length >= 4 ? 0.27 : text.length === 3 ? 0.33 : 0.42);
   return (
     <span aria-hidden="true" className={cn('inline-flex shrink-0 items-center justify-center rounded-full font-display font-bold leading-none', className)}
-      style={{ width: size, height: size, background: bg, color: readableOn(bg), fontSize, letterSpacing: '-0.02em' }}>
+      style={{ width: size, height: size, ...markColors(bg), fontSize, letterSpacing: '-0.02em' }}>
       {text}
     </span>
   );

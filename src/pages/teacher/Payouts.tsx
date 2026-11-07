@@ -11,7 +11,7 @@ import { money, shortDate, useTeacherScope } from './shared';
 interface PayoutsData { requests: PayoutRequest[]; balanceCents: number; reservedCents: number; availableCents: number; lastMethod: { method: PayoutMethod; details: string } | null }
 
 export const PAYOUT_STATUS: Record<PayoutStatus, { label: string; className: string }> = {
-  pending: { label: 'Waiting', className: 'bg-gold-100 text-gold-600' },
+  pending: { label: 'Waiting', className: 'bg-gold-100 text-gold-700' },
   paid: { label: 'Paid', className: 'bg-teal-100 text-teal-600 dark:bg-teal/20' },
   rejected: { label: 'Not paid', className: 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300' },
   cancelled: { label: 'Cancelled', className: 'bg-muted text-muted-fg' },

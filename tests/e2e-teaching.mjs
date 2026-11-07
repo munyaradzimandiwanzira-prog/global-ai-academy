@@ -60,7 +60,7 @@ const reqs = (await admin('GET', '/api/admin/teacher-requests')).j;
 const reqRow = reqs?.requests?.find?.((x) => x.userId === teacherId || x.user_id === teacherId);
 if (reqRow) r = await admin('POST', `/api/admin/teacher-requests/${reqRow.id}/approve`);
 else sql(`UPDATE users SET role='teacher', school='Gweru High', city='Gweru' WHERE id='${teacherId}'`);
-sql(`UPDATE users SET school='Gweru High', city='Gweru' WHERE id='${teacherId}'`);
+sql(`UPDATE users SET school='Gweru High ${id}', city='Gweru' WHERE id='${teacherId}'`);
 ok((await teacher('GET', '/api/teach/overview')).s === 200, 'approved teacher opens the portal');
 
 r = await signup(other, 'Other Teacher', `other${id}@example.com`);
@@ -90,7 +90,7 @@ r = await signup(guest, 'Bad Invite', `bad${id}@example.com`, { inviteCode: 'T-N
 ok(r.s >= 400 && r.s < 500, 'sign-up with a dead invite fails before the account is made');
 
 // Find a listed teacher by search; unlisted teachers are hidden.
-r = await guest('GET', '/api/teach/public/teachers?q=Ncube');
+r = await guest('GET', `/api/teach/public/teachers?q=${id}`);
 ok(r.j.teachers.some((t) => t.id === teacherId) && !JSON.stringify(r.j).includes('@'), 'listed teacher is findable by name, without email');
 ok(!(await guest('GET', '/api/teach/public/teachers?q=Other')).j.teachers.some((t) => t.id === otherId), 'unlisted teacher is not findable');
 r = await signup(kid2, 'Farai Chari', `farai${id}@example.com`, { teacherIds: [teacherId, otherId] });

@@ -21,7 +21,7 @@ function FeedbackCard({ fb }: { fb: AiFeedback }) {
   return (
     <div className="rounded-xl border border-gold/50 bg-gold-100/40 p-4 text-sm dark:bg-night-800">
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-gold-600" /> AI pre-mark</p>
+        <p className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-gold-700 dark:text-gold" /> AI pre-mark</p>
         <span className={cn('chip', fb.pass ? 'bg-teal-100 text-teal-600' : 'bg-stone-100 text-stone')}>{fb.score}/100</span>
       </div>
       <p className="mt-2">{fb.summary}</p>
@@ -153,7 +153,7 @@ function ManagerView({ a }: { a: Assignment }) {
                 <button onClick={() => setSelected(s.id)} className={cn('flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted', current?.id === s.id && 'bg-muted')}>
                   <Avatar name={s.userName ?? '?'} size={28} />
                   <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{s.userName}</span><span className="text-xs text-muted-fg">{formatDateTime(s.submittedAt)}</span></span>
-                  {s.status === 'graded' ? <span className="chip bg-teal-100 text-teal-600">{s.score}</span> : s.aiFeedback ? <span className="chip bg-gold-100 text-gold-600">AI {s.aiFeedback.score}</span> : <AlertCircle className="h-4 w-4 text-muted-fg" />}
+                  {s.status === 'graded' ? <span className="chip bg-teal-100 text-teal-600">{s.score}</span> : s.aiFeedback ? <span className="chip bg-gold-100 text-gold-700">AI {s.aiFeedback.score}</span> : <AlertCircle className="h-4 w-4 text-muted-fg" />}
                 </button>
               </li>
             ))}

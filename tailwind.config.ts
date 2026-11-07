@@ -21,7 +21,7 @@ export default {
         sand: { DEFAULT: '#F3F2EE', 200: '#E8E6E0', 300: '#D9D6CE', 50: '#FAF9F7' },
         granite: { DEFAULT: '#F3F2EE', 100: '#E8E6E0', 200: '#D9D6CE', 400: '#9A968C', 600: '#5E5A52' },
         teal: { DEFAULT: '#23807F', 600: '#1C6B6A', 400: '#3FA3A1', 100: '#DCEFEE' },
-        gold: { DEFAULT: '#D4A64A', 600: '#B88A2E', 100: '#F7ECD3' },
+        gold: { DEFAULT: '#D4A64A', 700: '#7A5A14', 600: '#B88A2E', 100: '#F7ECD3' },
         // Stone is the cool slate of weathered granite (no orange or brown anywhere in the palette).
         stone: { DEFAULT: '#3D4A5C', 400: '#5B6878', 100: '#E6E9EE' },
         night: { DEFAULT: '#0E1A30', 800: '#13233F', 700: '#1B2E50' },

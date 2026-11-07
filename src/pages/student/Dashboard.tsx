@@ -197,7 +197,7 @@ export default function Dashboard() {
     <div className="container py-8">
       {!user.emailVerified && (
         <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-gold/50 bg-gold-100/60 px-4 py-3 text-sm dark:bg-night-800">
-          <MailWarning className="h-5 w-5 text-gold-600" />
+          <MailWarning className="h-5 w-5 text-gold-700 dark:text-gold" />
           <span className="flex-1">Confirm your email so we can send certificates and password resets.</span>
           <button className="btn-outline btn-sm" onClick={async () => { try { const r = await api.post<{ devVerifyUrl?: string }>('/api/auth/resend-verification'); toast.success('Confirmation email sent.', { description: r.devVerifyUrl }); void refresh(); } catch (e) { toast.error(errorMessage(e)); } }}>Resend email</button>
         </div>
@@ -214,13 +214,13 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Day streak" value={<span className="flex items-center gap-2">{user.streak} <Flame className="h-6 w-6 text-gold-600" /></span>} sub={user.streak > 1 ? 'Keep it going tomorrow!' : 'Learn something tomorrow to build a streak'} />
-        <Stat label="Total XP" value={user.xp.toLocaleString()} sub={`+${data?.weekXp ?? 0} this week`} icon={<Zap className="h-4 w-4 text-gold-600" />} />
+        <Stat label="Day streak" value={<span className="flex items-center gap-2">{user.streak} <Flame className="h-6 w-6 text-gold-700 dark:text-gold" /></span>} sub={user.streak > 1 ? 'Keep it going tomorrow!' : 'Learn something tomorrow to build a streak'} />
+        <Stat label="Total XP" value={user.xp.toLocaleString()} sub={`+${data?.weekXp ?? 0} this week`} icon={<Zap className="h-4 w-4 text-gold-700 dark:text-gold" />} />
         <div className="card flex items-center gap-4 p-4">
           <ProgressRing value={lvl.progress * 100} label={<span className="font-display text-base">{lvl.level}</span>} />
           <div>
             <div className="text-sm text-muted-fg">Level</div>
-            <div className="font-display text-lg font-bold" style={{ color: rank.color }}>{rank.name}</div>
+            <div className="flex items-center gap-2 font-display text-lg font-bold"><span className="h-3 w-3 shrink-0 rounded-full" style={{ background: rank.color }} aria-hidden="true" />{rank.name}</div>
             <div className="text-xs text-muted-fg">{lvl.nextAt - user.xp} XP to level {lvl.level + 1}</div>
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function Dashboard() {
                   <li key={c.id}>
                     <Link to={`/classes/${c.id}`} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted">
                       <span><span className="block text-sm font-medium">{c.name}</span><span className="text-xs text-muted-fg">{c.teacher_name}</span></span>
-                      {c.open_assignments > 0 && <span className="chip bg-gold-100 text-gold-600">{c.open_assignments} to do</span>}
+                      {c.open_assignments > 0 && <span className="chip bg-gold-100 text-gold-700">{c.open_assignments} to do</span>}
                     </Link>
                   </li>
                 ))}

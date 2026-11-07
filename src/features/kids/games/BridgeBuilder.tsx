@@ -19,7 +19,11 @@ export default function BridgeBuilder() {
   const [li, setLi] = useState(start);
   const L = BRIDGE_LEVELS[li]!;
   const nodes = useMemo(() => makeNodes(L), [L]);
-  const [beams, setBeams] = useState<Beam[]>([]);
+  // Beams belong to one level. Tagging them stops the first render after a level change from
+  // drawing the old level's beams against the new level's joints (which crashed on missing joints).
+  const [built, setBuilt] = useState<{ li: number; beams: Beam[] }>({ li: start, beams: [] });
+  const beams = built.li === li ? built.beams : [];
+  const setBeams = (b: Beam[]) => setBuilt({ li, beams: b });
   const [sel, setSel] = useState<number | null>(null);
   const [msg, setMsg] = useState(L.brief);
   const [state, setState] = useState<'build' | 'driving' | 'sag'>('build');
@@ -78,7 +82,7 @@ export default function BridgeBuilder() {
         <Zuva size={64} mood={won ? 'wow' : state === 'sag' ? 'oops' : 'happy'} />
         <div className="flex-1"><SpeechBubble>{msg}</SpeechBubble></div>
       </div>
-      <div className="overflow-x-auto rounded-[24px] border-4 border-ink bg-[#E7F3F1]">
+      <div tabIndex={0} className="overflow-x-auto rounded-[24px] border-4 border-ink bg-[#E7F3F1]">
         <svg viewBox={`0 0 ${W} 330`} className="block w-full min-w-[560px]" role="img" aria-label={`Bridge over a ${L.gap} metre river with ${beams.length} beams.`}>
           <path d={`M0 ${Y(0)} H${X(0)} V330 H0 Z M${X(L.gap)} ${Y(0)} H${W} V330 H${X(L.gap)} Z`} fill="#B88A2E" stroke="#142B52" strokeWidth="3" />
           <path d={`M${X(0)} 300 Q${W / 2} 280 ${X(L.gap)} 300 V330 H${X(0)} Z`} fill="#2F6FB2" />

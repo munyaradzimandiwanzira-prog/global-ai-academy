@@ -62,8 +62,8 @@ export function Dialog({
 export function Avatar({ name, color, size = 32, className }: { name: string; color?: string; size?: number; className?: string }) {
   return (
     <span
-      className={cn('inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white', className)}
-      style={{ width: size, height: size, background: color ?? '#23807F', fontSize: size * 0.38 }}
+      className={cn('inline-flex shrink-0 items-center justify-center rounded-full font-semibold', className)}
+      style={{ width: size, height: size, ...markColors(color ?? '#23807F'), fontSize: size * 0.38 }}
       aria-hidden="true"
     >
       {initials(name) || '?'}
@@ -71,11 +71,11 @@ export function Avatar({ name, color, size = 32, className }: { name: string; co
   );
 }
 
-export function ProgressBar({ value, className, tone = 'teal' }: { value: number; className?: string; tone?: 'teal' | 'gold' | 'ink' }) {
+export function ProgressBar({ value, className, tone = 'teal', label = 'Progress' }: { value: number; className?: string; tone?: 'teal' | 'gold' | 'ink'; label?: string }) {
   const pct = Math.max(0, Math.min(100, value));
   const color = tone === 'gold' ? 'bg-gold' : tone === 'ink' ? 'bg-ink dark:bg-sand' : 'bg-teal';
   return (
-    <div className={cn('h-2 w-full overflow-hidden rounded-full bg-muted', className)} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+    <div className={cn('h-2 w-full overflow-hidden rounded-full bg-muted', className)} role="progressbar" aria-label={label} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-valuetext={`${Math.round(pct)}%`}>
       <div className={cn('h-full rounded-full transition-[width] duration-500', color)} style={{ width: `${pct}%` }} />
     </div>
   );
@@ -99,7 +99,7 @@ export function ProgressRing({ value, size = 56, stroke = 6, label }: { value: n
 export function Empty({ icon, title, children, action }: { icon?: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="card flex flex-col items-center px-6 py-12 text-center">
-      {icon && <div className="mb-3 text-gold-600">{icon}</div>}
+      {icon && <div className="mb-3 text-gold-700 dark:text-gold">{icon}</div>}
       <h3 className="font-display text-lg font-semibold">{title}</h3>
       {children && <p className="mt-1 max-w-md text-sm text-muted-fg">{children}</p>}
       {action && <div className="mt-5">{action}</div>}
@@ -163,7 +163,7 @@ export function LevelBadge({ level }: { level: string }) {
   const styles: Record<string, string> = {
     kids: 'bg-[#DCEFEE] text-[#1C6B6A]',
     beginner: 'bg-teal-100 text-teal-600',
-    intermediate: 'bg-gold-100 text-gold-600',
+    intermediate: 'bg-gold-100 text-gold-700',
     advanced: 'bg-stone-100 text-stone',
   };
   const labels: Record<string, string> = { kids: 'Kids', beginner: 'Entry level', intermediate: 'Intermediate', advanced: 'Advanced' };
@@ -171,5 +171,6 @@ export function LevelBadge({ level }: { level: string }) {
 }
 
 export { Button, ButtonLink, IconButton, buttonClass } from './Button';
-export { TrackMark, monogram, readableOn } from './TrackMark';
+export { TrackMark, monogram, readableOn, markColors } from './TrackMark';
+import { markColors } from './TrackMark';
 export { CareerMark } from './CareerMark';

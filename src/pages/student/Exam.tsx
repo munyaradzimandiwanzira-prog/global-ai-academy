@@ -103,7 +103,7 @@ export default function Exam() {
           <span>{track.title} exam</span>
           <span>Question {current + 1} of {attempt.questions.length}</span>
         </div>
-        <ProgressBar value={(answered / attempt.questions.length) * 100} />
+        <ProgressBar value={(answered / attempt.questions.length) * 100} label="Questions answered" />
         <div className="card mt-6 p-6">
           <p className="text-lg font-medium"><InlineCode text={q.q} /></p>
           <div className="mt-5 space-y-2" role="radiogroup">

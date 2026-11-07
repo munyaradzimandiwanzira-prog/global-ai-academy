@@ -73,7 +73,7 @@ export function OutputPanel({ result, live, status, running, className }: { resu
       </div>
       <div className="flex-1 overflow-auto p-3 font-mono text-[13px] leading-relaxed" aria-live="polite">
         {running && status && <div className="mb-1 text-gold">{status}</div>}
-        {!running && !result && <div className="text-sand/40">Press Run (or Ctrl/⌘ + Enter) to see the result here.</div>}
+        {!running && !result && <div className="text-sand/60">Press Run (or Ctrl/⌘ + Enter) to see the result here.</div>}
         {lines.map((l, i) => (
           <div key={i} className={cn('whitespace-pre-wrap break-words', l.kind === 'stderr' && 'text-red-300', l.kind === 'info' && 'text-teal-400', l.kind === 'system' && 'text-sand/50')}>
             {l.text || ' '}
@@ -94,7 +94,7 @@ export function OutputPanel({ result, live, status, running, className }: { resu
               <tbody>
                 {t.rows.map((r, ri) => (
                   <tr key={ri} className="border-t border-night-700">
-                    {r.map((v, vi) => <td key={vi} className="px-2.5 py-1">{v === null ? <span className="text-sand/40">NULL</span> : String(v)}</td>)}
+                    {r.map((v, vi) => <td key={vi} className="px-2.5 py-1">{v === null ? <span className="text-sand/60">NULL</span> : String(v)}</td>)}
                   </tr>
                 ))}
               </tbody>

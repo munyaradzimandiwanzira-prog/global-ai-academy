@@ -3,12 +3,13 @@ import {
   classroomSchema, joinClassSchema, assignmentSchema, submissionSchema, gradeSchema,
   announcementSchema, messageSchema, assistSchema, liveSessionSchema, sessionNotesSchema,
 } from '@shared/schemas';
-import type { AiFeedback, Assignment, Classroom, Submission, LiveSession, SessionSummary, LearnerReport } from '@shared/api-types';
+import { aiFeedback, assignmentDraft, classInsights, learnerReport, sessionSummary } from '../lib/ai-shapes';
+import type { AiFeedback, Assignment, Classroom, Submission, LiveSession, LearnerReport } from '@shared/api-types';
 import { XP } from '@shared/config';
 import { can } from '@shared/rbac';
 import { audit, effectivePlan, nowIso, parseJson, type UserRow } from '../lib/db';
 import { newId, randomCode } from '../lib/crypto';
-import { badRequest, forbidden, notFound, conflict } from '../lib/errors';
+import { badRequest, forbidden, notFound, conflict, unavailable } from '../lib/errors';
 import { chatJson } from '../lib/openai';
 import { consumeAiQuota } from '../lib/ai-quota';
 import { asData, ASSIGNMENT_GENERATOR_PROMPT, GRADER_SYSTEM_PROMPT, INSIGHTS_PROMPT, SESSION_SUMMARY_PROMPT, LEARNER_REPORT_PROMPT } from '../lib/prompts';
@@ -230,14 +231,15 @@ classrooms.post('/:id/insights', async (c) => {
      FROM classroom_members m JOIN users u ON u.id = m.user_id WHERE m.classroom_id = ?`,
   ).bind(room.id, room.id, room.id).all();
   const total = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM assignments WHERE classroom_id = ?').bind(room.id).first<{ n: number }>();
-  const insights = await chatJson<{ summary: string; atRisk: { name: string; reason: string }[]; strengths: string[]; actions: string[] }>(c.env, {
+  const insights = classInsights(await chatJson<Record<string, unknown>>(c.env, {
     temperature: 0.2,
     maxTokens: 700,
     messages: [
       { role: 'system', content: INSIGHTS_PROMPT },
       { role: 'user', content: `Class: ${room.name} (level ${room.level}). Assignments set: ${total?.n ?? 0}. Today: ${nowIso().slice(0, 10)}.\nLearners:\n${JSON.stringify(data.results)}` },
     ],
-  });
+  }));
+  if (!insights.summary) throw unavailable('The AI could not summarise this class right now. Try again.');
   return c.json({ insights });
 });
 
@@ -247,7 +249,7 @@ classrooms.get('/:id/students/:uid/reports', async (c) => {
   const { room } = await manage(c, c.req.param('id'));
   const rows = await c.env.DB.prepare('SELECT id, content, created_at FROM learner_reports WHERE classroom_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 10')
     .bind(room.id, c.req.param('uid')).all<{ id: string; content: string; created_at: string }>();
-  const reports: LearnerReport[] = rows.results.map((r) => ({ id: r.id, createdAt: r.created_at, content: parseJson<LearnerReport['content']>(r.content, null as never) })).filter((r) => r.content);
+  const reports: LearnerReport[] = rows.results.map((r) => ({ id: r.id, createdAt: r.created_at, content: learnerReport(parseJson<unknown>(r.content, null))! })).filter((r) => r.content);
   return c.json({ reports });
 });
 
@@ -271,16 +273,17 @@ classrooms.post('/:id/students/:uid/reports', async (c) => {
     classTracks: parseJson<string[]>(room.track_ids, []).map((t) => getTrack(t)?.title ?? t),
     recentLessons: progress.results,
     practice: activity.results,
-    assignments: subs.results.map((s) => ({ title: s.title, maxScore: s.max_score, score: s.score, status: s.status, aiImprovements: parseJson<AiFeedback | null>(s.ai_feedback, null)?.improvements ?? [] })),
+    assignments: subs.results.map((s) => ({ title: s.title, maxScore: s.max_score, score: s.score, status: s.status, aiImprovements: aiFeedback(parseJson<unknown>(s.ai_feedback, null))?.improvements ?? [] })),
   };
-  const content = await chatJson<LearnerReport['content']>(c.env, {
+  const content = learnerReport(await chatJson<unknown>(c.env, {
     temperature: 0.2,
     maxTokens: 900,
     messages: [
       { role: 'system', content: LEARNER_REPORT_PROMPT },
       { role: 'user', content: `Class: ${room.name} (level ${room.level}). Today: ${nowIso().slice(0, 10)}.\nData:\n${JSON.stringify(data).slice(0, 14000)}` },
     ],
-  });
+  }));
+  if (!content) throw unavailable('The AI could not write this report right now. Try again.');
   const id = newId();
   await c.env.DB.prepare('INSERT INTO learner_reports (id, classroom_id, user_id, content, created_by) VALUES (?, ?, ?, ?, ?)')
     .bind(id, room.id, uid, JSON.stringify(content), user.id).run();
@@ -296,7 +299,7 @@ interface SessionRow {
 const toSession = (r: SessionRow, manager: boolean): LiveSession => ({
   id: r.id, classroomId: r.classroom_id, title: r.title, description: r.description, startsAt: r.starts_at, minutes: r.minutes,
   meetingUrl: r.meeting_url, recordingUrl: r.recording_url, notes: manager ? r.notes : undefined,
-  summary: parseJson<SessionSummary | null>(r.summary, null), createdAt: r.created_at,
+  summary: sessionSummary(parseJson<unknown>(r.summary, null)), createdAt: r.created_at,
 });
 
 classrooms.get('/:id/sessions', async (c) => {
@@ -340,14 +343,15 @@ classrooms.post('/:id/sessions/:sid/summary', async (c) => {
   const row = await c.env.DB.prepare('SELECT * FROM live_sessions WHERE id = ? AND classroom_id = ?').bind(c.req.param('sid'), room.id).first<SessionRow>();
   if (!row) throw notFound('Session not found.');
   await consumeAiQuota(c);
-  const summary = await chatJson<SessionSummary>(c.env, {
+  const summary = sessionSummary(await chatJson<unknown>(c.env, {
     temperature: 0.2,
     maxTokens: 900,
     messages: [
       { role: 'system', content: SESSION_SUMMARY_PROMPT },
       { role: 'user', content: `Class: ${room.name}. Session: ${row.title} on ${row.starts_at.slice(0, 10)}.\n<notes>\n${asData(input.notes)}\n</notes>` },
     ],
-  });
+  }));
+  if (!summary) throw unavailable('The AI could not write the recap right now. Try again.');
   await c.env.DB.prepare('UPDATE live_sessions SET notes = ?, summary = ?, recording_url = CASE WHEN ? != \'\' THEN ? ELSE recording_url END WHERE id = ?')
     .bind(input.notes, JSON.stringify(summary), input.recordingUrl, input.recordingUrl, row.id).run();
   return c.json({ summary });
@@ -392,7 +396,7 @@ interface SubmissionRow {
 }
 const toSubmission = (r: SubmissionRow): Submission => ({
   id: r.id, assignmentId: r.assignment_id, userId: r.user_id, userName: r.user_name, code: r.code, text: r.text, status: r.status,
-  score: r.score, aiFeedback: parseJson<AiFeedback | null>(r.ai_feedback, null), teacherFeedback: r.teacher_feedback,
+  score: r.score, aiFeedback: aiFeedback(parseJson<unknown>(r.ai_feedback, null)), teacherFeedback: r.teacher_feedback,
   submittedAt: r.submitted_at, gradedAt: r.graded_at,
 });
 
@@ -485,14 +489,15 @@ classrooms.post('/:id/assignments/draft', async (c) => {
   requirePermission(c, 'ai.teacher_assist');
   const input = await body(c, assistSchema);
   await consumeAiQuota(c);
-  const draft = await chatJson<{ title: string; instructions: string; starterCode: string; rubric: string }>(c.env, {
+  const draft = assignmentDraft(await chatJson<unknown>(c.env, {
     temperature: 0.6,
     maxTokens: 1600,
     messages: [
       { role: 'system', content: ASSIGNMENT_GENERATOR_PROMPT },
       { role: 'user', content: `Topic: ${input.topic}\nLevel: ${input.level}\nLanguage: ${input.language}` },
     ],
-  });
+  }));
+  if (!draft.title || !draft.instructions) throw unavailable('The AI could not draft this right now. Try again.');
   return c.json({ draft: { ...draft, language: input.language } });
 });
 
@@ -502,7 +507,7 @@ async function aiGrade(c: Ctx, a: AssignmentRow, code: string, text: string): Pr
   if (!c.env.OPENAI_API_KEY) return null;
   try {
     await consumeAiQuota(c);
-    return await chatJson<AiFeedback>(c.env, {
+    return aiFeedback(await chatJson<unknown>(c.env, {
       temperature: 0.1,
       maxTokens: 700,
       messages: [
@@ -512,7 +517,7 @@ async function aiGrade(c: Ctx, a: AssignmentRow, code: string, text: string): Pr
           content: `<task>\nTitle: ${a.title}\nLanguage: ${a.language}\nInstructions:\n${asData(a.instructions)}\nRubric:\n${asData(a.rubric || '(none — use general criteria)')}\n</task>\n<student_code>\n${asData(code || '(no code)')}\n</student_code>\n<student_message>\n${asData(text || '(no written answer)')}\n</student_message>`,
         },
       ],
-    });
+    }));
   } catch (e) {
     console.error('[grade] AI grading failed', e);
     return null;

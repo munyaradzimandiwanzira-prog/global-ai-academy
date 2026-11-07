@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Play, RotateCcw, Copy, Share2, Keyboard, Server } from '@/components/icons';
-import { toast } from 'sonner';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { useQuery } from '@tanstack/react-query';
 import type { RunLanguage } from '@shared/content';
@@ -10,6 +9,7 @@ import { useRunner } from './useRunner';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui';
+import { copyText } from '@/lib/clipboard';
 
 const CodeEditor = lazy(() => import('./CodeEditor'));
 
@@ -34,14 +34,18 @@ interface PlaygroundProps {
   height?: string;
   onCodeChange?: (code: string) => void;
   autoRun?: boolean;
+  /** Pre-filled program input for code that calls input(); shows the input box. */
+  initialStdin?: string;
 }
 
 /** The "Try it Yourself" editor: code on the left, result on the right. */
-export function Playground({ language, initialCode, expectedOutput, fullscreen, height = '320px', onCodeChange, autoRun }: PlaygroundProps) {
+export function Playground({ language, initialCode, expectedOutput, fullscreen, height = '320px', onCodeChange, autoRun, initialStdin = '' }: PlaygroundProps) {
   const [code, setCode] = useState(initialCode);
-  const [stdin, setStdin] = useState('');
-  const [showStdin, setShowStdin] = useState(false);
+  const [stdin, setStdin] = useState(initialStdin);
+  const [showStdin, setShowStdin] = useState(!!initialStdin);
   const { run, reset, running, status, live, result } = useRunner(language);
+  // A program that waited for input with none given: open the input box so the learner sees where it goes.
+  useEffect(() => { if (result?.error && /input\(\) needs a value/.test(result.error)) setShowStdin(true); }, [result]);
   const remote = useRemoteRunner();
   const runnable = isBrowserRunnable(language) || remote;
 
@@ -62,8 +66,7 @@ export function Playground({ language, initialCode, expectedOutput, fullscreen, 
 
   const share = async () => {
     const url = `${location.origin}/playground?lang=${language}#code=${compressToEncodedURIComponent(code)}`;
-    await navigator.clipboard.writeText(url);
-    toast.success('Shareable link copied');
+    await copyText(url, 'Shareable link copied');
   };
 
   const editorHeight = fullscreen ? '100%' : height;
@@ -85,7 +88,7 @@ export function Playground({ language, initialCode, expectedOutput, fullscreen, 
           <button onClick={() => { setCode(initialCode); reset(); }} className="grid min-h-11 min-w-11 place-items-center rounded-lg text-sand/70 hover:bg-night-700 hover:text-sand" title="Reset code" aria-label="Reset code">
             <RotateCcw className="h-4 w-4" />
           </button>
-          <button onClick={() => { void navigator.clipboard.writeText(code); toast.success('Code copied'); }} className="grid min-h-11 min-w-11 place-items-center rounded-lg text-sand/70 hover:bg-night-700 hover:text-sand" title="Copy code" aria-label="Copy code">
+          <button onClick={() => void copyText(code, 'Code copied')} className="grid min-h-11 min-w-11 place-items-center rounded-lg text-sand/70 hover:bg-night-700 hover:text-sand" title="Copy code" aria-label="Copy code">
             <Copy className="h-4 w-4" />
           </button>
           <button onClick={share} className="grid min-h-11 min-w-11 place-items-center rounded-lg text-sand/70 hover:bg-night-700 hover:text-sand" title="Copy share link" aria-label="Copy share link">

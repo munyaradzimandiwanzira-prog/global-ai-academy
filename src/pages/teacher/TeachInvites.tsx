@@ -7,6 +7,7 @@ import { Dialog, Empty, Field, Input, PageHeader, PageLoader, Select } from '@/c
 import { QrCode } from '@/components/QrCode';
 import { Copy, Plus, Ticket, Share2 } from '@/components/icons';
 import { TeachNav, shortDate, useTeacherScope } from './shared';
+import { copyText } from '@/lib/clipboard';
 
 export default function TeachInvites() {
   const { q, readOnly } = useTeacherScope();
@@ -31,7 +32,7 @@ export default function TeachInvites() {
     const text = `Join my class on Global AI Academy. It's free: ${inv.url} (or enter the code ${inv.code} when you sign up).`;
     try {
       if (navigator.share) await navigator.share({ title: 'Join my class', text });
-      else { await navigator.clipboard.writeText(inv.url); toast.success('Link copied'); }
+      else await copyText(inv.url, 'Link copied');
     } catch { /* share sheet closed */ }
   };
 
@@ -57,7 +58,7 @@ export default function TeachInvites() {
               <div className="mt-3 truncate rounded-lg border border-border bg-muted/40 px-3 py-2 font-mono text-xs">{i.url}</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="btn-primary btn-sm" onClick={() => copy(i)}><Share2 className="h-4 w-4" /> Share</button>
-                <button type="button" className="btn-outline btn-sm" onClick={async () => { await navigator.clipboard.writeText(i.code); toast.success('Code copied'); }}><Copy className="h-4 w-4" /> Copy code</button>
+                <button type="button" className="btn-outline btn-sm" onClick={() => void copyText(i.code, 'Code copied')}><Copy className="h-4 w-4" /> Copy code</button>
                 <button type="button" className="btn-outline btn-sm" onClick={() => setQr(i)}>QR code</button>
                 {!readOnly && <button type="button" className="btn-outline btn-sm ml-auto" onClick={() => revoke.mutate(i.id)}>Switch off</button>}
               </div>

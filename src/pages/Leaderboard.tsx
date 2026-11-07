@@ -25,7 +25,7 @@ export default function Leaderboard() {
         <ol className="card divide-y divide-border overflow-hidden">
           {data.leaders.map((l, i) => (
             <li key={i} className={cn('flex items-center gap-4 px-5 py-3', l.isMe && 'bg-gold-100/60 dark:bg-night-700')}>
-              <span className={cn('w-7 text-center font-display text-lg font-bold', i === 0 ? 'text-gold-600' : i === 1 ? 'text-ink/60 dark:text-sand/70' : i === 2 ? 'text-stone' : 'text-muted-fg')}>{i + 1}</span>
+              <span className={cn('w-7 text-center font-display text-lg font-bold', i === 0 ? 'text-gold-700 dark:text-gold' : i === 1 ? 'text-ink/60 dark:text-sand/70' : i === 2 ? 'text-stone' : 'text-muted-fg')}>{i + 1}</span>
               <Avatar name={l.name} color={l.avatarColor} />
               <div className="flex-1">
                 <div className="font-medium">{l.name}{l.isMe && <span className="ml-2 chip bg-teal-100 text-teal-600">You</span>}</div>

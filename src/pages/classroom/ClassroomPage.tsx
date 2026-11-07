@@ -12,6 +12,7 @@ import { Markdown } from '@/components/Markdown';
 import { ClassroomForm } from './Classes';
 import { AssignForm } from '@/pages/teacher/AssignForm';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/lib/utils';
+import { copyText } from '@/lib/clipboard';
 
 type Tab = 'stream' | 'sessions' | 'assignments' | 'learners' | 'discussion' | 'settings';
 const TABS: Tab[] = ['stream', 'sessions', 'assignments', 'learners', 'discussion', 'settings'];
@@ -55,14 +56,14 @@ export default function ClassroomPage() {
               </div>
             </div>
             {manager && c.joinCode && (
-              <button onClick={() => { void navigator.clipboard.writeText(c.joinCode!); toast.success('Join code copied'); }} className="rounded-xl bg-white/10 px-4 py-3 text-left hover:bg-white/15">
+              <button onClick={() => void copyText(c.joinCode!, 'Join code copied')} className="rounded-xl bg-white/10 px-4 py-3 text-left hover:bg-white/15">
                 <span className="block text-xs text-white/60">Join code</span>
                 <span className="flex items-center gap-2 font-mono text-2xl font-bold tracking-[0.2em] text-gold">{c.joinCode} <Copy className="h-4 w-4" /></span>
               </button>
             )}
           </div>
         </div>
-        <div className="container flex gap-1 overflow-x-auto scrollbar-none">
+        <div tabIndex={0} className="container flex gap-1 overflow-x-auto scrollbar-none">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} className={cn('flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium', tab === t.id ? 'border-gold text-gold' : 'border-transparent text-white/70 hover:text-white')}>
               <t.icon className="h-4 w-4" /> {t.label}
@@ -142,7 +143,7 @@ function AssignmentEditor({ classroomId, onDone }: { classroomId: string; onDone
   return (
     <form onSubmit={save} className="space-y-4">
       <div className="rounded-xl border border-gold/50 bg-gold-100/50 p-4 dark:bg-night-800">
-        <p className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-gold-600" /> Draft with AI</p>
+        <p className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-gold-700 dark:text-gold" /> Draft with AI</p>
         <div className="mt-2 flex gap-2">
           <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. loops using a tuckshop sales list" aria-label="Assignment topic" />
           <button type="button" onClick={draft} disabled={drafting} className="btn-gold">{drafting ? <Spinner className="text-ink" /> : 'Draft'}</button>
@@ -203,12 +204,12 @@ function Assignments({ id, manager }: { id: string; manager: boolean }) {
                   {manager ? (
                     linked ? <span className="chip bg-muted">See who’s done</span> : <span className="chip bg-muted">{a.submissionCount ?? 0} submitted</span>
                   ) : linked ? (
-                    done ? <span className="chip bg-teal-100 text-teal-600"><CheckCircle2 className="h-3.5 w-3.5" /> Done</span> : <span className="chip bg-gold-100 text-gold-600">To do</span>
+                    done ? <span className="chip bg-teal-100 text-teal-600"><CheckCircle2 className="h-3.5 w-3.5" /> Done</span> : <span className="chip bg-gold-100 text-gold-700">To do</span>
                   ) : a.mySubmission ? (
                     a.mySubmission.status === 'graded'
                       ? <span className="chip bg-teal-100 text-teal-600">Graded {a.mySubmission.score}/{a.maxScore}</span>
                       : <span className="chip bg-muted"><CheckCircle2 className="h-3.5 w-3.5" /> Submitted</span>
-                  ) : <span className="chip bg-gold-100 text-gold-600">To do</span>}
+                  ) : <span className="chip bg-gold-100 text-gold-700">To do</span>}
                 </Link>
               </li>
             );
@@ -259,11 +260,11 @@ function Learners({ id, manager }: { id: string; manager: boolean }) {
             <div className="md:col-span-3 text-sm">{insights.summary}</div>
             <div><h3 className="text-sm font-semibold text-red-700 dark:text-red-300">Needs attention</h3><ul className="mt-1 space-y-1 text-sm">{insights.atRisk.length ? insights.atRisk.map((r) => <li key={r.name}><strong>{r.name}</strong> — {r.reason}</li>) : <li className="text-muted-fg">Nobody flagged.</li>}</ul></div>
             <div><h3 className="text-sm font-semibold text-teal-600">Going well</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm">{insights.strengths.map((s) => <li key={s}>{s}</li>)}</ul></div>
-            <div><h3 className="text-sm font-semibold text-gold-600">Suggested actions</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm">{insights.actions.map((s) => <li key={s}>{s}</li>)}</ul></div>
+            <div><h3 className="text-sm font-semibold text-gold-700 dark:text-gold">Suggested actions</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm">{insights.actions.map((s) => <li key={s}>{s}</li>)}</ul></div>
           </div>
         ) : <p className="mt-2 text-sm text-muted-fg">Get a summary of who is ahead, who is stuck and what to teach next, based on progress and scores.</p>}
       </div>
-      <div className="card overflow-x-auto">
+      <div tabIndex={0} className="card overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted text-left text-xs text-muted-fg">
             <tr>
@@ -307,7 +308,7 @@ function LearnerReportDialog({ classroomId, member, onClose }: { classroomId: st
     onError: (e) => toast.error(errorMessage(e)),
   });
   const latest = data?.reports[0];
-  const sev: Record<string, string> = { high: 'text-red-700 dark:text-red-300', medium: 'text-gold-600', low: 'text-fg/70' };
+  const sev: Record<string, string> = { high: 'text-red-700 dark:text-red-300', medium: 'text-gold-700 dark:text-gold', low: 'text-fg/70' };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} title={`Learner report: ${member.name}`} description="Private to teachers. Built from this learner's lessons, practice and assignment results." wide>
       {isLoading ? <PageLoader /> : !latest ? (

@@ -26,8 +26,9 @@ export function PeriodToggle({ period, onChange, tone = 'default' }: { period: B
   );
 }
 
-export function PriceLine({ plan, period, tone = 'default' }: { plan: Plan; period: BillingPeriod; tone?: 'default' | 'dark' }) {
-  const muted = tone === 'dark' ? 'text-white/70' : 'text-muted-fg';
+/** `inherit` softens the card's own text colour, so it reads on ink, gold and white cards alike. */
+export function PriceLine({ plan, period, tone = 'default' }: { plan: Plan; period: BillingPeriod; tone?: 'default' | 'inherit' }) {
+  const muted = tone === 'inherit' ? 'opacity-80' : 'text-muted-fg';
   if (!plan.priceUsdMonthly) {
     return (
       <div>
@@ -86,9 +87,9 @@ export function PlanCards({
               {p.highlight && <span className="text-sm font-semibold">Most chosen</span>}
               {p.comingSoon && <span className="text-sm font-semibold">Opening soon</span>}
             </div>
-            <p className={cn('mt-1 min-h-[2.5rem] text-[15px]', (dark && !p.highlight && !p.comingSoon) || (!dark && (p.highlight || p.comingSoon)) ? 'opacity-80' : 'text-fg/75')}>{p.blurb}</p>
+            <p className={cn('mt-1 min-h-[2.5rem] text-[15px]', !dark && !p.highlight && !p.comingSoon ? 'text-fg/75' : 'opacity-80')}>{p.blurb}</p>
             <div className="mt-6">
-              <PriceLine plan={p} period={period} tone={(dark && !p.highlight && !p.comingSoon) || (!dark && (p.highlight || p.comingSoon)) ? 'dark' : 'default'} />
+              <PriceLine plan={p} period={period} tone={!dark && !p.highlight && !p.comingSoon ? 'default' : 'inherit'} />
             </div>
             <ul className="mt-6 flex-1 space-y-2.5 text-[15px]">
               {p.features.slice(0, featureLimit ?? p.features.length).map((f) => (

@@ -43,7 +43,7 @@ export default function TeachHome() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Students" value={o?.students ?? 0} icon={<Users className="h-4 w-4" />} sub={`${o?.paying ?? 0} on a paid plan`} />
         <Stat label="Need attention" value={o?.needsAttention.length ?? 0} icon={<AlarmClock className="h-4 w-4 text-stone" />} sub={`${o?.inactive ?? 0} inactive 7+ days`} />
-        <Stat label="Waiting to be graded" value={o?.toGrade ?? 0} icon={<ClipboardCheck className="h-4 w-4 text-gold-600" />} sub="Zuva has pre-marked these" />
+        <Stat label="Waiting to be graded" value={o?.toGrade ?? 0} icon={<ClipboardCheck className="h-4 w-4 text-gold-700 dark:text-gold" />} sub="Zuva has pre-marked these" />
         <Stat label="Wallet" value={money(o?.walletCents ?? 0)} icon={<Wallet className="h-4 w-4 text-teal" />} sub="From your students’ subscriptions" />
       </div>
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
@@ -76,7 +76,7 @@ export default function TeachHome() {
                           <div className="font-semibold">{c.name}</div>
                           <div className="text-xs text-muted-fg">{c.learners} learners · {c.assignments} assignments</div>
                         </div>
-                        {c.to_grade > 0 && <span className="chip bg-gold-100 text-gold-600">{c.to_grade} to grade</span>}
+                        {c.to_grade > 0 && <span className="chip bg-gold-100 text-gold-700">{c.to_grade} to grade</span>}
                         {c.inactive > 0 && <span className="chip bg-stone-100 text-stone">{c.inactive} inactive</span>}
                       </Link>
                     </li>
@@ -94,7 +94,7 @@ export default function TeachHome() {
         <aside className="space-y-6">
           {!readOnly && (
             <div className="card p-5">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Sparkles className="h-5 w-5 text-gold-600" /> Ask Zuva</h2>
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Sparkles className="h-5 w-5 text-gold-700 dark:text-gold" /> Ask Zuva</h2>
               <p className="mt-1 text-sm text-muted-fg">Your teaching assistant knows your classes and students.</p>
               <ul className="mt-3 space-y-2">
                 {ASKS.map((a) => <li key={a}><Link to={`/teach/zuva?ask=${encodeURIComponent(a)}`} className="block rounded-lg border border-border px-3 py-2 text-sm hover:border-teal hover:bg-muted">{a}</Link></li>)}
@@ -107,7 +107,7 @@ export default function TeachHome() {
               <li className="flex gap-3"><Ticket className="h-5 w-5 shrink-0 text-teal" /><span><strong>Invite links.</strong> Learners join you free with a link or code ({o?.invites ?? 0} active).</span></li>
               <li className="flex gap-3"><Brain className="h-5 w-5 shrink-0 text-ink dark:text-sand" /><span><strong>Zuva reports.</strong> Pain points and next steps for any student, in seconds.</span></li>
               <li className="flex gap-3"><BookOpen className="h-5 w-5 shrink-0 text-teal" /><span><strong>Lesson plans.</strong> Timed plans built from the course content ({o?.lessonPlans ?? 0} saved).</span></li>
-              <li className="flex gap-3"><ClipboardCheck className="h-5 w-5 shrink-0 text-gold-600" /><span><strong>Assign anything.</strong> Lessons and Kids Zone levels tick off by themselves; code is pre-marked.</span></li>
+              <li className="flex gap-3"><ClipboardCheck className="h-5 w-5 shrink-0 text-gold-700 dark:text-gold" /><span><strong>Assign anything.</strong> Lessons and Kids Zone levels tick off by themselves; code is pre-marked.</span></li>
               <li className="flex gap-3"><Wallet className="h-5 w-5 shrink-0 text-teal" /><span><strong>Earn.</strong> A share of every subscription your students pay goes to your wallet.</span></li>
             </ul>
           </div>

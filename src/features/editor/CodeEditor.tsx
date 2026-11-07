@@ -24,7 +24,7 @@ const nightHighlight = HighlightStyle.define([
   { tag: [t.keyword, t.controlKeyword, t.operatorKeyword, t.moduleKeyword], color: '#E6A157' },
   { tag: [t.string, t.special(t.string), t.regexp], color: '#9BD39B' },
   { tag: [t.number, t.bool, t.null, t.atom], color: '#F2C66D' },
-  { tag: [t.comment, t.lineComment, t.blockComment], color: '#6E81A6', fontStyle: 'italic' },
+  { tag: [t.comment, t.lineComment, t.blockComment], color: '#93A3C4', fontStyle: 'italic' },
   { tag: [t.function(t.variableName), t.function(t.propertyName)], color: '#7CC7E8' },
   { tag: [t.definition(t.variableName), t.definition(t.function(t.variableName))], color: '#8FD3D1' },
   { tag: [t.className, t.typeName, t.namespace], color: '#F0D78C' },

@@ -29,7 +29,7 @@ export function AssignedToMe() {
     <section className="card p-5" aria-labelledby="assigned">
       <div className="flex items-center justify-between">
         <h2 id="assigned" className="flex items-center gap-2 font-display text-lg font-semibold"><ClipboardCheck className="h-5 w-5 text-teal" /> Assigned to me</h2>
-        {open.length > 0 && <span className="chip bg-gold-100 text-gold-600">{open.length} to do</span>}
+        {open.length > 0 && <span className="chip bg-gold-100 text-gold-700">{open.length} to do</span>}
       </div>
       <ul className="mt-3 divide-y divide-border">
         {[...open, ...rest].map((a) => (

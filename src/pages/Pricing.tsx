@@ -142,7 +142,7 @@ export default function Pricing() {
 
       <section className="container py-20">
         <h2 className="display-md max-w-2xl">Compare every plan</h2>
-        <div className="mt-8 overflow-x-auto">
+        <div tabIndex={0} className="mt-8 overflow-x-auto" role="region" aria-label="Plan comparison">
           <table className="w-full min-w-[720px] text-left text-[15px]">
             <thead>
               <tr className="border-b-2 border-ink/80 dark:border-sand/40">

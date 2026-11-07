@@ -199,7 +199,7 @@ export default function Home() {
             </div>
             <figure data-reveal style={{ ['--i' as string]: 1 }} className="rounded-3xl bg-granite-100 p-5 dark:bg-night-800" data-ui>
               <figcaption className="mb-3 font-display text-lg font-semibold">Python example</figcaption>
-              <pre className="overflow-x-auto rounded-2xl bg-white p-5 font-mono text-[14px] leading-relaxed text-ink dark:bg-night dark:text-sand">{`prices = {"mealie meal": 8.5, "cooking oil": 4.2, "sugar": 2.8}
+              <pre tabIndex={0} className="overflow-x-auto rounded-2xl bg-white p-5 font-mono text-[14px] leading-relaxed text-ink dark:bg-night dark:text-sand">{`prices = {"mealie meal": 8.5, "cooking oil": 4.2, "sugar": 2.8}
 total = sum(prices.values())
 print(f"Basket total: \${total:.2f}")`}</pre>
               <ButtonLink to={tryHref('python', 'prices = {"mealie meal": 8.5, "cooking oil": 4.2, "sugar": 2.8}\ntotal = sum(prices.values())\nprint(f"Basket total: ${total:.2f}")')} color="action" className="mt-4" startIcon={<Play className="fill-current" />}>Try it yourself</ButtonLink>
@@ -224,7 +224,7 @@ print(f"Basket total: \${total:.2f}")`}</pre>
               </div>
             </div>
             <div className="mt-12 grid overflow-hidden rounded-[20px] border border-border bg-white text-ink md:grid-cols-2" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
-              <pre className="overflow-x-auto bg-night p-6 font-mono text-[14px] leading-relaxed text-sand">{`<h1>Mhoro, Harare!</h1>
+              <pre tabIndex={0} className="overflow-x-auto bg-night p-6 font-mono text-[14px] leading-relaxed text-sand">{`<h1>Mhoro, Harare!</h1>
 <p>Kombi fares today:</p>
 <ul>
   <li>CBD to Avondale — $1</li>
@@ -259,7 +259,7 @@ print(f"Basket total: \${total:.2f}")`}</pre>
               </div>
             </div>
             <div className="overflow-hidden rounded-[20px] border border-border bg-card" data-reveal style={{ ['--i' as string]: 1 }} data-ui>
-              <pre className="overflow-x-auto bg-night p-6 font-mono text-[14px] leading-relaxed text-sand">{`SELECT Province, COUNT(*) AS Customers
+              <pre tabIndex={0} className="overflow-x-auto bg-night p-6 font-mono text-[14px] leading-relaxed text-sand">{`SELECT Province, COUNT(*) AS Customers
 FROM Customers
 GROUP BY Province
 ORDER BY Customers DESC, Province
@@ -436,7 +436,7 @@ LIMIT 4;`}</pre>
                   <tr key={n} className="border-b border-border last:border-0">
                     <td className="px-5 py-3 font-medium">{n}</td>
                     <td className="px-5 py-3"><div className="flex items-center gap-3"><div className="h-2 w-28 rounded-full bg-muted"><div className="h-full rounded-full bg-teal" style={{ width: `${(d / total) * 100}%` }} /></div><span className="text-sm text-fg/70">{d}/{total}</span></div></td>
-                    <td className="px-5 py-3 text-right">{s ?? <span className="font-medium text-gold-600">Needs a nudge</span>}</td>
+                    <td className="px-5 py-3 text-right">{s ?? <span className="font-medium text-gold-700 dark:text-gold">Needs a nudge</span>}</td>
                   </tr>
                 ))}
               </tbody>

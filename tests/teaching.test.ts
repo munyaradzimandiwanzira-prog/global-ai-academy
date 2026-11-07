@@ -144,3 +144,19 @@ describe('Zuva teacher agent prompt', () => {
     expect(p).not.toMatch(/You are talking to a child/i);
   });
 });
+
+describe('AI output shapes', async () => {
+  const { aiFeedback, learnerReport, sessionSummary, classInsights, assignmentDraft } = await import('../worker/lib/ai-shapes');
+  it('never lets a missing list reach the page', () => {
+    const fb = aiFeedback({ summary: 'Good start', score: '72' });
+    expect(fb).toEqual({ score: 72, pass: true, strengths: [], improvements: [], summary: 'Good start' });
+    expect(aiFeedback({ summary: 'x', score: 900, strengths: 'not a list' })?.score).toBe(100);
+    expect(aiFeedback(null)).toBeNull();
+    expect(aiFeedback('garbage')).toBeNull();
+    expect(learnerReport({ overview: 'Fine', gaps: [{ area: 'Loops', severity: 'extreme' }] })?.gaps[0]?.severity).toBe('medium');
+    expect(learnerReport({ strengths: ['x'] })).toBeNull();
+    expect(sessionSummary({ summary: 'We did loops', keyPoints: [{ point: 'for' }, 'bad'] })?.keyPoints).toEqual([{ point: 'for', by: '' }]);
+    expect(classInsights({}).atRisk).toEqual([]);
+    expect(assignmentDraft({ title: 5 }).title).toBe('5');
+  });
+});

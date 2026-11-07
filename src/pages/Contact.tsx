@@ -50,11 +50,11 @@ export default function Contact() {
           </form>
         )}
         <aside className="card space-y-4 p-6 text-sm">
-          <a href={`mailto:${SITE.contact.email}`} className="flex items-center gap-3 hover:text-teal-600"><Mail className="h-5 w-5 text-gold-600" />{SITE.contact.email}</a>
-          <a href={`tel:${SITE.contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-3 hover:text-teal-600"><Phone className="h-5 w-5 text-gold-600" />{SITE.contact.phone}</a>
-          <a href={`https://wa.me/${SITE.contact.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-teal-600"><MessageCircle className="h-5 w-5 text-gold-600" />Chat on WhatsApp</a>
-          <p className="flex items-center gap-3"><MapPin className="h-5 w-5 text-gold-600" />{SITE.contact.address}</p>
-          <p className="flex items-center gap-3"><Clock className="h-5 w-5 text-gold-600" />{SITE.contact.hours}</p>
+          <a href={`mailto:${SITE.contact.email}`} className="flex items-center gap-3 hover:text-teal-600"><Mail className="h-5 w-5 text-gold-700 dark:text-gold" />{SITE.contact.email}</a>
+          <a href={`tel:${SITE.contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-3 hover:text-teal-600"><Phone className="h-5 w-5 text-gold-700 dark:text-gold" />{SITE.contact.phone}</a>
+          <a href={`https://wa.me/${SITE.contact.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-teal-600"><MessageCircle className="h-5 w-5 text-gold-700 dark:text-gold" />Chat on WhatsApp</a>
+          <p className="flex items-center gap-3"><MapPin className="h-5 w-5 text-gold-700 dark:text-gold" />{SITE.contact.address}</p>
+          <p className="flex items-center gap-3"><Clock className="h-5 w-5 text-gold-700 dark:text-gold" />{SITE.contact.hours}</p>
         </aside>
       </div>
     </div>

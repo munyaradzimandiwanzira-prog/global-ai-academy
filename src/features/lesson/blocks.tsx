@@ -79,12 +79,12 @@ export function Exercise({ block, trackId }: { block: Extract<Block, { type: 'ex
     <section className="not-prose my-6 rounded-2xl bg-gold-100/70 p-5 dark:bg-night-800" aria-label="Exercise">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-          <Sparkles className="h-4 w-4 text-gold-600" /> Exercise
+          <Sparkles className="h-4 w-4 text-gold-700 dark:text-gold" /> Exercise
         </h3>
         {(already || allOk) && <span className="chip bg-teal-100 text-teal-600"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</span>}
       </div>
       <p className="mb-3 text-[15px]">{block.prompt}</p>
-      <pre className="overflow-x-auto rounded-lg bg-night p-4 font-mono text-[14px] leading-[2] text-sand">
+      <pre tabIndex={0} className="overflow-x-auto rounded-lg bg-night p-4 font-mono text-[14px] leading-[2] text-sand">
         {parts.map((part, i) => (
           <span key={i}>
             {part}
@@ -110,7 +110,7 @@ export function Exercise({ block, trackId }: { block: Extract<Block, { type: 'ex
       </pre>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button onClick={check} className="btn-primary btn-sm">Submit answer</button>
-        {block.hint && checked && !allOk && <span className="text-sm text-muted-fg"><Lightbulb className="mr-1 inline h-4 w-4 text-gold-600" />{block.hint}</span>}
+        {block.hint && checked && !allOk && <span className="text-sm text-muted-fg"><Lightbulb className="mr-1 inline h-4 w-4 text-gold-700 dark:text-gold" />{block.hint}</span>}
         {checked && !allOk && !revealed && <button onClick={() => setRevealed(true)} className="btn-ghost btn-sm text-muted-fg"><Eye className="h-3.5 w-3.5" /> Show answer</button>}
         {allOk && <span className="text-sm font-medium text-teal-600">Correct! 🎉</span>}
       </div>
@@ -220,7 +220,7 @@ export function ChallengeBlock({ challenge, trackId, lessonTitle }: { challenge:
             <ol className="mt-3 space-y-3">
               {hints.map((h, i) => (
                 <motion.li key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg bg-card p-3 text-sm shadow-sm">
-                  <div className="mb-1 text-xs font-semibold text-gold-600">Hint {i + 1} of 3</div>
+                  <div className="mb-1 text-xs font-semibold text-gold-700 dark:text-gold">Hint {i + 1} of 3</div>
                   <Markdown className="prose-sm">{h}</Markdown>
                 </motion.li>
               ))}

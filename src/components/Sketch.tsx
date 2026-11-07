@@ -175,7 +175,7 @@ export const Sketch = memo(function Sketch({ spec }: { spec: SketchSpec }) {
 
   return (
     <figure className="not-prose my-7" data-sketch={spec.title ?? ""}>
-      <div className="overflow-x-auto rounded-xl border border-border" style={{ background: 'var(--sk-paper)' }}>
+      <div tabIndex={0} className="overflow-x-auto rounded-xl border border-border" style={{ background: 'var(--sk-paper)' }}>
         <svg
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           width="100%"

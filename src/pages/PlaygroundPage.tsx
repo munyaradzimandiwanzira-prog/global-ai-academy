@@ -122,7 +122,7 @@ export default function PlaygroundPage() {
         </form>
       </Dialog>
       <div className="min-h-0 flex-1">
-        <Playground key={`${lang}:${projectId ?? ''}:${project.data?.project.updatedAt ?? ''}`} language={lang} initialCode={initial} fullscreen autoRun={lang === 'html' || lang === 'css'} onCodeChange={(c) => { code.current = c; }} />
+        <Playground key={`${lang}:${projectId ?? ''}:${project.data?.project.updatedAt ?? ''}`} language={lang} initialCode={initial} fullscreen autoRun={lang === 'html' || lang === 'css'} initialStdin={!project.data && lang === 'python' ? 'Tendai' : ''} onCodeChange={(c) => { code.current = c; }} />
       </div>
     </div>
   );

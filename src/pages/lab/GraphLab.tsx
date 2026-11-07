@@ -62,13 +62,13 @@ export function GraphLabIndex() {
                   <p className="text-sm font-semibold text-teal-600">{s.company}</p>
                   <h2 className="mt-1 font-display text-2xl font-bold">{s.role}</h2>
                 </div>
-                {!pro && s.freeTasks < s.tasks.length && <span className="chip shrink-0 bg-gold-100 text-gold-600">{s.freeTasks} free · {s.tasks.length - s.freeTasks} Plus</span>}
+                {!pro && s.freeTasks < s.tasks.length && <span className="chip shrink-0 bg-gold-100 text-gold-700">{s.freeTasks} free · {s.tasks.length - s.freeTasks} Plus</span>}
                 {(pro || s.freeTasks >= s.tasks.length) && <span className="chip shrink-0 bg-teal-100 text-teal-600">Open</span>}
               </div>
               <p className="mt-3 flex-1 text-[15px] text-muted-fg">{s.summary}</p>
               <p className="mt-4 flex items-center gap-2 text-sm text-muted-fg"><Database className="h-4 w-4" aria-hidden="true" /> {ds?.title}</p>
               <div className="mt-4 flex items-center gap-3 text-sm">
-                <ProgressBar value={(solved / s.tasks.length) * 100} className="h-1.5" />
+                <ProgressBar value={(solved / s.tasks.length) * 100} className="h-1.5" label="Tickets solved" />
                 <span className="shrink-0 tabular text-muted-fg">{solved}/{s.tasks.length} tickets</span>
                 <ArrowRight className="h-4 w-4 shrink-0 text-teal-600 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </div>
@@ -153,7 +153,7 @@ function Workspace({ scenario }: { scenario: Scenario }) {
             <Avatar name={scenario.manager.name} size={28} />
             <span className="leading-tight"><span className="font-medium">{scenario.manager.name}</span><br /><span className="text-xs text-muted-fg">{scenario.manager.title}, your manager</span></span>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-fg"><ProgressBar value={(solvedCount / scenario.tasks.length) * 100} className="h-1.5" /><span className="shrink-0 tabular">{solvedCount}/{scenario.tasks.length}</span></div>
+          <div className="mt-4 flex items-center gap-2 text-xs text-muted-fg"><ProgressBar value={(solvedCount / scenario.tasks.length) * 100} className="h-1.5" label="Tickets solved" /><span className="shrink-0 tabular">{solvedCount}/{scenario.tasks.length}</span></div>
         </div>
         <nav className="py-2">
           {scenario.tasks.map((t, i) => {
@@ -225,7 +225,7 @@ function Workspace({ scenario }: { scenario: Scenario }) {
               {showSolution && (
                 <div className="mt-3 rounded-xl border border-border bg-card p-4 text-sm">
                   <p className="font-semibold">One way to solve it</p>
-                  <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-night p-3 font-mono text-[12.5px] text-sand">{task.solution}</pre>
+                  <pre tabIndex={0} className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-night p-3 font-mono text-[12.5px] text-sand">{task.solution}</pre>
                   <p className="mt-2 text-muted-fg">Type it out yourself rather than pasting. Then change one thing and predict the result before you run it.</p>
                 </div>
               )}

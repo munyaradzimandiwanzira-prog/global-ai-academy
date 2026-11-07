@@ -10,7 +10,7 @@ import { Button, ButtonLink, Dialog, Empty, Field, Input, PageLoader, Select, Te
 import { cn } from '@/lib/utils';
 
 const STATUS_LABEL: Record<Capstone['status'], string> = { planning: 'Planning', building: 'Building', review: 'In review', completed: 'Signed off' };
-const STATUS_TONE: Record<Capstone['status'], string> = { planning: 'text-fg/70', building: 'text-gold-600', review: 'text-teal-600', completed: 'text-teal-600 font-semibold' };
+const STATUS_TONE: Record<Capstone['status'], string> = { planning: 'text-fg/70', building: 'text-gold-700 dark:text-gold', review: 'text-teal-600', completed: 'text-teal-600 font-semibold' };
 
 type Form = { title: string; careerId: string; summary: string; stack: string; repoUrl: string; demoUrl: string; status: Capstone['status'] };
 const empty: Form = { title: '', careerId: '', summary: '', stack: '', repoUrl: '', demoUrl: '', status: 'planning' };

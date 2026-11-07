@@ -136,7 +136,7 @@ export default function QuizPage() {
           <p className="text-sm text-fg/70 tabular">Question {index + 1} of {items.length}</p>
         </div>
       </div>
-      <ProgressBar value={(index / items.length) * 100} className="mt-5" />
+      <ProgressBar value={(index / items.length) * 100} className="mt-5" label="Quiz progress" />
 
       <section className="mt-8 rounded-3xl bg-card p-6 md:p-8" aria-live="polite">
         <h2 className="text-xl font-semibold leading-snug md:text-2xl" style={{ fontFamily: 'inherit', letterSpacing: 0 }}><InlineCode text={q!.q} /></h2>

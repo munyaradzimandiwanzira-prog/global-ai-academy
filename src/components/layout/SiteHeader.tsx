@@ -34,7 +34,7 @@ function TutorialsMenu({ onClose }: { onClose: () => void }) {
       <div className="container grid max-h-[70vh] gap-x-8 gap-y-6 overflow-y-auto py-8 sm:grid-cols-2 lg:grid-cols-4">
         {groups.map((g) => (
           <div key={g.category}>
-            <h3 className="mb-2 font-display text-base font-semibold text-gold-600">{CATEGORY_LABELS[g.category]}</h3>
+            <h3 className="mb-2 font-display text-base font-semibold text-gold-700 dark:text-gold">{CATEGORY_LABELS[g.category]}</h3>
             <ul className="space-y-0.5">
               {g.tracks.map((t) => (
                 <li key={t.id}>
@@ -47,7 +47,7 @@ function TutorialsMenu({ onClose }: { onClose: () => void }) {
           </div>
         ))}
         <div>
-          <h3 className="mb-2 font-display text-base font-semibold text-gold-600">Practise and prove it</h3>
+          <h3 className="mb-2 font-display text-base font-semibold text-gold-700 dark:text-gold">Practise and prove it</h3>
           <ul className="space-y-0.5 text-sm">
             {PRACTICE_LINKS.map(([to, label]) => (
               <li key={to}><Link to={to} onClick={onClose} className="block rounded-md px-2 py-1.5 hover:bg-muted">{label}</Link></li>
@@ -73,7 +73,7 @@ function UserMenu() {
   const item = 'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm hover:bg-muted';
   return (
     <div className="relative" ref={ref}>
-      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full p-0.5 pr-2 hover:bg-muted" aria-expanded={open} aria-haspopup="menu">
+      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full p-0.5 pr-2 hover:bg-muted" aria-expanded={open} aria-haspopup="menu" aria-label={`Account menu for ${user.name}`}>
         <Avatar name={user.name} color={user.avatarColor} size={32} />
         <ChevronDown className="h-4 w-4 text-muted-fg" />
       </button>
@@ -83,7 +83,7 @@ function UserMenu() {
             <div className="truncate font-semibold">{user.name}</div>
             <div className="truncate text-xs text-muted-fg">{user.email}</div>
             <div className="mt-1.5 flex gap-1.5">
-              <span className="chip bg-gold-100 text-gold-600">{PLANS[user.plan].name}</span>
+              <span className="chip bg-gold-100 text-gold-700">{PLANS[user.plan].name}</span>
               <span className="chip bg-muted capitalize">{user.role}</span>
             </div>
           </div>

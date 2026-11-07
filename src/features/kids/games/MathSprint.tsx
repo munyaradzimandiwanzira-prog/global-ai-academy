@@ -143,7 +143,7 @@ export default function MathSprint() {
     <div className="mx-auto max-w-md">
       <div className="mb-4 flex items-center justify-between text-xl font-bold">
         <span className={cn('flex items-center gap-1', time <= 10 && 'animate-pulse text-red-600')}><Timer className="h-6 w-6" /> {time}s</span>
-        <span className="flex items-center gap-1">{streak >= 4 && <Flame className="h-6 w-6 text-gold-600" />} {score} pts</span>
+        <span className="flex items-center gap-1">{streak >= 4 && <Flame className="h-6 w-6 text-gold-700 dark:text-gold" />} {score} pts</span>
       </div>
       <div className="h-3 overflow-hidden rounded-full bg-white"><motion.div className="h-full bg-[#5B8C3A]" animate={{ width: `${(time / DURATION) * 100}%` }} /></div>
       <AnimatePresence mode="wait">

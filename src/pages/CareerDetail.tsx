@@ -52,7 +52,7 @@ export default function CareerDetail() {
                   })}
                 </div>
                 <div className="mt-4 flex gap-3 rounded-xl border border-dashed border-gold/60 bg-gold-100/40 p-4 text-sm dark:bg-night-800">
-                  <Hammer className="h-5 w-5 shrink-0 text-gold-600" />
+                  <Hammer className="h-5 w-5 shrink-0 text-gold-700 dark:text-gold" />
                   <p><strong>Portfolio project:</strong> {stage.project}</p>
                 </div>
               </li>

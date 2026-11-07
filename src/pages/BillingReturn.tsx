@@ -31,7 +31,7 @@ export default function BillingReturn() {
     <div className="container flex min-h-[60vh] flex-col items-center justify-center text-center">
       {status === 'pending' && (
         <>
-          <Smartphone className="h-14 w-14 text-gold-600" />
+          <Smartphone className="h-14 w-14 text-gold-700 dark:text-gold" />
           <h1 className="mt-4 text-3xl font-bold">Waiting for your payment</h1>
           <p className="mt-2 max-w-md text-muted-fg">If you chose EcoCash or OneMoney, check your phone and enter your PIN. This page updates by itself.</p>
           <Spinner className="mt-6" label="Checking with Paynow…" />

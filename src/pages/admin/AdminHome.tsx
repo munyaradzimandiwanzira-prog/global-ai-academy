@@ -152,7 +152,7 @@ function UsersAdmin() {
         <div className="relative flex-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-fg" /><Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Search name or email" className="pl-9" aria-label="Search users" /></div>
         <Select value={role} onChange={(e) => { setRole(e.target.value); setPage(0); }} className="w-40" aria-label="Filter role"><option value="">All roles</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="admin">Admins</option></Select>
       </div>
-      <div className="card overflow-x-auto">
+      <div tabIndex={0} className="card overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-muted text-left text-xs text-muted-fg"><tr><th className="px-4 py-2.5">User</th><th className="px-4">Role</th><th className="px-4">Plan</th><th className="px-4">XP</th><th className="px-4">Joined</th><th className="px-4">Last active</th><th /></tr></thead>
           <tbody>
@@ -228,7 +228,7 @@ function ClassesAdmin() {
   if (!data) return <PageLoader />;
   if (!data.classrooms.length) return <Empty icon={<GraduationCap className="h-8 w-8" />} title="No classrooms yet" />;
   return (
-    <div className="card overflow-x-auto">
+    <div tabIndex={0} className="card overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-muted text-left text-xs text-muted-fg"><tr><th className="px-4 py-2.5">Class</th><th className="px-4">Teacher</th><th className="px-4">Code</th><th className="px-4">Learners</th><th className="px-4">Assignments</th><th className="px-4">Created</th></tr></thead>
         <tbody>{data.classrooms.map((c) => (
@@ -244,11 +244,11 @@ function PaymentsAdmin() {
   if (!data) return <PageLoader />;
   if (!data.payments.length) return <Empty icon={<CreditCard className="h-8 w-8" />} title="No payments yet">Payments appear here once Paynow is connected. You can also grant plans manually from Users.</Empty>;
   return (
-    <div className="card overflow-x-auto">
+    <div tabIndex={0} className="card overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-muted text-left text-xs text-muted-fg"><tr><th className="px-4 py-2.5">Date</th><th className="px-4">Learner</th><th className="px-4">Plan</th><th className="px-4">Amount</th><th className="px-4">Status</th><th className="px-4">Reference</th></tr></thead>
         <tbody>{data.payments.map((p) => (
-          <tr key={p.id} className="border-t border-border"><td className="px-4 py-2.5 text-xs">{formatDateTime(p.created_at)}</td><td className="px-4">{p.name}<div className="text-xs text-muted-fg">{p.email}</div></td><td className="px-4 capitalize">{p.plan} · {p.period}</td><td className="px-4">${(p.amount_cents / 100).toFixed(2)}</td><td className="px-4"><span className={cn('chip capitalize', p.status === 'paid' ? 'bg-teal-100 text-teal-600' : p.status === 'pending' ? 'bg-gold-100 text-gold-600' : 'bg-muted')}>{p.status}</span></td><td className="px-4 font-mono text-xs">{p.reference}</td></tr>
+          <tr key={p.id} className="border-t border-border"><td className="px-4 py-2.5 text-xs">{formatDateTime(p.created_at)}</td><td className="px-4">{p.name}<div className="text-xs text-muted-fg">{p.email}</div></td><td className="px-4 capitalize">{p.plan} · {p.period}</td><td className="px-4">${(p.amount_cents / 100).toFixed(2)}</td><td className="px-4"><span className={cn('chip capitalize', p.status === 'paid' ? 'bg-teal-100 text-teal-600' : p.status === 'pending' ? 'bg-gold-100 text-gold-700' : 'bg-muted')}>{p.status}</span></td><td className="px-4 font-mono text-xs">{p.reference}</td></tr>
         ))}</tbody>
       </table>
     </div>
@@ -288,7 +288,7 @@ function InboxAdmin() {
   return (
     <ul className="space-y-3">
       {data.messages.map((m) => (
-        <li key={m.id} className={cn('card p-4', m.handled_at && 'opacity-60')}>
+        <li key={m.id} className={cn('card p-4', m.handled_at && 'bg-muted/50')}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-semibold">{m.subject}</p>
             <span className="text-xs text-muted-fg">{formatDateTime(m.created_at)}</span>
@@ -306,7 +306,7 @@ function AuditAdmin() {
   const { data } = useQuery({ queryKey: ['admin-audit'], queryFn: () => api.get<{ entries: { id: number; action: string; target: string | null; meta: string | null; created_at: string; actor_name: string | null }[] }>('/api/admin/audit') });
   if (!data) return <PageLoader />;
   return (
-    <div className="card overflow-x-auto">
+    <div tabIndex={0} className="card overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-muted text-left text-xs text-muted-fg"><tr><th className="px-4 py-2.5">When</th><th className="px-4">Who</th><th className="px-4">Action</th><th className="px-4">Details</th></tr></thead>
         <tbody>{data.entries.map((e) => (
@@ -337,7 +337,7 @@ function PromosAdmin() {
         <button className="btn-primary" onClick={() => setOpen(true)}><Tag className="h-4 w-4" /> New code</button>
       </div>
       {!data.promos.length ? <Empty title="No promo codes yet">Create one for a school, a launch week or a partner.</Empty> : (
-        <div className="card overflow-x-auto">
+        <div tabIndex={0} className="card overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted-fg"><tr className="border-b border-border"><th className="px-4 py-2.5">Code</th><th className="px-4">Discount</th><th className="px-4">Applies to</th><th className="px-4 text-right">Used</th><th className="px-4">Expires</th><th className="px-4">Status</th><th /></tr></thead>
             <tbody>{data.promos.map((p) => (
@@ -393,7 +393,7 @@ function ScholarshipsAdmin() {
         <button className="btn-primary" onClick={() => setOpen(true)}><HandHeart className="h-4 w-4" /> Grant scholarship</button>
       </div>
       {!data.scholarships.length ? <Empty title="No scholarships yet">Grant one to a learner who has applied through the contact page.</Empty> : (
-        <div className="card overflow-x-auto">
+        <div tabIndex={0} className="card overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted-fg"><tr className="border-b border-border"><th className="px-4 py-2.5">Learner</th><th className="px-4">Award</th><th className="px-4">Plan</th><th className="px-4">Until</th><th className="px-4">Granted by</th><th /></tr></thead>
             <tbody>{data.scholarships.map((s) => (
@@ -443,7 +443,7 @@ function WaitlistAdmin() {
         {data.entries.length > 0 && <button className="btn-outline btn-sm" onClick={csv}>Download CSV</button>}
       </div>
       {!data.entries.length ? <Empty title="Nobody on the waitlist yet">Sign-ups from the Premium card on the pricing page appear here.</Empty> : (
-        <div className="card overflow-x-auto">
+        <div tabIndex={0} className="card overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted-fg"><tr className="border-b border-border"><th className="px-4 py-2.5">Name</th><th className="px-4">Email</th><th className="px-4">What they want</th><th className="px-4">Joined</th></tr></thead>
             <tbody>{data.entries.map((e) => (

@@ -10,3 +10,4 @@ worker/env.d.ts.bak
 __pycache__/
 *.pyc
 backups/
+public/sitemap.xml

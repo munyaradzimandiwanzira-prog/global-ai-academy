@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Award, Printer, Copy } from '@/components/icons';
-import { toast } from 'sonner';
 import type { Certificate } from '@shared/api-types';
 import { api } from '@/lib/api';
 import { catalog } from '@/lib/catalog';
 import { Empty, PageHeader, PageLoader, TrackMark } from '@/components/ui';
 import { LogoMark } from '@/components/ui/Logo';
 import { formatDate } from '@/lib/utils';
+import { copyText } from '@/lib/clipboard';
 
 export function CertificateView({ cert }: { cert: Certificate }) {
   const verifyUrl = `${location.origin}/verify/${cert.id}`;
@@ -54,7 +54,7 @@ export default function Certificates() {
               <CertificateView cert={c} />
               <div className="mx-auto mt-3 flex max-w-3xl flex-wrap justify-center gap-2 print:hidden">
                 <button onClick={() => window.print()} className="btn-outline btn-sm"><Printer className="h-4 w-4" /> Print or save as PDF</button>
-                <button onClick={() => { void navigator.clipboard.writeText(`${location.origin}/verify/${c.id}`); toast.success('Verification link copied'); }} className="btn-outline btn-sm"><Copy className="h-4 w-4" /> Copy verification link</button>
+                <button onClick={() => void copyText(`${location.origin}/verify/${c.id}`, 'Verification link copied')} className="btn-outline btn-sm"><Copy className="h-4 w-4" /> Copy verification link</button>
                 <a href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(c.trackTitle)}&organizationName=Global%20AI%20Academy&certId=${c.id}&certUrl=${encodeURIComponent(`${location.origin}/verify/${c.id}`)}`} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm">Add to LinkedIn</a>
               </div>
             </div>

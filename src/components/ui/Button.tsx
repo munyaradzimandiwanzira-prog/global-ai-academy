@@ -26,8 +26,8 @@ interface StyleProps {
 
 const VARIANT_CLASS: Record<ButtonVariant, Partial<Record<ButtonColor, string>>> = {
   contained: { primary: 'btn-primary', action: 'btn-run', accent: 'btn-gold', danger: 'btn-danger', light: 'btn bg-white text-ink hover:bg-sand' },
-  outlined: { primary: 'btn-outline', action: 'btn-outline-run', accent: 'btn border-[1.5px] border-gold bg-transparent text-gold-600 hover:bg-gold/10', danger: 'btn border-[1.5px] border-red-700 text-red-700 hover:bg-red-700/[.06]', light: 'btn-outline-light' },
-  text: { primary: 'btn-ghost', action: 'btn-text-run', accent: 'btn bg-transparent px-3 text-gold-600 hover:bg-gold/10', danger: 'btn bg-transparent px-3 text-red-700 hover:bg-red-700/[.06]', light: 'btn bg-transparent px-3 text-white hover:bg-white/10' },
+  outlined: { primary: 'btn-outline', action: 'btn-outline-run', accent: 'btn border-[1.5px] border-gold bg-transparent text-gold-700 dark:text-gold hover:bg-gold/10', danger: 'btn border-[1.5px] border-red-700 text-red-700 hover:bg-red-700/[.06]', light: 'btn-outline-light' },
+  text: { primary: 'btn-ghost', action: 'btn-text-run', accent: 'btn bg-transparent px-3 text-gold-700 dark:text-gold hover:bg-gold/10', danger: 'btn bg-transparent px-3 text-red-700 hover:bg-red-700/[.06]', light: 'btn bg-transparent px-3 text-white hover:bg-white/10' },
 };
 
 export function buttonClass({ variant = 'contained', color = 'primary', size = 'md', fullWidth }: StyleProps = {}, extra?: string) {

@@ -37,7 +37,7 @@ export default function TrackPage() {
               <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> about {Math.max(1, Math.round(track.totalMinutes / 60))} h</span>
               <span className="flex items-center gap-1"><Code2 className="h-4 w-4" /> {track.exerciseCount} exercises</span>
               <span className="flex items-center gap-1"><Trophy className="h-4 w-4" /> {track.challengeCount} challenges</span>
-              {track.premium && <span className="chip bg-gold-100 text-gold-600">{pro ? 'Professional track · unlocked' : `Professional track · first ${preview} lessons free`}</span>}
+              {track.premium && <span className="chip bg-gold-100 text-gold-700">{pro ? 'Professional track · unlocked' : `Professional track · first ${preview} lessons free`}</span>}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to={lessonPath(track.id, next.slug)} className="btn-run btn-lg"><PlayCircle className="h-5 w-5" /> {p.done ? 'Continue' : 'Start'}: {next.title}</Link>
@@ -63,13 +63,13 @@ export default function TrackPage() {
               return (
                 <li key={l.slug}>
                   {i === preview && track.premium && !pro && (
-                    <div className="flex items-center gap-2 bg-gold-100/70 px-5 py-2 text-sm font-semibold text-gold-600 dark:bg-night-700"><Lock className="h-4 w-4" aria-hidden="true" /> Included with Plus · <Link to="/pricing?plan=plus" className="underline underline-offset-4">see plans</Link></div>
+                    <div className="flex items-center gap-2 bg-gold-100/70 px-5 py-2 text-sm font-semibold text-gold-700 dark:text-gold dark:bg-night-700"><Lock className="h-4 w-4" aria-hidden="true" /> Included with Plus · <Link to="/pricing?plan=plus" className="underline underline-offset-4">see plans</Link></div>
                   )}
                   <Link to={lessonPath(track.id, l.slug)} className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted">
                     <span className="w-6 text-right text-sm tabular-nums text-muted-fg">{i + 1}</span>
                     {done ? <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" aria-label="Completed" /> : lockedHere ? <Lock className="h-5 w-5 shrink-0 text-muted-fg" aria-label="Plus" /> : <Circle className="h-5 w-5 shrink-0 text-border" aria-hidden="true" />}
                     <span className="flex-1 font-medium">{l.title}</span>
-                    {l.hasChallenge && <Trophy className="h-4 w-4 text-gold-600" aria-label="Has a coding challenge" />}
+                    {l.hasChallenge && <Trophy className="h-4 w-4 text-gold-700 dark:text-gold" aria-label="Has a coding challenge" />}
                     <span className="text-xs text-muted-fg">{l.minutes} min</span>
                   </Link>
                 </li>

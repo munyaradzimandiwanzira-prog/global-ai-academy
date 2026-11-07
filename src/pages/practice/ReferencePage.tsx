@@ -52,7 +52,7 @@ function Entry({ entry, lang, section }: { entry: RefEntry; lang: string; sectio
         {example && (
           <details className="mt-1 text-[14.5px]">
             <summary className="cursor-pointer font-medium text-teal-600">Example</summary>
-            <pre className="mt-2 overflow-x-auto rounded-xl bg-night px-4 py-3 font-mono text-[13.5px] leading-relaxed text-sand"><code>{example}</code></pre>
+            <pre tabIndex={0} className="mt-2 overflow-x-auto rounded-xl bg-night px-4 py-3 font-mono text-[13.5px] leading-relaxed text-sand"><code>{example}</code></pre>
           </details>
         )}
       </div>

@@ -115,7 +115,7 @@ export default function PixelPainter() {
       {done && (
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mx-auto mt-10 max-w-3xl rounded-[28px] border-4 border-ink bg-white p-6">
           <h2 className="flex items-center gap-2 text-2xl font-bold">{Array.from({ length: starCount }, (_, i) => <Star key={i} className="h-6 w-6 fill-gold text-gold" />)} The same picture in Python</h2>
-          <pre className="mt-4 overflow-x-auto rounded-2xl bg-ink p-4 font-mono text-[15px] leading-relaxed text-white">{P.code}</pre>
+          <pre tabIndex={0} className="mt-4 overflow-x-auto rounded-2xl bg-ink p-4 font-mono text-[15px] leading-relaxed text-white">{P.code}</pre>
           <div className="mt-5 flex flex-wrap gap-3">
             {pi < PICTURES.length - 1 && <button onClick={() => setPi(pi + 1)} className="flex h-14 items-center gap-2 rounded-2xl bg-ink px-6 text-lg font-bold text-white">Next picture <ArrowRight className="h-5 w-5" /></button>}
             <button onClick={() => { setGrid(blank()); setTaps(0); }} className="flex h-14 items-center gap-2 rounded-2xl border-[3px] border-ink bg-white px-5 text-lg font-bold"><RotateCcw className="h-5 w-5" /> Try for 3 stars</button>

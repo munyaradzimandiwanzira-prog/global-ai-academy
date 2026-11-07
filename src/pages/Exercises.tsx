@@ -35,14 +35,14 @@ export default function Exercises() {
                 <h2 className="flex items-center gap-2 font-display text-xl font-semibold"><TrackMark short={t.short} color={t.color} size={32} />{t.title}</h2>
                 <span className="text-sm text-muted-fg">{solved}/{total} done</span>
               </div>
-              <ProgressBar value={(solved / Math.max(1, total)) * 100} className="mt-3" tone="gold" />
+              <ProgressBar value={(solved / Math.max(1, total)) * 100} className="mt-3" tone="gold" label="Exercises solved" />
               <ul className="mt-4 divide-y divide-border">
                 {t.lessons.filter((l: CatalogTrack['lessons'][number]) => l.hasExercise || l.hasChallenge).map((l: CatalogTrack['lessons'][number]) => {
                   const done = [...passed].some((k) => k.includes(`${t.id}:${l.slug}:`));
                   return (
                     <li key={l.slug}>
                       <Link to={lessonPath(t.id, l.slug)} className="flex items-center gap-3 py-2.5 text-sm hover:text-teal-600">
-                        {done ? <CheckCircle2 className="h-4 w-4 text-teal" /> : l.hasChallenge ? <Trophy className="h-4 w-4 text-gold-600" /> : <Sparkles className="h-4 w-4 text-muted-fg" />}
+                        {done ? <CheckCircle2 className="h-4 w-4 text-teal" /> : l.hasChallenge ? <Trophy className="h-4 w-4 text-gold-700 dark:text-gold" /> : <Sparkles className="h-4 w-4 text-muted-fg" />}
                         <span className="flex-1">{l.title}</span>
                         <span className="text-xs text-muted-fg">{l.hasChallenge ? 'Challenge' : 'Exercise'}</span>
                       </Link>
