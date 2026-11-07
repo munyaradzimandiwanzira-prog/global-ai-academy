@@ -10,6 +10,8 @@ import { KID_LEVELS, levelHref, STAGES } from '@shared/kids-curriculum';
 import { chatJson } from '../lib/openai';
 import { asData } from '../lib/prompts';
 import { getTrack, lessonExists, lessonOutline } from '../lib/catalog';
+import { eslViewText } from '../esl/report';
+import { eslWeek } from '@shared/esl';
 import { unavailable } from '../lib/errors';
 
 const model = (env: Env) => env.ZUVA_MODEL || 'gpt-5.5';
@@ -22,6 +24,7 @@ export function realPath(path: string): boolean {
   const [, a, b, c] = p!.split('/');
   if (a === 'learn') return !!getTrack(b ?? '') && (!c || lessonExists(b!, c));
   if (a === 'kids') return q ? KID_LEVELS.some((l) => levelHref(l) === path) : true;
+  if (a === 'cambridge' && b === 'esl' && c === 'week') { const n = Number(p!.split('/')[4]); return Number.isInteger(n) && n >= 1 && n <= 36; }
   return true;
 }
 
@@ -34,8 +37,8 @@ const REPORT_PROMPT = `You are Zuva, the AI teaching assistant of Global AI Acad
 ${DATA_NOTE}
 Use only the learning data given. Do not guess about the learner's home life, health, personality or ability beyond what the data shows. If there is little data, say so and set confidence to "low".
 Be specific: name lessons, levels, assignments and numbers from the data. Be kind and professional; the teacher may share the parent note.
-Pain points are learning obstacles backed by evidence (repeated failed attempts, overdue or low-scoring work, stalled courses, long inactivity).
-Next steps are concrete actions for the teacher, each with a reason. When a next step points to Academy material, include a resource with a real path from <catalog> (lesson paths look like /learn/<track>/<lesson>; Kids Zone levels like /kids/<game>?level=<n>). Never invent a path.
+Pain points are learning obstacles backed by evidence (repeated failed attempts, overdue or low-scoring work, stalled courses, long inactivity, low English mastery in a skill).
+Next steps are concrete actions for the teacher, each with a reason. When a next step points to Academy material, include a resource with a real path from <catalog> (lesson paths look like /learn/<track>/<lesson>; Kids Zone levels like /kids/<game>?level=<n>; English weeks like /cambridge/esl/week/<n>). Never invent a path.
 Return JSON only: {"summary": string (2-3 sentences), "strengths": string[] (max 4), "painPoints": [{"area": string, "evidence": string}] (max 4), "nextSteps": [{"action": string, "why": string, "resource"?: {"title": string, "path": string}}] (max 4), "parentNote": string (1-2 sentences, plain words), "confidence": "low"|"medium"|"high"}.`;
 
 export async function writeStudentReport(env: Env, d: StudentDetail, catalogHints: { title: string; path: string }[]): Promise<StudentReportContent> {
@@ -48,6 +51,7 @@ export async function writeStudentReport(env: Env, d: StudentDetail, catalogHint
     assignments: d.assignments,
     struggles: d.struggles,
     activeDaysLast4Weeks: d.activityByDay.length,
+    english: d.esl ? eslViewText(d.esl) : null,
   };
   const raw = await chatJson<Partial<StudentReportContent>>(env, {
     model: model(env), reasoningEffort: 'medium', maxTokens: 1400,
@@ -82,6 +86,9 @@ export function catalogHintsFor(d: StudentDetail): { title: string; path: string
   const stage = d.student.kidsStage;
   if (stage || d.student.level === 'kids') {
     for (const l of KID_LEVELS.filter((x) => x.stage === (stage ?? 2)).slice(0, 10)) hints.push({ title: `Kids Zone: ${l.name}`, path: levelHref(l) });
+  }
+  if (d.esl) {
+    for (let w = Math.max(1, d.esl.week - 1); w <= Math.min(36, d.esl.week + 1); w++) hints.push({ title: `English week ${w}: ${eslWeek(w)?.title ?? ''}`, path: `/cambridge/esl/week/${w}` });
   }
   return hints;
 }

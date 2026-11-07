@@ -15,6 +15,7 @@ import { assertCanSeeStudent, isAdmin } from '../lib/teaching';
 import { resourceProblem } from '../lib/assignments';
 import { makeLessonPlan, makeStudentReport } from '../routes/teach';
 import { obj, str, type ToolCtx, type ZuvaTool } from './tool-kit';
+import { eslTeacherView, eslViewText } from '../esl/report';
 
 const first = (name: string) => name.split(/\s+/)[0] ?? name;
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -123,7 +124,23 @@ export const TEACHER_TOOLS: ZuvaTool[] = [
       const d = await studentDetail(ctx.env.DB, t.id, s.id, isAdmin(t));
       if (!d) return 'Learner not found.';
       const { email: _email, ...student } = d.student;
-      return JSON.stringify({ ...d, student, page: `/teach/students/${s.id}` }).slice(0, 3800);
+      const { esl, ...rest } = d;
+      return `${JSON.stringify({ ...rest, student, page: `/teach/students/${s.id}` }).slice(0, 3200)}${esl ? `\n${eslViewText(esl).slice(0, 1200)}` : ''}`;
+    },
+  },
+  {
+    label: 'Reading English progress',
+    modes: ['teacher'],
+    signedIn: true,
+    spec: { name: 'esl_progress', description: 'English as a Second Language progress for ONE learner: level band, week, mastery per skill, struggles, strengths, games they are slow or quick at, what they enjoy, tricky words and the notes the English tutor left. Use it to plan English support.', parameters: obj({ student: { type: 'string', description: 'Learner id or name' } }, ['student']) },
+    run: async (ctx, args) => {
+      const s = await findStudent(ctx, str(args.student, 80));
+      if (typeof s === 'string') return s;
+      const t = teacherOf(ctx);
+      await assertCanSeeStudent(ctx.env.DB, t, s.id);
+      const v = await eslTeacherView(ctx.env.DB, s.id);
+      if (!v) return `${s.name} has not started the English course yet. Its first four weeks are free at /cambridge/esl.`;
+      return `${eslViewText(v)}\nPage: /teach/students/${s.id}`;
     },
   },
   {

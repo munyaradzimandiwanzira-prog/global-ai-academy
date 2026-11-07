@@ -16,6 +16,7 @@ import { getExperiment, type Experiment } from './experiments';
 import { HttpError } from '../lib/errors';
 import { TEACHER_TOOLS } from './teacher-tools';
 import { obj, str, type ToolCtx, type ZuvaTool } from './tool-kit';
+import { eslZuvaTools } from '../esl/adapter';
 
 export type { ToolCtx, ZuvaTool } from './tool-kit';
 
@@ -79,7 +80,7 @@ const BASE_TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Getting a button ready',
-    modes: ['kids', 'learner', 'teacher'],
+    modes: ['kids', 'learner', 'teacher', 'esl'],
     spec: { name: 'open_page', description: 'Show the learner a button that opens a page in the Academy (a Kids Zone game like /kids/bridge, a lesson like /learn/python/lists, /tutorials, /playground). They choose whether to tap it.', parameters: obj({ path: { type: 'string' }, label: { type: 'string', description: 'Short button text, e.g. "Play Bridge Builder"' } }, ['path', 'label']) },
     run: async ({ emit }, args) => {
       const path = str(args.path, 120);
@@ -145,7 +146,7 @@ const BASE_TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Saving that to memory',
-    modes: ['kids', 'learner', 'teacher'],
+    modes: ['kids', 'learner', 'teacher', 'esl'],
     signedIn: true,
     needsMemory: true,
     spec: { name: 'remember', description: 'Save one lasting, learning-related fact the learner asked you to remember (an interest, goal, preference or struggle). Never personal details.', parameters: obj({ kind: { type: 'string', enum: MEMORY_KINDS }, content: { type: 'string', description: 'One short sentence, e.g. "Wants to build a weather station"' } }, ['kind', 'content']) },
@@ -157,7 +158,7 @@ const BASE_TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Forgetting that',
-    modes: ['kids', 'learner', 'teacher'],
+    modes: ['kids', 'learner', 'teacher', 'esl'],
     signedIn: true,
     spec: { name: 'forget', description: 'Delete memories about something when the learner asks you to forget it.', parameters: obj({ about: { type: 'string' } }, ['about']) },
     run: async ({ env, user }, args) => {
@@ -168,9 +169,12 @@ const BASE_TOOLS: ZuvaTool[] = [
 ];
 
 export function toolsFor(ctx: Pick<ToolCtx, 'mode' | 'user' | 'memoryEnabled'>): ZuvaTool[] {
-  const TOOLS = [...BASE_TOOLS, ...TEACHER_TOOLS];
+  const TOOLS = [...BASE_TOOLS, ...TEACHER_TOOLS, ...(ctx.mode === 'esl' ? eslZuvaTools() : [])];
   return TOOLS.filter((t) => t.modes.includes(ctx.mode) && (!t.signedIn || ctx.user) && (!t.needsMemory || ctx.memoryEnabled));
 }
+
+/** Tools that change stored data refuse once web content has entered the turn (see worker/esl/mcp.ts). */
+const WRITES_MEMORY = new Set(['remember', 'forget']);
 
 export async function runTool(ctx: ToolCtx, tools: ZuvaTool[], name: string, rawArgs: string): Promise<string> {
   const tool = tools.find((t) => t.spec.name === name);
@@ -181,6 +185,7 @@ export async function runTool(ctx: ToolCtx, tools: ZuvaTool[], name: string, raw
   } catch {
     return 'Arguments were not valid JSON.';
   }
+  if (ctx.esl?.tainted && WRITES_MEMORY.has(name)) return '<tool_result>Refused: memory can’t change in a turn that read web content. Ask the learner again next time.</tool_result>';
   ctx.emit({ t: 'tool', name, label: tool.label });
   try {
     // Tool output goes back to the model as data, tagged so it is never mistaken for instructions.

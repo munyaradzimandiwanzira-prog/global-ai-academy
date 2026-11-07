@@ -10,6 +10,12 @@ interface Env {
   ZUVA_FAST_MODEL?: string;
   /** Speech-to-text model for dictation. Defaults to gpt-transcribe. */
   ZUVA_TRANSCRIBE_MODEL?: string;
+  /** English course: speech model and voice, picture model, and daily caps on new (uncached) clips and pictures. */
+  ESL_TTS_MODEL?: string;
+  ESL_TTS_VOICE?: string;
+  ESL_IMAGE_MODEL?: string;
+  ESL_TTS_DAILY_LIMIT?: string;
+  ESL_IMAGE_DAILY_LIMIT?: string;
   EMAIL_FROM: string;
   JUDGE0_URL: string;
   /** Public Turnstile site key (safe to expose). Bot checks switch on once this and the secret are set. */

@@ -199,3 +199,47 @@ export async function transcribe(env: Env, audio: Blob, filename: string, prompt
   const data = (await res.json()) as { text?: string };
   return (data.text ?? '').trim();
 }
+
+// ── Text to speech and pictures (English course) ─────────────────────────────
+
+/**
+ * Spoken audio for a short text. `instructions` steers accent, pace and warmth.
+ * Note: OpenAI retires its speech-endpoint models (gpt-4o-mini-tts, tts-1) on 6 January 2027;
+ * the model is a setting (ESL_TTS_MODEL) and every clip is cached, so the course keeps working and
+ * the browser's own voice takes over for anything new until the voice is moved to a newer model.
+ */
+export async function speech(env: Env, opts: { text: string; voice: string; instructions: string }): Promise<ArrayBuffer> {
+  const res = await fetch(`${base(env)}/v1/audio/speech`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${requireKey(env)}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ model: env.ESL_TTS_MODEL || 'gpt-4o-mini-tts', voice: opts.voice, input: opts.text, instructions: opts.instructions, response_format: 'mp3' }),
+  });
+  if (!res.ok) {
+    console.error('[openai:speech]', res.status, (await res.text()).slice(0, 300));
+    throw unavailable('Zuva’s voice is resting. Your device will read it instead.');
+  }
+  return res.arrayBuffer();
+}
+
+/** One picture-card image. Returns WebP (or PNG if the model does not offer WebP). */
+export async function picture(env: Env, prompt: string): Promise<{ bytes: Uint8Array; mime: string }> {
+  const call = async (format: 'webp' | 'png') => fetch(`${base(env)}/v1/images/generations`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${requireKey(env)}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ model: env.ESL_IMAGE_MODEL || 'gpt-image-2', prompt, size: '1024x1024', quality: 'low', n: 1, output_format: format, ...(format === 'webp' ? { output_compression: 70 } : {}), moderation: 'auto' }),
+  });
+  let res = await call('webp');
+  let mime = 'image/webp';
+  if (res.status === 400) { res = await call('png'); mime = 'image/png'; }
+  if (!res.ok) {
+    console.error('[openai:image]', res.status, (await res.text()).slice(0, 300));
+    throw unavailable('Pictures are resting. Here is the emoji instead.');
+  }
+  const data = (await res.json()) as { data?: { b64_json?: string }[] };
+  const b64 = data.data?.[0]?.b64_json;
+  if (!b64) throw unavailable('No picture came back.');
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return { bytes, mime };
+}

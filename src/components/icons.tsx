@@ -167,6 +167,11 @@ export const ICONS = {
   Users: 'group',
   Video: 'videocam',
   Volume2: 'volume_up',
+  Ear: 'hearing',
+  Headphones: 'headphones',
+  Languages: 'translate',
+  ThumbsDown: 'thumb_down',
+  ThumbsUp: 'thumb_up',
   VolumeX: 'volume_off',
   Wand2: 'auto_fix_high',
   Wifi: 'wifi',
@@ -236,6 +241,11 @@ export const KeyRound = icon(ICONS.KeyRound);
 export const Keyboard = icon(ICONS.Keyboard);
 export const LayoutDashboard = icon(ICONS.LayoutDashboard);
 export const Lightbulb = icon(ICONS.Lightbulb);
+export const Ear = icon(ICONS.Ear);
+export const Headphones = icon(ICONS.Headphones);
+export const Languages = icon(ICONS.Languages);
+export const ThumbsDown = icon(ICONS.ThumbsDown);
+export const ThumbsUp = icon(ICONS.ThumbsUp);
 export const Link2 = icon(ICONS.Link2);
 export const Link2Off = icon(ICONS.Link2Off);
 export const ListOrdered = icon(ICONS.ListOrdered);

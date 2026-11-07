@@ -46,7 +46,7 @@ describe('Academy MCP server', () => {
     expect(d.resultType).toBe('complete');
     expect(d.supportedVersions).toContain(MODERN);
     const l = call('tools/list').result as { tools: { name: string }[]; ttlMs: number; cacheScope: string };
-    expect(l.tools.map((t) => t.name)).toEqual(['search_lessons', 'get_track_outline', 'list_kids_games', 'find_experiments', 'get_experiment']);
+    expect(l.tools.map((t) => t.name)).toEqual(['esl_list_units', 'esl_get_unit', 'search_lessons', 'get_track_outline', 'list_kids_games', 'find_experiments', 'get_experiment']);
     expect(l.ttlMs).toBeGreaterThan(0);
     expect(l.cacheScope).toBe('public');
     const r = call('tools/call', { name: 'list_kids_games', arguments: { topic: 'robots' } }).result as { resultType: string; structuredContent: { id: string }[] };

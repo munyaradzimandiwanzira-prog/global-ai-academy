@@ -18,6 +18,7 @@ import capstones from './routes/capstones';
 import content from './routes/content';
 import account from './routes/account';
 import zuva from './routes/zuva';
+import esl from './routes/esl';
 import mcp from './routes/mcp';
 import teach from './routes/teach';
 import adminConsole from './routes/admin-console';
@@ -32,7 +33,8 @@ app.use('/api/*', secureHeaders({ crossOriginResourcePolicy: 'same-origin', refe
 const tooLarge = (c: Parameters<Parameters<typeof bodyLimit>[0]['onError'] & {}>[0]) => c.json({ error: { code: 'too_large', message: 'Request is too large.' } }, 413);
 // Dictation uploads short audio clips; everything else stays small.
 app.use('/api/zuva/transcribe', bodyLimit({ maxSize: 4.5 * 1024 * 1024, onError: tooLarge }));
-app.use('/api/*', async (c, next) => (c.req.path === '/api/zuva/transcribe' ? next() : bodyLimit({ maxSize: 128 * 1024, onError: tooLarge })(c, next)));
+app.use('/api/esl/hear', bodyLimit({ maxSize: 1.6 * 1024 * 1024, onError: tooLarge }));
+app.use('/api/*', async (c, next) => (c.req.path === '/api/zuva/transcribe' || c.req.path === '/api/esl/hear' ? next() : bodyLimit({ maxSize: 128 * 1024, onError: tooLarge })(c, next)));
 app.use('/api/*', csrfMiddleware);
 app.use('/api/*', sessionMiddleware);
 app.use('/api/*', async (c, next) => {
@@ -55,6 +57,7 @@ app.route('/api/capstones', capstones);
 app.route('/api/content', content);
 app.route('/api/account', account);
 app.route('/api/zuva', zuva);
+app.route('/api/esl', esl);
 app.route('/api/mcp', mcp);
 app.route('/api/teach', teach);
 app.route('/api/notifications', notifications);

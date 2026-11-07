@@ -55,9 +55,13 @@ Edit `vars` in `wrangler.jsonc`, then run `npm run deploy` again:
 | `ZUVA_MODEL` | Zuva, the tutor agent, plus its experiment planner and quiz maker. `gpt-5.5`, called through the Responses API so it can reason while using tools (low effort for children, medium for adult learners). |
 | `ZUVA_FAST_MODEL` | Zuva's background jobs (memory curation, conversation summaries). `gpt-5.4-mini`. |
 | `ZUVA_TRANSCRIBE_MODEL` | Speech-to-text for dictation. `gpt-transcribe`. |
+| `ESL_TTS_MODEL` | Optional. Zuva's reading voice in the English course. Defaults to `gpt-4o-mini-tts`. OpenAI shuts its speech models down on 6 Jan 2027; before then, move to the replacement OpenAI names (the browser voice is used automatically if speech fails). |
+| `ESL_TTS_VOICE` | Optional. Default `coral`. |
+| `ESL_IMAGE_MODEL` | Optional. Pictures for words outside the emoji set and Zuva-made games. Default `gpt-image-2` (low quality, cached forever). |
+| `ESL_TTS_DAILY_LIMIT` / `ESL_IMAGE_DAILY_LIMIT` | Optional cost caps for new (uncached) speech clips and pictures per day. Defaults 3000 and 150. |
 | `JUDGE0_URL` | Your Judge0 endpoint, if you use one |
 
-The OpenAI project behind `OPENAI_API_KEY` must have access to all four models, plus `omni-moderation-latest` (used for every child message).
+The OpenAI project behind `OPENAI_API_KEY` must have access to all four models, plus `omni-moderation-latest` (used for every child message), and the speech and image models above for the English course.
 
 ### Zuva and MCP
 

@@ -44,6 +44,9 @@ const AdminHome = lazy(() => import('@/pages/admin/AdminHome'));
 const KidsHome = lazy(() => import('@/features/kids/KidsHome'));
 const KidsGame = lazy(() => import('@/features/kids/KidsGame'));
 const KidsCurriculum = lazy(() => import('@/features/kids/KidsCurriculum'));
+const CambridgeHub = lazy(() => import('@/pages/cambridge/CambridgeHub'));
+const EslHome = lazy(() => import('@/pages/cambridge/EslHome'));
+const EslWeek = lazy(() => import('@/pages/cambridge/EslWeek'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const About = lazy(() => import('@/pages/About'));
 const Legal = lazy(() => import('@/pages/Legal'));
@@ -136,6 +139,8 @@ export default function App() {
           <Route path="verify" element={<Verify />} />
           <Route path="verify/:id" element={<Verify />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="cambridge" element={<CambridgeHub />} />
+          <Route path="cambridge/esl" element={<EslHome />} />
           <Route path="about" element={<About />} />
           <Route path="privacy" element={<Legal kind="privacy" />} />
           <Route path="terms" element={<Legal kind="terms" />} />
@@ -176,6 +181,7 @@ export default function App() {
         <Route element={<SiteLayout footer={false} />}>
           <Route path="learn/:trackId/:lessonSlug" element={<LessonPage />} />
           <Route path="playground" element={<PlaygroundPage />} />
+          <Route path="cambridge/esl/week/:week" element={<EslWeek />} />
           <Route path="compiler/:lang" element={<PlaygroundPage />} />
           <Route path="lab/:scenarioId" element={<GraphLabScenario />} />
         </Route>

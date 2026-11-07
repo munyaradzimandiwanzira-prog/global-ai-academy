@@ -14,7 +14,7 @@ import { ZuvaCardView } from './ZuvaCards';
 
 export interface ChatMsg { id: number; role: 'user' | 'assistant'; text: string; cards: ZuvaCard[]; actions: ZuvaAction[]; working: string[]; pending: boolean; error?: boolean }
 
-type Context = Pick<ZuvaChatRequest, 'page' | 'lesson' | 'activity' | 'stage'>;
+type Context = Pick<ZuvaChatRequest, 'page' | 'lesson' | 'activity' | 'stage' | 'esl'>;
 
 export interface ZuvaChatProps {
   mode: ZuvaMode;
@@ -30,6 +30,14 @@ export interface ZuvaChatProps {
   /** Ask Zuva something on the child's behalf (e.g. from a coach bubble). */
   ask?: { text: string; nonce: number } | null;
   autoSpeak?: boolean;
+  /** Speak a reply or a "hear it" button in a particular voice (the English course uses Zuva's accent-aware voice). */
+  voice?: (text: string, pace?: 'word' | 'early' | 'primary' | 'secondary') => void;
+  /** Called after each tool Zuva uses (e.g. to refresh settings Zuva changed). */
+  onTool?: (name: string) => void;
+  /** Called each time the learner sends a message. */
+  onUserMessage?: (text: string) => void;
+  /** Hide the starter chips and use a compact height (inside a game). */
+  compact?: boolean;
 }
 
 let msgId = 0;
@@ -53,7 +61,8 @@ function AssistantText({ text, animate, kids }: { text: string; animate: boolean
   return kids ? <p className="whitespace-pre-wrap">{shown}</p> : <Markdown className="prose-sm">{shown}</Markdown>;
 }
 
-export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey, signedIn, inject, ask, autoSpeak }: ZuvaChatProps) {
+export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey, signedIn, inject, ask, autoSpeak, voice, onTool, onUserMessage, compact }: ZuvaChatProps) {
+  const talk = voice ?? ((t: string) => speak(t));
   const kids = skin === 'kids';
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
@@ -75,15 +84,16 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
     setMessages((ms) => [...ms, { id: ++msgId, role: 'user', text, cards: [], actions: [], working: [], pending: false }, { id: ++msgId, role: 'assistant', text: '', cards: [], actions: [], working: [], pending: true }]);
     setInput('');
     setBusy(true);
+    onUserMessage?.(text);
     abort.current = new AbortController();
     try {
       await streamZuva({ mode, message: text, threadId: signedIn ? threadId.current : undefined, history: signedIn ? undefined : history, ...getContext() }, (e) => {
-        if (e.t === 'tool') patchLast((m) => ({ ...m, working: [...m.working, e.label] }));
+        if (e.t === 'tool') { patchLast((m) => ({ ...m, working: [...m.working, e.label] })); onTool?.(e.name); }
         else if (e.t === 'card') patchLast((m) => ({ ...m, cards: [...m.cards, e.card] }));
         else if (e.t === 'action') patchLast((m) => ({ ...m, actions: [...m.actions, e.action] }));
         else if (e.t === 'text') {
           patchLast((m) => ({ ...m, text: e.text, pending: false }));
-          if (autoSpeak) speak(e.text);
+          if (autoSpeak) talk(e.text);
         } else if (e.t === 'error') patchLast((m) => ({ ...m, text: e.message, pending: false, error: true }));
         else if (e.t === 'done' && e.threadId) { threadId.current = e.threadId; threads.set({ ...threads.get(), [threadKey]: e.threadId }); }
       }, abort.current.signal);
@@ -93,7 +103,7 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
       patchLast((m) => ({ ...m, pending: false }));
       setBusy(false);
     }
-  }, [autoSpeak, busy, getContext, messages, mode, signedIn, threadKey]);
+  }, [autoSpeak, busy, getContext, messages, mode, signedIn, threadKey, onTool, talk, onUserMessage]);
 
   // Coach clues appear as Zuva messages; coach "ask" sends on the child's behalf.
   useEffect(() => { if (inject) setMessages((ms) => [...ms, { id: ++msgId, role: 'assistant', text: inject.text, cards: [], actions: [], working: [], pending: false }]); }, [inject?.nonce]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -109,7 +119,7 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
           {kids && <Zuva size={44} />}
           <div className={cn('max-w-[92%] rounded-2xl px-4 py-2.5', kids ? 'rounded-tl-sm border-2 border-ink bg-white text-lg text-ink' : 'bg-muted text-sm')}>{kids ? greeting : <Markdown className="prose-sm">{greeting}</Markdown>}</div>
         </div>
-        {messages.length === 0 && (
+        {messages.length === 0 && !compact && (
           <div className="flex flex-wrap gap-2">
             {starters.map((s) => (
               <button key={s} type="button" onClick={() => void send(s)} className={cn('rounded-full border-2 px-3 py-2 text-left font-semibold transition-transform active:scale-95', kids ? 'min-h-11 border-ink/30 bg-white text-base text-ink' : 'border-border text-sm hover:border-teal')}>{s}</button>
@@ -134,13 +144,15 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
                   ) : m.role === 'assistant' ? <AssistantText text={m.text} animate={m.id === messages[messages.length - 1]?.id} kids={kids} /> : m.text}
                 </div>
                 {m.role === 'assistant' && m.text && !m.error && typeof window !== 'undefined' && 'speechSynthesis' in window && (
-                  <button type="button" onClick={() => speak(m.text)} className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D6EBE8] text-ink" aria-label="Read this aloud"><Volume2 /></button>
+                  <button type="button" onClick={() => talk(m.text)} className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D6EBE8] text-ink" aria-label="Read this aloud"><Volume2 /></button>
                 )}
               </div>
             )}
             {m.actions.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {m.actions.map((a, i) => <Link key={i} to={a.to} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'min-h-11 border-4 border-ink bg-gold text-ink' : 'btn-primary btn-sm')}>{a.label} <ArrowRight /></Link>)}
+                {m.actions.map((a, i) => a.kind === 'speak'
+                  ? <button key={i} type="button" onClick={() => (voice ? voice(a.text, a.pace) : speak(a.text))} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'min-h-11 border-4 border-ink bg-[#D6EBE8] text-ink' : 'btn-outline btn-sm')}><Volume2 /> {a.label}</button>
+                  : <Link key={i} to={a.to} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'min-h-11 border-4 border-ink bg-gold text-ink' : 'btn-primary btn-sm')}>{a.label} <ArrowRight /></Link>)}
               </div>
             )}
           </div>

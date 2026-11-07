@@ -149,6 +149,13 @@ account.get('/export', async (c) => {
   const user = await freshUser(c);
   await hit(c.env.DB, `export:${user.id}`, 5, 3600, 'You can download your data 5 times an hour.');
   const q = (sql: string) => c.env.DB.prepare(sql).bind(user.id).all().then((r) => r.results);
+  const [esl, eslAttempts, eslSkills, eslSessions, eslNotes] = await Promise.all([
+    q('SELECT band, accent, age, week, voice, created_at, updated_at FROM esl_learners WHERE user_id = ?'),
+    q('SELECT week, band, kind, skill, item, correct, score, ms, tries, hints, input, heard, created_at FROM esl_attempts WHERE user_id = ? ORDER BY id'),
+    q('SELECT skill, mastery, attempts, correct, avg_ms, last_at FROM esl_skills WHERE user_id = ?'),
+    q('SELECT week, band, started_at, ended_at, summary FROM esl_sessions WHERE user_id = ?'),
+    c.env.DB.prepare('SELECT area, note, suggestion, created_at FROM esl_teacher_notes WHERE student_id = ?').bind(user.id).all().then((r) => r.results),
+  ]);
   const [progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests, zuvaProfile, zuvaMemories, zuvaChats] = await Promise.all([
     q('SELECT track_id, lesson_slug, status, completed_at, updated_at FROM progress WHERE user_id = ?'),
     q('SELECT kind, ref_id, track_id, passed, score, attempts, last_code, updated_at FROM activity WHERE user_id = ?'),
@@ -170,6 +177,7 @@ account.get('/export', async (c) => {
   const data = {
     exportedAt: nowIso(),
     site: c.env.APP_NAME,
+    englishCourse: { settings: esl[0] ?? null, answers: eslAttempts, skills: eslSkills, sessions: eslSessions, notesToTeachers: eslNotes },
     account: {
       ...toPublicUser(user),
       termsAcceptedAt: user.terms_accepted_at,
@@ -212,7 +220,9 @@ account.post('/delete', async (c) => {
   await db.batch([
     ...['sessions', 'email_tokens', 'progress', 'activity', 'xp_events', 'goals', 'projects', 'capstones', 'submissions',
       'certificates', 'exam_attempts', 'classroom_members', 'messages', 'learner_reports', 'teacher_requests', 'waitlist',
-      'mfa_recovery_codes', 'mfa_challenges', 'zuva_threads', 'zuva_memories', 'zuva_profiles'].map(del),
+      'mfa_recovery_codes', 'mfa_challenges', 'zuva_threads', 'zuva_memories', 'zuva_profiles',
+      'esl_learners', 'esl_attempts', 'esl_skills', 'esl_items', 'esl_engagement', 'esl_sessions', 'esl_progress', 'esl_generated'].map(del),
+    db.prepare('DELETE FROM esl_teacher_notes WHERE student_id = ?').bind(id),
     db.prepare('DELETE FROM contact_messages WHERE email = ?').bind(user.email),
     db.prepare(
       `UPDATE users SET email = ?, name = 'Deleted account', password_hash = '!', city = NULL, school = NULL, bio = NULL,

@@ -12,7 +12,9 @@ http.createServer((req, res) => {
       const flagged = /BADWORDTEST/.test(body);
       return reply(res, { results: [{ flagged, categories: { 'violence': flagged } }] });
     }
-    if (req.url.endsWith('/audio/transcriptions')) return reply(res, { text: 'Zuva, how do bridges stay up?' });
+    if (req.url.endsWith('/audio/transcriptions')) return reply(res, { text: /mango/.test(body) ? 'Mango.' : 'Zuva, how do bridges stay up?' });
+    if (req.url.endsWith('/audio/speech')) { log.push({ api: 'speech', body: body.slice(0, 300) }); res.writeHead(200, { 'content-type': 'audio/mpeg' }); return res.end(Buffer.from('ID3mockmp3')); }
+    if (req.url.endsWith('/images/generations')) { log.push({ api: 'image', body: body.slice(0, 400) }); return reply(res, { data: [{ b64_json: Buffer.from('RIFFmockWEBPVP8 ').toString('base64') }] }); }
     const j = JSON.parse(body || '{}');
     if (req.url.endsWith('/responses')) {
       const bad = (m) => { res.writeHead(400, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: { message: m } })); };
@@ -31,6 +33,17 @@ http.createServer((req, res) => {
       const fc = (id, name, args) => ({ type: 'function_call', id: 'fc_' + id, call_id: id, name, arguments: JSON.stringify(args), status: 'completed' });
       const text = (t) => ({ type: 'message', id: 'msg_1', role: 'assistant', status: 'completed', content: [{ type: 'output_text', text: t, annotations: [] }] });
       const done = (output) => reply(res, { id: 'resp_1', status: 'completed', output, usage: { input_tokens: 10, output_tokens: 5 } });
+      const tn0 = (j.tools || []).map((t) => t.name);
+      if (tn0.includes('esl_create_game') && !outs.length) {
+        if (/new game/i.test(userText)) return done([R, fc('call_g', 'esl_create_game', { title: 'Mango Market', intro: 'Say these fruits!', difficulty: 'harder', activity: { kind: 'say', items: [{ word: 'mango', emoji: '🥭' }, { word: 'banana', emoji: '🍌' }] } })]);
+        if (/story/i.test(userText)) return done([R, fc('call_st', 'esl_find_story', { source: 'fable', theme: 'animals' }), fc('call_sp', 'esl_set_preferences', { accent: 'us' })]);
+        if (/check my writing/i.test(userText)) return done([R, fc('call_w', 'esl_check_writing', { text: 'I goed to school yesterday and I play football with my friend.', task: 'Write about your day' })]);
+        if (/how do i say/i.test(userText)) return done([R, fc('call_pr', 'esl_pronounce', { text: 'ship' })]);
+        if (/tell my teacher/i.test(userText)) return done([R, fc('call_n', 'esl_note_for_teacher', { area: 'phonics', observation: 'Mixes up the sh and ch sounds in 6 of 8 words this week.', suggestion: 'Practise sh/ch minimal pairs for five minutes.' })]);
+        if (/american/i.test(userText)) return done([R, fc('call_ac', 'esl_set_preferences', { accent: 'us' })]);
+        if (/what next/i.test(userText)) return done([R, fc('call_nx', 'esl_next_activity', {})]);
+        if (/ignore previous/i.test(userText)) return done([R, text('I’m here to help with English! Shall we play a word game?')]);
+      }
       if (!outs.length && /experiment|make|build/i.test(userText) && j.tools?.length) return done([R, fc('call_1', 'plan_experiment', { request: 'build a bridge from paper' }), fc('call_2', 'open_page', { path: '/kids/bridge', label: 'Play Bridge Builder' }), fc('call_3', 'open_page', { path: 'https://evil.example', label: 'x' })]);
       if (!outs.length && /progress/i.test(userText) && j.tools?.length) return done([R, fc('call_p', 'get_my_progress', {})]);
       const tn = (j.tools || []).map((t) => t.name);
@@ -56,6 +69,8 @@ http.createServer((req, res) => {
       if (sys.includes('memory curator')) return reply(res, msg(JSON.stringify({ add: [{ kind: 'interest', content: 'Loves building bridges', importance: 3 }, { kind: 'fact', content: 'Goes to Avondale Primary school', importance: 2 }], profile: { interests: ['bridges'] } })));
       if (sys.includes('progress report on ONE learner')) return reply(res, msg(JSON.stringify({ summary: 'Tariro is moving steadily through Python basics.', strengths: ['Finishes lessons she starts'], painPoints: [{ area: 'Loops', evidence: 'Two failed loop exercises' }], nextSteps: [{ action: 'Revisit loops', why: 'Failed attempts', resource: { title: 'Python intro', path: '/learn/python/intro' } }, { action: 'Pair with a peer', why: 'Builds confidence', resource: { title: 'Bad', path: 'https://evil.example' } }], parentNote: 'Tariro is doing well; ask her to show you a program.', confidence: 'medium' })));
       if (sys.includes('writing a lesson plan')) return reply(res, msg(JSON.stringify({ title: 'Meet Python', overview: 'A first look at Python.', objectives: ['Run a first program'], priorKnowledge: ['Using a browser'], materials: ['Shared laptops'], timeline: [{ minutes: 5, phase: 'Starter', teacher: 'Ask what a program is', learners: 'Discuss' }, { minutes: 20, phase: 'Main', teacher: 'Live-code print()', learners: 'Type along' }, { minutes: 5, phase: 'Plenary', teacher: 'Exit ticket', learners: 'Answer' }], differentiation: { support: ['Pairs'], stretch: ['Use input()'] }, assessment: ['Exit ticket'], homework: 'Finish lesson 1', resources: [{ title: 'Intro', path: '/learn/python/intro' }] })));
+      if (sys.includes('turn a source text into a short listening')) return reply(res, msg(JSON.stringify({ title: 'The Lion and the Mouse', paragraphs: ['A big lion sleeps.', 'A little mouse runs on him.', 'Later the mouse helps the lion.'], questions: [{ q: 'Who helps the lion?', answer: 'mouse', options: [{ label: 'mouse', emoji: '🐭' }, { label: 'cat', emoji: '🐈' }] }] })));
+      if (sys.includes('You mark English writing')) return reply(res, msg(JSON.stringify({ scores: [{ criterion: 'Content', band: 4, comment: 'You told me about your day.' }, { criterion: 'Language', band: 3, comment: 'Watch past tenses.' }], corrections: [{ wrong: 'goed', right: 'went', why: 'go is irregular' }, { wrong: 'play', right: 'played', why: 'past tense' }], well: ['Clear sentences'], nextStep: 'Write three sentences with went, saw and ate.' })));
       if (sys.includes('practice quizzes')) return reply(res, msg(JSON.stringify({ title: 'Bridges', questions: [{ q: 'Which shape keeps its form?', options: ['Square', 'Triangle'], answer: 1, why: 'Triangles are rigid.' }] })));
       return reply(res, msg(JSON.stringify({ summary: 'Talked about bridges.' })));
     }

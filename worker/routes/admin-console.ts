@@ -280,7 +280,7 @@ console_.get('/traffic', async (c) => {
 // ── Data explorer (create, read, update, delete) ─────────────────────────
 
 /** Never shown or editable: credentials, sessions, tokens and internal tables. */
-const HIDDEN_TABLES = /^(sessions|email_tokens|mfa_recovery_codes|mfa_challenges|rate_limits|d1_migrations|_cf_.*|sqlite_.*)$/;
+const HIDDEN_TABLES = /^(sessions|email_tokens|mfa_recovery_codes|mfa_challenges|rate_limits|media_cache|d1_migrations|_cf_.*|sqlite_.*)$/;
 const READ_ONLY_TABLES = new Set(['audit_log']);
 const SECRET_COLUMNS: Record<string, Set<string>> = { users: new Set(['password_hash', 'mfa_secret', 'mfa_pending_secret', 'mfa_last_step']) };
 

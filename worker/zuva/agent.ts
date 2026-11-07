@@ -29,6 +29,10 @@ import { curateMemories, summarize } from './subagents';
 import { stageOf } from '@shared/kids-curriculum';
 import type { UserRow } from '../lib/db';
 import type { TeacherContext } from './persona';
+import { eslBand, hasBlockedWord } from '@shared/esl';
+import { eslSystemPrompt } from '../esl/persona';
+import { eslContextBlock, loadEslContext } from '../esl/context';
+import type { EslSession } from '../esl/mcp';
 
 type ChatInput = z.infer<typeof zuvaChatSchema>;
 const MAX_STEPS = 4;
@@ -83,7 +87,11 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
   const user = c.get('user');
   const background: Promise<unknown>[] = [];
   const teacherMode = input.mode === 'teacher';
-  const agentName = teacherMode ? 'teacher' : 'tutor';
+  const eslMode = input.mode === 'esl';
+  const agentName = teacherMode ? 'teacher' : eslMode ? 'esl' : 'tutor';
+  // English learners under 13 get the children's safety rules (input scrubbing, stricter moderation).
+  const eslChild = eslMode && (eslBand(input.esl?.band)?.tier !== 'secondary');
+  const safetyMode = eslMode ? (eslChild ? 'kids' : 'learner') : input.mode;
   const speakerTag = teacherMode ? 'teacher_message' : 'learner_message';
 
   const work = async () => {
@@ -94,7 +102,7 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       const db = env.DB;
       const title = userText.replace(/\s+/g, ' ').slice(0, 60);
       // The mode column predates teacher mode; teacher threads are marked by the agent column.
-      if (thread.isNew) await db.prepare('INSERT INTO zuva_threads (id, user_id, mode, title, agent) VALUES (?, ?, ?, ?, ?)').bind(thread.id, user.id, input.mode === 'kids' ? 'kids' : 'learner', title || 'Chat with Zuva', agentName).run();
+      if (thread.isNew) await db.prepare('INSERT INTO zuva_threads (id, user_id, mode, title, agent) VALUES (?, ?, ?, ?, ?)').bind(thread.id, user.id, safetyMode === 'kids' ? 'kids' : 'learner', title || 'Chat with Zuva', agentName).run();
       await db.batch([
         db.prepare('INSERT INTO zuva_messages (thread_id, role, content) VALUES (?, ?, ?)').bind(thread.id, 'user', userText),
         db.prepare('INSERT INTO zuva_messages (thread_id, role, content) VALUES (?, ?, ?)').bind(thread.id, 'assistant', reply),
@@ -106,7 +114,7 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
 
     try {
       emit({ t: 'status', text: 'Thinking' });
-      const verdict = await checkInput(env, input.mode, input.message);
+      const verdict = await checkInput(env, safetyMode, input.message);
       if (user) {
         learner = await loadLearnerContext(env.DB, user);
         thread = await loadThread(env.DB, user.id, agentName, input.threadId);
@@ -122,39 +130,51 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       const history = thread ? thread.history : (input.history ?? []).slice(-6);
 
       const teacher = teacherMode && user ? await loadTeacherContext(env.DB, user) : null;
-      const messages: AgentMessage[] = [{ role: 'system', content: systemPrompt(input.mode, learner, memories, thread?.summary, teacher) }];
-      const situation = situationBlock(input);
+      const eslIn = input.esl ?? { week: 1, band: 'starters' as const, accent: 'gb' as const };
+      const eslCtx = eslMode ? await loadEslContext(env.DB, user, eslIn) : null;
+      const memoryText = memories.length ? `\n\nThings you remember about this learner (use naturally, don't recite):\n<memory>\n${memories.map((m) => `- ${asData(m)}`).join('\n')}\n</memory>` : '';
+      const summaryText = thread?.summary ? `\n\nSummary of this conversation so far:\n<memory>\n${asData(thread.summary)}\n</memory>` : '';
+      const messages: AgentMessage[] = [{
+        role: 'system',
+        content: eslCtx ? `${eslSystemPrompt(eslCtx.band, eslCtx.accent)}${memoryText}${summaryText}\n\nToday's date is ${new Date().toISOString().slice(0, 10)}.` : systemPrompt(input.mode, learner, memories, thread?.summary, teacher),
+      }];
+      if (eslCtx) messages.push({ role: 'system', content: `What you know right now (data):\n${eslContextBlock(eslCtx, { activityId: eslIn.activityId, kind: eslIn.kind, item: eslIn.item, heard: eslIn.heard, task: eslIn.task })}` });
+      const situation = eslMode ? '' : situationBlock(input);
       if (situation || verdict.note) messages.push({ role: 'system', content: [situation, verdict.note].filter(Boolean).join('\n') });
       for (const m of history) messages.push(m.role === 'user' ? { role: 'user', content: `<${speakerTag}>${asData(m.content)}</${speakerTag}>` } : { role: 'assistant', content: m.content });
       messages.push({ role: 'user', content: `<${speakerTag}>${asData(verdict.text)}</${speakerTag}>` });
 
-      const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, stage: stageOf(input.stage)?.id, memoryEnabled, emit };
+      const esl: EslSession | undefined = eslCtx ? { env, user, ctx: eslCtx, memoryEnabled, emit, tainted: false } : undefined;
+      const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, stage: stageOf(input.stage)?.id, memoryEnabled, emit, esl };
       const tools = toolsFor(ctx);
       const model = env.ZUVA_MODEL || 'gpt-5.5';
       // Children get quick, short answers; grown-up learners get deeper reasoning.
-      const effort = input.mode === 'kids' ? 'low' : 'medium';
+      const effort = input.mode === 'kids' || eslChild ? 'low' : 'medium';
       let reply = '';
       for (let step = 0; step <= MAX_STEPS; step++) {
         const last = step === MAX_STEPS;
-        const r = await chatWithTools(env, { model, messages, tools: last ? [] : tools.map((t) => t.spec), maxTokens: input.mode === 'kids' ? 2000 : 4000, reasoningEffort: effort });
+        const r = await chatWithTools(env, { model, messages, tools: last ? [] : tools.map((t) => t.spec), maxTokens: input.mode === 'kids' || eslChild ? 2000 : 4000, reasoningEffort: effort });
         if (!r.toolCalls.length || last) { reply = r.content.trim(); break; }
         messages.push(...r.items);
         for (const tc of r.toolCalls.slice(0, 4)) messages.push({ type: 'function_call_output', call_id: tc.id, output: await runTool(ctx, tools, tc.name, tc.arguments) });
         for (const tc of r.toolCalls.slice(4)) messages.push({ type: 'function_call_output', call_id: tc.id, output: '<tool_result>Skipped: too many tools at once.</tool_result>' });
       }
-      reply = await checkOutput(env, input.mode, reply || 'Hmm, I’m not sure. Can you say that another way?');
+      reply = await checkOutput(env, safetyMode, reply || 'Hmm, I’m not sure. Can you say that another way?');
+      // Zuva never swears, whatever it was asked: a reply with a blocked word is replaced, not shown.
+      if (eslMode && hasBlockedWord(reply)) reply = 'Let’s keep our words kind and friendly. Shall we play the next game?';
       emit({ t: 'text', text: reply });
       await save(verdict.text, reply);
       emit({ t: 'done', threadId: thread?.id, quota });
 
       // ── After the reply: memory curation and episodic summary (never blocks the learner) ──
       // Teacher chats are about learners, so nothing is curated into memory automatically there.
-      if (user && learner && memoryEnabled && !teacherMode && verdict.text.length >= 12) {
+      // A turn that read web content is never mined for memories (a story could carry planted "facts").
+      if (user && learner && memoryEnabled && !teacherMode && !esl?.tainted && verdict.text.length >= 12) {
         background.push(
           (async () => {
             const existing = (await listMemories(env.DB, user.id)).map((m) => m.content);
-            const out = await curateMemories(env, { isKid: learner!.isKid || input.mode === 'kids', existing, exchange: [{ role: 'learner', content: verdict.text }, { role: 'zuva', content: reply }] });
-            for (const m of out.add) await writeMemory(env.DB, user.id, m, 'chat', learner!.isKid || input.mode === 'kids');
+            const out = await curateMemories(env, { isKid: learner!.isKid || input.mode === 'kids' || eslChild, existing, exchange: [{ role: 'learner', content: verdict.text }, { role: 'zuva', content: reply }] });
+            for (const m of out.add) await writeMemory(env.DB, user.id, m, 'chat', learner!.isKid || input.mode === 'kids' || eslChild);
             if (out.profile && (out.profile.interests?.length || out.profile.goals?.length || out.profile.learningStyle)) {
               const p = learner!.profile;
               await saveProfile(env.DB, user.id, {

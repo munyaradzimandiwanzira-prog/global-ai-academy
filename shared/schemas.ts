@@ -100,7 +100,7 @@ export const tutorSchema = z.object({
 
 /** Zuva agent chat. Guests send their short history; signed-in learners send a threadId instead. */
 export const zuvaChatSchema = z.object({
-  mode: z.enum(['kids', 'learner', 'teacher']),
+  mode: z.enum(['kids', 'learner', 'teacher', 'esl']),
   message: z.string().trim().min(1, 'Type or say something first').max(2000),
   threadId: z.string().max(40).optional(),
   history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(2000) })).max(8).optional(),
@@ -117,6 +117,19 @@ export const zuvaChatSchema = z.object({
     .optional(),
   /** Kids Zone: the Cambridge stage the child picked (1–6 Primary, 7 Lower Secondary). */
   stage: z.number().int().min(1).max(7).optional(),
+  /** English course: where the learner is, and (for guests) who they said they are. */
+  esl: z.object({
+    week: z.number().int().min(1).max(36),
+    band: z.enum(['tiny', 'little', 'starters', 'movers', 'flyers', 'key', 'preliminary', 'first']),
+    accent: z.enum(['gb', 'us']),
+    activityId: z.string().max(80).optional(),
+    kind: z.enum(['echo', 'say', 'pick', 'sound', 'rhyme', 'spell', 'order', 'gap', 'story', 'talk', 'write']).optional(),
+    /** The talk or write task the learner is doing. */
+    task: z.string().max(400).optional(),
+    item: z.string().max(200).optional(),
+    heard: z.string().max(200).optional(),
+    guest: z.object({ name: z.string().trim().max(40).optional(), age: z.number().int().min(2).max(99).optional(), trial: z.boolean() }).optional(),
+  }).optional(),
 });
 export const zuvaSettingsSchema = z.object({ memoryEnabled: z.boolean() });
 

@@ -470,6 +470,7 @@ export function LearnerAdmin() {
           <Section title="Courses">
             {d.tracks.length ? <Meter rows={d.tracks.map((t) => ({ label: t.title, value: t.done }))} format={(n) => `${n} lessons`} /> : <p className="text-sm text-muted-fg">No lessons yet.</p>}
             {d.kids.some((k) => k.done) && <div className="mt-4"><p className="label">Kids Zone</p><Meter rows={d.kids.filter((k) => k.done).map((k) => ({ label: `Stage ${k.stage}`, value: k.done }))} format={(n) => `${n} levels`} /></div>}
+                      {d.esl && <div className="mt-4"><p className="label">English with Zuva</p><p className="text-sm">{d.esl.bandName}, week {d.esl.week}/36 · {d.esl.unitsDone} weeks done · {d.esl.stars} stars · accuracy {d.esl.accuracy == null ? '–' : `${Math.round(d.esl.accuracy * 100)}%`} · {d.esl.notes.length} notes to teachers</p></div>}
           </Section>
           <Section title="Assignments">
             {d.assignments.length ? (

@@ -13,7 +13,7 @@ import { KID_GAMES } from '../shared/kids-games';
 const PLAYGROUND_LANGS = ['python', 'javascript', 'typescript', 'html', 'css', 'sql', 'postgres', 'cypher', 'java', 'kotlin', 'php', 'cpp', 'c', 'swift', 'go', 'bash'];
 
 const dir = join(import.meta.dirname, '../content/tracks');
-const out = new Set<string>(['/', '/tutorials', '/exercises', '/start', '/reference', '/quiz', '/challenges', '/lab', '/careers', '/pricing', '/leaderboard', '/verify', '/contact', '/about', '/privacy', '/terms', '/login', '/signup', '/forgot-password', '/playground', '/kids', '/kids/curriculum']);
+const out = new Set<string>(['/', '/tutorials', '/exercises', '/start', '/reference', '/quiz', '/challenges', '/lab', '/careers', '/pricing', '/leaderboard', '/verify', '/contact', '/about', '/privacy', '/terms', '/login', '/signup', '/forgot-password', '/playground', '/kids', '/kids/curriculum', '/cambridge', '/cambridge/esl']);
 for (const f of readdirSync(dir).filter((x) => x.endsWith('.md')).sort()) {
   const t = parseTrack(readFileSync(join(dir, f), 'utf8'), f);
   out.add(`/learn/${t.meta.id}`);

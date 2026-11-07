@@ -13,6 +13,13 @@ A hands-on AI and software engineering school for Zimbabwean learners, from a ch
 - **Coach Zuva** gives three levels of hints on a failed challenge without handing over the answer.
 - **Kids Zone:** Zuva's journey across Zimbabwe, with 8 games (Robo Maze, Bug Hunt, Turtle Art, Pixel Painter, Binary Bulbs, Circuit Lab, Math Sprint, STEM Safari). It has drawn art, sound and read-aloud, and needs no account.
 
+**Cambridge tab: English as a Second Language with Zuva** (`/cambridge`, `/cambridge/esl`)
+- A 36-week scheme (`shared/esl-curriculum.ts`) in 8 bands for ages 2–20, mapped to Cambridge English levels (Pre A1 Starters to B2 First; our own mapping, not endorsed by Cambridge). Weeks 1–4 are free; weeks 5–36 need Plus.
+- 11 game types built per band and week (`shared/esl.ts`: echo, say, pick, sound-out, rhyme, spell, sentence train, gap fill, story, talk, write) with pictures, Zuva's voice (British or American) and the microphone (OpenAI transcription, never stored).
+- **Zuva the English tutor** (`worker/esl/`): an agent mode (`mode: 'esl'`) with age-tuned personas (joyful early-years style for 2–6), 13 MCP-style tools (`worker/esl/mcp.ts`: learner profile and patterns, next activity, make a game, pronounce, mark writing, stories from Aesop (Project Gutenberg) and Simple English Wikipedia, notes for the teacher, preferences, sign-up), and layered memory: working (the screen and last messages), episodic (sittings and their summaries), semantic (profile and memories) and skill (mastery per skill, Leitner spaced review per word, enjoyment per game; `worker/esl/model.ts`).
+- Guard rails: data fencing against prompt injection, a taint rule (after reading the web, no notes, settings or memories can change in that turn), blocklist plus moderation on everything generated, kids safety mode for under-13s, cost caps on voice and pictures.
+- Teachers see an English panel per learner (mastery, struggles, pace, enjoyment, tricky words, Zuva's notes and a weekly summary), never the chats; teacher Zuva has an `esl_progress` tool.
+
 **Plans** (`shared/config.ts`; yearly billing is 10 months for 12)
 
 | Plan | Monthly | Yearly | Adds |
@@ -124,6 +131,12 @@ Teaching, money, payouts and admin console end to end (88 checks), against the b
 ```bash
 npm run build && bash scripts/dev-mock.sh   # wrangler dev on :8787 with a scripted OpenAI mock
 node tests/e2e-teaching.mjs
+```
+
+The English course end to end (43 checks: gating, the learner model, voice and pictures, Zuva's English tools and taint guard, teacher notes and reports), same setup:
+
+```bash
+node tests/e2e-esl.mjs
 ```
 
 Every page (689 public pages, at phone and desktop width) for console errors, failed requests, error screens and sideways scrolling:

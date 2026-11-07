@@ -4,10 +4,15 @@
  * The chat endpoint streams newline-delimited JSON events, so the UI can show what Zuva is doing
  * ("looking at your progress…") while it works, then render the answer, buttons and cards.
  */
-export type ZuvaMode = 'kids' | 'learner' | 'teacher';
+import type { Activity } from './esl';
+
+export type ZuvaMode = 'kids' | 'learner' | 'teacher' | 'esl';
 
 /** Something Zuva offers to do in the app. The learner always taps to accept; Zuva never navigates on its own. */
-export interface ZuvaAction { kind: 'open'; to: string; label: string }
+export type ZuvaAction =
+  | { kind: 'open'; to: string; label: string }
+  /** English course: play this text in Zuva's voice (the learner taps to hear it). */
+  | { kind: 'speak'; text: string; label: string; pace: 'word' | 'early' | 'primary' | 'secondary' };
 
 export interface ExperimentMaterial { item: string; qty?: string; where: string; approxUsd?: number; substitute?: string }
 export interface ExperimentCard {
@@ -40,7 +45,16 @@ export interface ReportCard {
   kind: 'report'; studentId: string; studentName: string; reportId: string; summary: string;
   painPoints: { area: string; evidence: string }[]; nextSteps: { action: string; why: string; resource?: { title: string; path: string } }[];
 }
-export type ZuvaCard = ExperimentCard | QuizCard | AssignmentDraftCard | LessonPlanCard | ReportCard;
+/** English course: a game ready to play inside the chat (from the course, or made by Zuva). */
+export interface EslGameCard { kind: 'esl_game'; activity: Activity; reason?: string }
+/** English course: writing marked against Cambridge-style criteria. */
+export interface EslFeedbackCard {
+  kind: 'esl_feedback'; title: string; wordCount: number;
+  scores: { criterion: string; band: number; comment: string }[];
+  corrections: { wrong: string; right: string; why: string }[];
+  well: string[]; nextStep: string;
+}
+export type ZuvaCard = ExperimentCard | QuizCard | AssignmentDraftCard | LessonPlanCard | ReportCard | EslGameCard | EslFeedbackCard;
 
 export type ZuvaEvent =
   | { t: 'status'; text: string }
@@ -73,5 +87,5 @@ export interface ZuvaActivity {
 }
 
 /** Paths Zuva may offer as buttons. Anything else is dropped, so a model can't send learners elsewhere. */
-export const ZUVA_SAFE_PATHS = [/^\/teach(\/[a-z-]+(\/[A-Za-z0-9-]{1,40})?)?$/, /^\/classes(\/[A-Za-z0-9-]{1,40})?$/, /^\/assignments\/[A-Za-z0-9-]{1,40}$/, /^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/];
+export const ZUVA_SAFE_PATHS = [/^\/teach(\/[a-z-]+(\/[A-Za-z0-9-]{1,40})?)?$/, /^\/classes(\/[A-Za-z0-9-]{1,40})?$/, /^\/assignments\/[A-Za-z0-9-]{1,40}$/, /^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/, /^\/cambridge(\/esl(\/week\/\d{1,2})?)?$/, /^\/signup\?next=\/cambridge\/esl$/, /^\/pricing$/];
 export const isSafeZuvaPath = (p: string) => ZUVA_SAFE_PATHS.some((r) => r.test(p));

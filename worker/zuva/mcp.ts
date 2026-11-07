@@ -20,7 +20,10 @@ import { STRANDS, levelHref, levelsAt, stageLabel, stageOf, stageRange, strandsF
 export const MODERN = '2026-07-28';
 export const SUPPORTED_VERSIONS = [MODERN, '2025-11-25', '2025-06-18', '2025-03-26'];
 const SERVER_INFO = { name: 'global-ai-academy', title: 'Global AI Academy', version: '1.0.0' };
-const INSTRUCTIONS = 'Read-only knowledge from Global AI Academy (skurulearning.com): search coding, AI and engineering lessons, get course outlines, list the Kids Zone learning games, and find safe hands-on science experiments for children with materials lists. All links are relative to https://skurulearning.com.';
+const INSTRUCTIONS = 'Read-only knowledge from Global AI Academy (skurulearning.com): search coding, AI and engineering lessons, get course outlines, list the Kids Zone learning games, browse the English as a Second Language course (ages 2–20), and find safe hands-on science experiments for children with materials lists. All links are relative to https://skurulearning.com.';
+
+import { getUnitText, listUnitsText } from '../esl/mcp';
+import type { EslBandId } from '@shared/esl';
 
 type Json = Record<string, unknown>;
 interface McpTool {
@@ -51,6 +54,23 @@ export function searchLessons(query: string, limit = 6) {
 }
 
 export const MCP_TOOLS: McpTool[] = [
+  {
+    name: 'esl_list_units',
+    title: 'English course units',
+    description: 'The English as a Second Language course: eight age bands (2–20, aligned to Cambridge English levels Pre A1 to C1) and 36 weekly units with themes and grammar focus.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    run: () => { const t = listUnitsText(); return { text: t, data: JSON.parse(t) }; },
+  },
+  {
+    name: 'esl_get_unit',
+    title: 'English course unit',
+    description: 'One week of the English course: words, phrases, grammar and the games for an age band (tiny, little, starters, movers, flyers, key, preliminary, first).',
+    inputSchema: { type: 'object', properties: { week: { type: 'integer', minimum: 1, maximum: 36 }, band: { type: 'string', enum: ['tiny', 'little', 'starters', 'movers', 'flyers', 'key', 'preliminary', 'first'] } }, required: ['week'], additionalProperties: false },
+    run: (a) => {
+      const t = getUnitText(int(a.week, 1, 1, 36), (str(a.band, 20) || 'starters') as EslBandId);
+      return t.startsWith('{') ? { text: t, data: JSON.parse(t) } : { error: t };
+    },
+  },
   {
     name: 'search_lessons',
     title: 'Search lessons',

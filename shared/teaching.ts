@@ -62,6 +62,23 @@ export interface StudentDetail {
   assignments: { id: string; title: string; kind: AssignmentKind; classroomName: string; dueAt: string | null; status: 'open' | 'done' | 'submitted' | 'graded' | 'late'; score: number | null; maxScore: number }[];
   struggles: string[];
   activityByDay: { day: string; count: number }[];
+  /** English as a Second Language: learning patterns only (Zuva's chats with the learner stay private). */
+  esl?: EslTeacherView | null;
+}
+
+export interface EslTeacherView {
+  band: string; bandName: string; accent: 'gb' | 'us'; week: number;
+  unitsDone: number; stars: number; lastActive: string | null;
+  attempts: number; accuracy: number | null; trend: 'up' | 'down' | 'steady' | 'new';
+  skills: { area: string; mastery: number; attempts: number }[];
+  struggles: { what: string; why: string }[];
+  strengths: { what: string; why: string }[];
+  slow: { title: string; avgSeconds: number }[];
+  fast: { title: string; avgSeconds: number }[];
+  enjoys: { title: string; why: string }[];
+  avoids: { title: string; why: string }[];
+  trickyWords: string[];
+  notes: { id: string; area: string; note: string; suggestion: string | null; source: 'zuva' | 'weekly'; at: string }[];
 }
 
 export interface StudentReportContent {

@@ -9,6 +9,7 @@ import { Avatar, Dialog, PageLoader, ProgressBar, Select, Stat } from '@/compone
 import { ArrowLeft, Sparkles, ClipboardList, BookOpen, Star, Flame, Trophy, Trash2, Printer, Plus } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { AssignForm } from './AssignForm';
+import { EslPanel } from './EslPanel';
 import { StatusChip, TeachNav, firstName, lastSeen, shortDate, useTeacherScope } from './shared';
 
 export default function TeachStudent() {
@@ -127,6 +128,8 @@ export default function TeachStudent() {
               </ul>
             ) : <p className="px-5 py-4 text-sm text-muted-fg">No work set yet.</p>}
           </section>
+
+          {d.esl && <EslPanel v={d.esl} name={firstName(s.name)} />}
 
           <section className="card p-5" aria-labelledby="courses">
             <h2 id="courses" className="font-display text-lg font-semibold">Courses</h2>
