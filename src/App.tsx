@@ -40,6 +40,12 @@ const TeachPlans = lazy(() => import('@/pages/teacher/TeachPlans'));
 const TeachPlan = lazy(() => import('@/pages/teacher/TeachPlan'));
 const TeachZuva = lazy(() => import('@/pages/teacher/TeachZuva'));
 const TeachWallet = lazy(() => import('@/pages/teacher/TeachWallet'));
+const TeachTests = lazy(() => import('@/pages/teacher/TeachTests'));
+const TeachTest = lazy(() => import('@/pages/teacher/TeachTest'));
+const TeachGradebook = lazy(() => import('@/pages/teacher/TeachGradebook'));
+const Teachers = lazy(() => import('@/pages/Teachers'));
+const MyTests = lazy(() => import('@/pages/student/MyTests'));
+const TakeTest = lazy(() => import('@/pages/student/TakeTest'));
 const AdminHome = lazy(() => import('@/pages/admin/AdminHome'));
 const KidsHome = lazy(() => import('@/features/kids/KidsHome'));
 const KidsGame = lazy(() => import('@/features/kids/KidsGame'));
@@ -136,6 +142,7 @@ export default function App() {
           <Route path="careers" element={<Careers />} />
           <Route path="careers/:careerId" element={<CareerDetail />} />
           <Route path="pricing" element={<Pricing />} />
+          <Route path="teachers" element={<Teachers />} />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="join/:code" element={<JoinTeacher />} />
           <Route path="verify" element={<Verify />} />
@@ -155,6 +162,8 @@ export default function App() {
 
           <Route element={<RequireAuth />}>
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="tests" element={<MyTests />} />
+            <Route path="tests/:id" element={<TakeTest />} />
             <Route path="settings" element={<Settings />} />
             <Route path="certificates" element={<Certificates />} />
             <Route path="exam/:trackId" element={<Exam />} />
@@ -174,6 +183,9 @@ export default function App() {
             <Route path="teach/plans/:id" element={<TeachPlan />} />
             <Route path="teach/zuva" element={<TeachZuva />} />
             <Route path="teach/wallet" element={<TeachWallet />} />
+            <Route path="teach/tests" element={<TeachTests />} />
+            <Route path="teach/tests/:id" element={<TeachTest />} />
+            <Route path="teach/gradebook" element={<TeachGradebook />} />
           </Route>
           <Route element={<RequireRole roles={['admin']} />}>
             <Route path="admin/*" element={<AdminHome />} />

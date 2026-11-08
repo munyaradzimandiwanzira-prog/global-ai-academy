@@ -164,3 +164,13 @@ node tests/e2e-api-fuzz.mjs routes.json admin-cookie.json
 ## Deploy
 
 See **[DEPLOY.md](DEPLOY.md)**.
+
+## Teacher tools: tests, gradebook, insights, tour
+
+- **Tests** (`/teach/tests`, API `/api/tests`, migration `0010_tests.sql`): homework, tests and exams with multiple choice, number, short and written questions. Everything except written answers is marked on hand-in (`shared/tests.ts` `autoMark`); written answers get a rubric-based suggestion from Zuva that the teacher confirms. Questions lock once anyone hands in. Questions can be imported from any Cambridge Maths unit's generators.
+- **Learners** take papers at `/tests/:id`: an intro before the clock starts, autosave every 15 s, an optional time limit that hands in automatically, and a review with answers if the teacher allows it.
+- **Gradebook** (`/teach/gradebook`) with CSV download.
+- **Dashboard insights** (`GET /api/teach/insights`, `worker/lib/insights.ts`): 14-day activity, onboarding funnel, test averages, flags (overdue, low marks, inactive, rushing, never started) and what to reteach, from marks earned and course mastery.
+- **Starter tour** (`src/pages/teacher/Tour.tsx`): a narrated spotlight tour that opens on a teacher's first visit, with a "Take the tour" button to replay it.
+- **For teachers** page (`/teachers`), `/signup?teacher=1`, and `POST /api/account/teacher-request` for signed-in learners. Admins approve requests as before.
+- Tests: `node tests/e2e-tests.mjs` (38 checks).

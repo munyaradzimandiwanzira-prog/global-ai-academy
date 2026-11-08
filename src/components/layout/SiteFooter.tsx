@@ -16,7 +16,7 @@ const COLUMNS: { title: string; links: [string, string][] }[] = [
   },
   {
     title: 'Academy',
-    links: [['/careers', 'Career paths'], ['/pricing', 'Plans and pricing'], ['/classes', 'Classrooms'], ['/certificates', 'Get certified'], ['/verify', 'Verify a certificate'], ['/leaderboard', 'Leaderboard']],
+    links: [['/careers', 'Career paths'], ['/pricing', 'Plans and pricing'], ['/classes', 'Classrooms'], ['/teachers', 'For teachers'], ['/certificates', 'Get certified'], ['/verify', 'Verify a certificate'], ['/leaderboard', 'Leaderboard']],
   },
   {
     title: 'About',

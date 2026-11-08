@@ -25,7 +25,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const invite = params.get('invite') ?? '';
-  const [form, setForm] = useState({ name: '', email: '', password: '', city: '', level: 'beginner' as Level, wantsToTeach: false, acceptTerms: false, inviteCode: invite });
+  const [form, setForm] = useState({ name: '', email: '', password: '', city: '', level: 'beginner' as Level, wantsToTeach: params.get('teacher') === '1', acceptTerms: false, inviteCode: invite });
   const [teachers, setTeachers] = useState<ListedTeacher[]>([]);
   const [hasTeacher, setHasTeacher] = useState(!!invite);
   const bot = useTurnstile('signup');

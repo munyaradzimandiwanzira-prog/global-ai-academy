@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, Moon, Sun, ChevronDown, LayoutDashboard, LogOut, Settings, GraduationCap, Shield, Award, BookOpenCheck, FolderCode, Rocket } from '@/components/icons';
+import { Search, Menu, X, Moon, Sun, ChevronDown, LayoutDashboard, LogOut, Settings, GraduationCap, Shield, Award, BookOpenCheck, FolderCode, Rocket, MaterialIcon } from '@/components/icons';
 import { Logo } from '@/components/ui/Logo';
 import { Avatar, TrackMark } from '@/components/ui';
 import { SearchDialog } from './SearchDialog';
@@ -91,6 +91,8 @@ function UserMenu() {
             <Link to="/dashboard" className={item}><LayoutDashboard className="h-4 w-4" /> My learning</Link>
             {user.role !== 'student' && <Link to="/teach" className={item}><GraduationCap className="h-4 w-4" /> Teaching</Link>}
             {user.role === 'admin' && <Link to="/admin" className={item}><Shield className="h-4 w-4" /> Administration</Link>}
+            <Link to="/tests" className={item}><MaterialIcon name="quiz" className="text-[16px]" /> Tests and homework</Link>
+            {user.role === 'student' && <Link to="/teachers" className={item}><GraduationCap className="h-4 w-4" /> Teach with us</Link>}
             <Link to="/classes" className={item}><BookOpenCheck className="h-4 w-4" /> Classes</Link>
             <Link to="/projects" className={item}><FolderCode className="h-4 w-4" /> My projects</Link>
             <Link to="/capstone" className={item}><Rocket className="h-4 w-4" /> Capstone</Link>
@@ -141,6 +143,7 @@ export function SiteHeader() {
             <NavLink to="/careers" className={navLink}>Careers</NavLink>
             <NavLink to="/kids" className={navLink}>Kids Zone</NavLink>
             <NavLink to="/pricing" className={navLink}>Plans</NavLink>
+            <NavLink to="/teachers" className={(a) => cn(navLink(a), "hidden xl:block")}>For teachers</NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-1.5">
             <button onClick={() => setSearchOpen(true)} className="flex h-11 items-center gap-2 rounded-full bg-granite-100 px-3 text-sm text-fg/70 transition-colors hover:bg-granite-200 dark:bg-night-700 2xl:w-52 2xl:px-4" aria-label="Search (Ctrl+K)">
@@ -171,7 +174,7 @@ export function SiteHeader() {
         {mobile && (
           <nav className="border-t border-border bg-card lg:hidden" aria-label="Mobile">
             <div className="container grid gap-1 py-3 text-sm">
-              {[['/tutorials', 'All tutorials'], ['/reference', 'References'], ['/exercises', 'Exercises'], ['/quiz', 'Quizzes'], ['/challenges', 'Code challenges'], ['/lab', 'Graph Lab'], ['/playground', 'Playground'], ['/careers', 'Career paths'], ['/kids', 'Kids Zone'], ['/pricing', 'Plans'], ['/leaderboard', 'Leaderboard'], ['/contact', 'Contact']].map(([to, label]) => (
+              {[['/tutorials', 'All tutorials'], ['/reference', 'References'], ['/exercises', 'Exercises'], ['/quiz', 'Quizzes'], ['/challenges', 'Code challenges'], ['/lab', 'Graph Lab'], ['/playground', 'Playground'], ['/careers', 'Career paths'], ['/kids', 'Kids Zone'], ['/pricing', 'Plans'], ['/teachers', 'For teachers'], ['/leaderboard', 'Leaderboard'], ['/contact', 'Contact']].map(([to, label]) => (
                 <Link key={to} to={to!} className="rounded-md px-3 py-2.5 hover:bg-muted">{label}</Link>
               ))}
               {!user && <Link to="/login" className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted">Sign in</Link>}

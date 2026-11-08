@@ -2,7 +2,10 @@ import { createRouter, body, requireUser, type Ctx } from '../app';
 import { deleteAccountSchema, mfaCodeSchema, mfaDisableSchema, mfaSetupSchema } from '@shared/schemas';
 import type { AccountSession, MfaStatus } from '@shared/api-types';
 import { audit, nowIso, toPublicUser, type UserRow } from '../lib/db';
-import { verifyPassword, sha256Hex } from '../lib/crypto';
+import { verifyPassword, sha256Hex, newId } from '../lib/crypto';
+import { tellAdminsAboutTeacherRequest } from '../lib/teaching';
+import { appBase } from '../lib/urls';
+import { z } from 'zod';
 import { destroyAllSessions, destroySession } from '../lib/session';
 import { badRequest, conflict, forbidden, notFound, unavailable } from '../lib/errors';
 import { hit } from '../lib/ratelimit';
@@ -28,6 +31,28 @@ async function requirePassword(c: Ctx, user: UserRow, password: string) {
   await hit(c.env.DB, `reauth:${user.id}`, 8, 900, 'Too many attempts. Wait 15 minutes and try again.');
   if (!(await verifyPassword(password, user.password_hash))) throw badRequest('Your password is not correct.', { password: 'Incorrect password' });
 }
+
+// ── Teaching ───────────────────────────────────────────────────────────────
+
+/** A signed-in learner asking to teach. An admin approves it before the teacher portal opens. */
+account.get('/teacher-request', async (c) => {
+  const user = requireUser(c);
+  const row = await c.env.DB.prepare('SELECT status, created_at FROM teacher_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').bind(user.id).first<{ status: string; created_at: string }>();
+  return c.json({ status: user.role === 'teacher' || user.role === 'admin' ? 'approved' : row?.status ?? 'none', requestedAt: row?.created_at ?? null });
+});
+
+account.post('/teacher-request', async (c) => {
+  const user = requireUser(c);
+  const { message } = await body(c, z.object({ message: z.string().trim().max(1000).default('') }));
+  if (user.role === 'teacher' || user.role === 'admin') throw conflict('You can already teach.');
+  await hit(c.env.DB, `teacher-request:${user.id}`, 3, 86_400, 'You’ve asked already today. We’ll be in touch.');
+  const pending = await c.env.DB.prepare("SELECT id FROM teacher_requests WHERE user_id = ? AND status = 'pending'").bind(user.id).first();
+  if (pending) return c.json({ status: 'pending' });
+  await c.env.DB.prepare('INSERT INTO teacher_requests (id, user_id, message) VALUES (?, ?, ?)').bind(newId(), user.id, message || 'Requested from the teachers page').run();
+  await audit(c.env.DB, user.id, 'teacher.request', user.id);
+  c.executionCtx.waitUntil(tellAdminsAboutTeacherRequest(c.env, appBase(c.req.url, c.env.APP_URL), user.name, user.email).catch((e) => console.error('[teacher-request:email]', e)));
+  return c.json({ status: 'pending' }, 201);
+});
 
 // ── Two-step login ─────────────────────────────────────────────────────────
 
@@ -229,6 +254,8 @@ account.post('/delete', async (c) => {
       'esl_learners', 'esl_attempts', 'esl_skills', 'esl_items', 'esl_engagement', 'esl_sessions', 'esl_progress', 'esl_generated',
       'maths_learners', 'maths_attempts', 'maths_skills', 'maths_items', 'maths_engagement', 'maths_progress'].map(del),
     db.prepare('DELETE FROM esl_teacher_notes WHERE student_id = ?').bind(id),
+    db.prepare('DELETE FROM test_attempts WHERE student_id = ?').bind(id),
+    db.prepare('DELETE FROM teacher_test_targets WHERE student_id = ?').bind(id),
     db.prepare('DELETE FROM contact_messages WHERE email = ?').bind(user.email),
     db.prepare(
       `UPDATE users SET email = ?, name = 'Deleted account', password_hash = '!', city = NULL, school = NULL, bio = NULL,

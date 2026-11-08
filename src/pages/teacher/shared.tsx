@@ -2,7 +2,7 @@ import { NavLink, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, Ticket, BookOpen, Sparkles, Wallet, GraduationCap, Eye } from '@/components/icons';
+import { LayoutDashboard, Users, Ticket, BookOpen, Sparkles, Wallet, GraduationCap, Eye, Quiz, Table } from '@/components/icons';
 
 /**
  * An admin can open any teacher's portal with ?teacher=<id> and sees exactly what that teacher
@@ -34,6 +34,8 @@ const NAV = [
   { to: '/teach', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/teach/students', label: 'Students', icon: Users },
   { to: '/teach/invites', label: 'Invites', icon: Ticket },
+  { to: '/teach/tests', label: 'Tests', icon: Quiz, tour: 'tests' },
+  { to: '/teach/gradebook', label: 'Gradebook', icon: Table, tour: 'gradebook' },
   { to: '/teach/plans', label: 'Lesson plans', icon: BookOpen },
   { to: '/teach/zuva', label: 'Ask Zuva', icon: Sparkles },
   { to: '/teach/wallet', label: 'Wallet', icon: Wallet },
@@ -55,7 +57,7 @@ export function TeachNav() {
       )}
       <nav aria-label="Teaching" className="mb-6 flex gap-1 overflow-x-auto border-b border-border pb-px scrollbar-none">
         {NAV.map((n) => (
-          <NavLink key={n.to} to={q(n.to)} end={n.end} className={({ isActive }) => cn('flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium', isActive ? 'border-teal text-fg' : 'border-transparent text-muted-fg hover:text-fg')}>
+          <NavLink key={n.to} to={q(n.to)} end={n.end} data-tour={'tour' in n ? n.tour : n.to.split('/')[2] ?? 'overview'} className={({ isActive }) => cn('flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium', isActive ? 'border-teal text-fg' : 'border-transparent text-muted-fg hover:text-fg')}>
             <n.icon className="h-4 w-4" /> {n.label}
           </NavLink>
         ))}

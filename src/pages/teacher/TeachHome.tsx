@@ -8,10 +8,13 @@ import { errorMessage } from '@/lib/api';
 import { Dialog, Field, Input, Select, Textarea } from '@/components/ui';
 import { ClipboardCheck, Users, GraduationCap, AlarmClock, Plus, BookOpen, Sparkles, Brain, Ticket, Wallet } from '@/components/icons';
 import { TeachNav, money, useTeacherScope } from './shared';
+import { AttentionList, ClassInsightsPanel } from './Insights';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Empty, PageHeader, PageLoader, Stat } from '@/components/ui';
 import { greeting } from '@/lib/utils';
+import { MaterialIcon } from '@/components/icons';
+import { startTour, TeacherTour } from './Tour';
 
 interface Summary { classes: { id: string; name: string; learners: number; to_grade: number; assignments: number; inactive: number }[] }
 interface Overview { students: number; paying: number; inactive: number; openWork: number; classes: number; toGrade: number; invites: number; lessonPlans: number; walletCents: number; needsAttention: { id: string; name: string; reason: string }[] }
@@ -37,32 +40,20 @@ export default function TeachHome() {
       <PageHeader
         title="Teaching"
         description={readOnly ? 'Teacher portal (admin view).' : `${greeting()}, ${user?.name.split(' ')[0]}. Here’s what needs your attention.`}
-        actions={readOnly ? undefined : <><Link to="/teach/invites" className="btn-outline"><Ticket className="h-4 w-4" /> Invite learners</Link><Link to="/classes" className="btn-primary"><Plus className="h-4 w-4" /> New class</Link></>}
+        actions={readOnly ? undefined : <><button type="button" className="btn-ghost" onClick={() => startTour()}><MaterialIcon name="tour" /> Take the tour</button><Link to="/teach/invites" className="btn-outline"><Ticket className="h-4 w-4" /> Invite learners</Link><Link to="/classes" className="btn-primary"><Plus className="h-4 w-4" /> New class</Link></>}
       />
       <TeachNav />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {!readOnly && <TeacherTour />}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-tour="stats">
         <Stat label="Students" value={o?.students ?? 0} icon={<Users className="h-4 w-4" />} sub={`${o?.paying ?? 0} on a paid plan`} />
         <Stat label="Need attention" value={o?.needsAttention.length ?? 0} icon={<AlarmClock className="h-4 w-4 text-stone" />} sub={`${o?.inactive ?? 0} inactive 7+ days`} />
         <Stat label="Waiting to be graded" value={o?.toGrade ?? 0} icon={<ClipboardCheck className="h-4 w-4 text-gold-700 dark:text-gold" />} sub="Zuva has pre-marked these" />
         <Stat label="Wallet" value={money(o?.walletCents ?? 0)} icon={<Wallet className="h-4 w-4 text-teal" />} sub="From your students’ subscriptions" />
       </div>
+      <div className="mt-6"><ClassInsightsPanel /></div>
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
         <section className="min-w-0">
-          <h2 className="mb-4 text-xl font-bold">Needs attention</h2>
-          {o?.needsAttention.length ? (
-            <ul className="card divide-y divide-border overflow-hidden">
-              {o.needsAttention.map((s) => (
-                <li key={s.id}>
-                  <Link to={q(`/teach/students/${s.id}`)} className="flex flex-wrap items-center gap-3 px-5 py-3.5 hover:bg-muted">
-                    <span className="min-w-0 flex-1 font-semibold">{s.name}</span>
-                    <span className="text-sm text-muted-fg">{s.reason}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[15px] text-fg/70">{o?.students ? 'Everyone is active and up to date.' : 'No students yet. Share an invite link to get started.'}</p>
-          )}
+          <AttentionList />
 
           {!readOnly && (
             <>
@@ -93,7 +84,7 @@ export default function TeachHome() {
         </section>
         <aside className="space-y-6">
           {!readOnly && (
-            <div className="card p-5">
+            <div className="card p-5" data-tour="zuva">
               <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Sparkles className="h-5 w-5 text-gold-700 dark:text-gold" /> Ask Zuva</h2>
               <p className="mt-1 text-sm text-muted-fg">Your teaching assistant knows your classes and students.</p>
               <ul className="mt-3 space-y-2">
@@ -107,6 +98,7 @@ export default function TeachHome() {
               <li className="flex gap-3"><Ticket className="h-5 w-5 shrink-0 text-teal" /><span><strong>Invite links.</strong> Learners join you free with a link or code ({o?.invites ?? 0} active).</span></li>
               <li className="flex gap-3"><Brain className="h-5 w-5 shrink-0 text-ink dark:text-sand" /><span><strong>Zuva reports.</strong> Pain points and next steps for any student, in seconds.</span></li>
               <li className="flex gap-3"><BookOpen className="h-5 w-5 shrink-0 text-teal" /><span><strong>Lesson plans.</strong> Timed plans built from the course content ({o?.lessonPlans ?? 0} saved).</span></li>
+              <li className="flex gap-3"><MaterialIcon name="quiz" className="shrink-0 text-[20px] text-teal" /><span><strong>Tests that mark themselves.</strong> Multiple choice, numbers and short answers are marked instantly; Zuva suggests marks for written answers from your rubric.</span></li>
               <li className="flex gap-3"><ClipboardCheck className="h-5 w-5 shrink-0 text-gold-700 dark:text-gold" /><span><strong>Assign anything.</strong> Lessons and Kids Zone levels tick off by themselves; code is pre-marked.</span></li>
               <li className="flex gap-3"><Wallet className="h-5 w-5 shrink-0 text-teal" /><span><strong>Earn.</strong> A share of every subscription your students pay goes to your wallet.</span></li>
             </ul>

@@ -19,6 +19,7 @@ import { consumeAiQuota } from '../lib/ai-quota';
 import { getTrack } from '../lib/catalog';
 import { assertCanSeeStudent, commissionRateBp, findInvite, inviteProblem, isAdmin, isTeacher, newInviteCode, tellAdmins, walletBalance, type InviteRow } from '../lib/teaching';
 import { rosterFor, studentDetail } from '../lib/students';
+import { classInsights } from '../lib/insights';
 import { catalogHintsFor, writeLessonPlan, writeStudentReport } from '../zuva/teaching';
 
 const teach = createRouter();
@@ -101,6 +102,12 @@ teach.get('/overview', async (c) => {
       .slice(0, 8)
       .map((r) => ({ id: r.id, name: r.name, reason: !r.lastActiveDay || r.lastActiveDay < weekAgo ? `Not active since ${r.lastActiveDay ?? 'joining'}` : `${r.assignmentsOpen} assignments open` })),
   });
+});
+
+teach.get('/insights', async (c) => {
+  const s = await scope(c);
+  const roster = await rosterFor(c.env.DB, s.teacherId);
+  return c.json(await classInsights(c.env.DB, s.teacherId, roster));
 });
 
 // ── Invites ─────────────────────────────────────────────────────────────

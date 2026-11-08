@@ -179,6 +179,18 @@ export const ICONS = {
   X: 'close',
   XCircle: 'cancel',
   Zap: 'bolt',
+  TrendingDown: 'trending_down',
+  Bedtime: 'bedtime',
+  TaskAlt: 'task_alt',
+  Hourglass: 'hourglass_top',
+  Download: 'download',
+  TableView: 'table_view',
+  Calculate: 'calculate',
+  PlayArrow: 'play_arrow',
+  Tour: 'tour',
+  Campaign: 'campaign',
+  Insights: 'insights',
+  PersonAdd: 'person_add',
 } as const satisfies Record<string, SymbolName>;
 
 export const AlarmClock = icon(ICONS.AlarmClock);
