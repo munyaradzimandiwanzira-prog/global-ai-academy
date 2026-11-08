@@ -10,19 +10,29 @@ import { ESL_BANDS } from '@shared/esl-curriculum';
 type Panel = TrackCategory | 'cambridge';
 
 /**
- * The bar under the header: one entry per topic instead of a long row of language names.
- * Topics with one track link straight to it; the rest open a panel listing their tracks with
- * level, size and whether they are free, so a newcomer can choose without opening each one.
- *
- * The panel renders outside the horizontally scrolling strip, so it is never clipped on phones.
+ * The bar under the header, laid like a Great Zimbabwe wall: every learning path is a stone,
+ * coursed into three compartments (school, foundations, specialise), one course each, that
+ * wrap instead of scrolling sideways, so every path is visible at once. A chevron frieze, like the one on the
+ * Great Enclosure, caps the wall. Topics with one track link straight to it; the rest open a
+ * panel listing their tracks with level, size and whether they are free.
  */
+const COMPARTMENTS: { label: string; items: Panel[] }[] = [
+  { label: 'School', items: ['cambridge', 'kids', 'start'] },
+  { label: 'Foundations', items: ['languages', 'web', 'frameworks', 'databases', 'tools'] },
+  { label: 'Specialise', items: ['maths-data', 'ai', 'agentic', 'mobile', 'cloud', 'hardware'] },
+];
+
+/** The chevron band of the Great Enclosure's outer wall, as a repeating strip. */
+const CHEVRON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8'%3E%3Cpath d='M0 7 8 1 16 7' fill='none' stroke='%23E2B13C' stroke-opacity='.55' stroke-width='1.5'/%3E%3C/svg%3E")`;
+
 export function CategoryBar() {
   const groups = tracksByCategory();
+  const byCat = new Map(groups.map((g) => [g.category, g.tracks]));
   const [open, setOpen] = useState<Panel | null>(null);
   const location = useLocation();
   const root = useRef<HTMLDivElement>(null);
   const panelId = useId();
-  const current: Panel | undefined = location.pathname.startsWith('/cambridge') ? 'cambridge' : getCatalogTrack(location.pathname.split('/')[2] ?? '')?.category;
+  const current: Panel | undefined = location.pathname.startsWith('/cambridge') ? 'cambridge' : location.pathname.startsWith('/kids') ? 'kids' : getCatalogTrack(location.pathname.split('/')[2] ?? '')?.category;
 
   useEffect(() => setOpen(null), [location.pathname]);
   useEffect(() => {
@@ -34,56 +44,64 @@ export function CategoryBar() {
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
   }, [open]);
 
-  const toggle = (cat: Panel, button: HTMLElement) => {
-    setOpen(open === cat ? null : cat);
-    // On phones the strip scrolls sideways; keep the chosen topic in view.
-    button.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  };
-
+  const toggle = (cat: Panel) => setOpen(open === cat ? null : cat);
   const active = groups.find((g) => g.category === open);
-  const item = 'flex shrink-0 items-center gap-1 border-b-2 px-3 py-2.5 text-[14px] font-semibold transition-colors hover:bg-white/10';
+  // A dressed stone: flat face, a darker bed joint underneath, no mortar between stones.
+  const stone = (on: boolean) => cn(
+    'flex grow items-center justify-center gap-1 rounded-[3px] px-2 py-1.5 text-[12.5px] font-semibold leading-none transition-colors sm:px-2.5 sm:text-[13.5px]',
+    'shadow-[inset_0_-2px_0_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.06)]',
+    on ? 'bg-gold text-ink' : 'bg-white/[0.08] text-white/90 hover:bg-white/[0.16] hover:text-white',
+  );
+
+  const renderStone = (cat: Panel) => {
+    const on = current === cat || open === cat;
+    if (cat === 'cambridge') {
+      return (
+        <button key={cat} type="button" className={stone(on)} aria-expanded={open === cat} aria-controls={open === cat ? panelId : undefined} onClick={() => toggle(cat)}>
+          Cambridge <span className={cn('rounded-sm px-1 py-0.5 text-[9.5px] font-bold uppercase', on ? 'bg-ink text-gold' : 'bg-gold text-ink')}>New</span>
+          <ChevronDown className={cn('text-[18px] transition-transform', open === cat && 'rotate-180')} />
+        </button>
+      );
+    }
+    const tracks = byCat.get(cat);
+    if (!tracks?.length) return null;
+    if (tracks.length === 1) {
+      return (
+        <Link key={cat} to={cat === 'kids' ? '/kids' : lessonPath(tracks[0]!.id)} className={stone(on)} aria-current={current === cat ? 'page' : undefined}>
+          {CATEGORY_SHORT[cat]}
+        </Link>
+      );
+    }
+    return (
+      <button key={cat} type="button" className={stone(on)} aria-expanded={open === cat} aria-controls={open === cat ? panelId : undefined} onClick={() => toggle(cat)}>
+        {CATEGORY_SHORT[cat]}
+        <ChevronDown className={cn('text-[18px] transition-transform', open === cat && 'rotate-180')} />
+      </button>
+    );
+  };
 
   return (
     <div ref={root} className="relative bg-ink text-white dark:bg-night-800">
-      <nav aria-label="Tutorials by topic" className="container flex items-center overflow-x-auto scrollbar-none">
-        {groups.map(({ category, tracks }) => {
-          const isCurrent = current === category;
-          const cls = cn(item, isCurrent || open === category ? 'border-gold text-gold' : 'border-transparent text-white/90');
-          if (tracks.length === 1) {
-            return (
-              <Link key={category} to={category === 'kids' ? '/kids' : lessonPath(tracks[0].id)} className={cls} aria-current={isCurrent ? 'page' : undefined}>
-                {CATEGORY_SHORT[category]}
-              </Link>
-            );
-          }
-          return (
-            <button
-              key={category}
-              type="button"
-              className={cls}
-              aria-expanded={open === category}
-              aria-controls={open === category ? panelId : undefined}
-              onClick={(e) => toggle(category, e.currentTarget)}
-            >
-              {CATEGORY_SHORT[category]}
-              <ChevronDown className={cn('transition-transform', open === category && 'rotate-180')} />
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          className={cn(item, current === 'cambridge' || open === 'cambridge' ? 'border-gold text-gold' : 'border-transparent text-white/90')}
-          aria-expanded={open === 'cambridge'}
-          aria-controls={open === 'cambridge' ? panelId : undefined}
-          onClick={(e) => toggle('cambridge', e.currentTarget)}
-        >
-          Cambridge <span className="rounded bg-gold px-1 text-[10px] font-bold uppercase text-ink">New</span>
-          <ChevronDown className={cn('transition-transform', open === 'cambridge' && 'rotate-180')} />
-        </button>
-        <Link to="/tutorials" className="ml-auto flex shrink-0 items-center gap-1 px-3 py-2.5 text-[14px] text-white/80 hover:text-white">
-          All tracks <ArrowRight />
-        </Link>
+      <nav aria-label="Learning paths" className="container py-1.5 md:py-2">
+        <div className="grid gap-y-1.5">
+          {COMPARTMENTS.map((c, i) => (
+            <section key={c.label} aria-label={c.label} className="flex min-w-0 items-start gap-2.5">
+              <h2 className="w-[68px] shrink-0 pt-2 text-[9px] font-bold uppercase tracking-[0.06em] text-gold/80 sm:w-[96px] sm:text-[10.5px] sm:tracking-[0.14em]">{c.label}</h2>
+              <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                {c.items.map(renderStone)}
+                {i === COMPARTMENTS.length - 1 && (
+                  <Link to="/tutorials" className="flex shrink-0 items-center gap-1 px-2 py-1.5 text-[12.5px] text-white/75 hover:text-white sm:text-[13px]">
+                    All tracks <ArrowRight />
+                  </Link>
+                )}
+                {/* Takes the slack in the last course so its stones keep their natural size. */}
+                <span aria-hidden="true" className="grow-[12]" />
+              </div>
+            </section>
+          ))}
+        </div>
       </nav>
+      <div aria-hidden="true" className="h-2 bg-repeat-x" style={{ backgroundImage: CHEVRON, backgroundSize: '16px 8px' }} />
 
       {open === 'cambridge' && (
         <div id={panelId} role="region" aria-label="Cambridge curriculum" className="absolute inset-x-0 top-full z-40 border-b border-border bg-card text-fg shadow-float">
