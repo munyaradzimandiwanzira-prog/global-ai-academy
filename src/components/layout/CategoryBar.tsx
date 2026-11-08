@@ -44,6 +44,10 @@ export function CategoryBar() {
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
   }, [open]);
 
+  // On phones the wall folds to the School course; the choice is remembered on this device.
+  const [allPaths, setAllPaths] = useState(() => { try { return localStorage.getItem('gaa:paths-open') === '1'; } catch { return false; } });
+  const flipAllPaths = () => setAllPaths((v) => { try { localStorage.setItem('gaa:paths-open', v ? '0' : '1'); } catch { /* private mode */ } return !v; });
+
   const toggle = (cat: Panel) => setOpen(open === cat ? null : cat);
   const active = groups.find((g) => g.category === open);
   // A dressed stone: flat face, a darker bed joint underneath, no mortar between stones.
@@ -85,7 +89,7 @@ export function CategoryBar() {
       <nav aria-label="Learning paths" className="container py-1.5 md:py-2">
         <div className="grid gap-y-1.5">
           {COMPARTMENTS.map((c, i) => (
-            <section key={c.label} aria-label={c.label} className="flex min-w-0 items-start gap-2.5">
+            <section key={c.label} id={i > 0 ? `${panelId}-c${i}` : undefined} aria-label={c.label} className={cn('min-w-0 items-start gap-2.5', i > 0 && !allPaths ? 'hidden sm:flex' : 'flex')}>
               <h2 className="w-[68px] shrink-0 pt-2 text-[9px] font-bold uppercase tracking-[0.06em] text-gold/80 sm:w-[96px] sm:text-[10.5px] sm:tracking-[0.14em]">{c.label}</h2>
               <div className="flex min-w-0 flex-1 flex-wrap gap-1">
                 {c.items.map(renderStone)}
@@ -99,6 +103,11 @@ export function CategoryBar() {
               </div>
             </section>
           ))}
+          <button type="button" onClick={flipAllPaths} aria-expanded={allPaths} aria-controls={`${panelId}-c1 ${panelId}-c2`}
+            className="flex w-full items-center justify-center gap-1 rounded-[3px] border border-dashed border-gold/50 py-1 text-[12px] font-semibold text-gold sm:hidden">
+            {allPaths ? 'Show fewer paths' : 'Show all paths'}
+            <ChevronDown className={cn('text-[18px] transition-transform', allPaths && 'rotate-180')} />
+          </button>
         </div>
       </nav>
       <div aria-hidden="true" className="h-2 bg-repeat-x" style={{ backgroundImage: CHEVRON, backgroundSize: '16px 8px' }} />
