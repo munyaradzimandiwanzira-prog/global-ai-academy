@@ -4,6 +4,9 @@ import { normalise, type Activity } from '@shared/esl';
 import { ArrowRight, Volume2 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { say } from '../voice';
+import { focusRing, helperPill, optionClass } from '../ui';
+import { buttonClass } from '@/components/ui/Button';
+import { MaterialIcon } from '@/components/icons';
 import { Dots, OptionButton, cheer, big, useItemClock, type GameProps } from './kit';
 
 type Of<K extends Activity['kind']> = GameProps<Extract<Activity, { kind: K }>>;
@@ -35,18 +38,18 @@ export function Order({ activity, tier, accent, onAnswer, onDone }: Of<'order'>)
     <div className="space-y-5">
       <Dots n={activity.items.length} at={i} results={results} />
       <p className="text-center text-lg font-bold">Tap the words in the right order.</p>
-      <div className={cn('flex min-h-16 flex-wrap items-center gap-2 rounded-2xl border-4 border-dashed p-3', state === 'right' ? 'border-teal bg-[#D6EBE8]' : state === 'wrong' ? 'border-[#E2553E] bg-[#FCE3DE]' : 'border-ink/40 bg-white')} aria-label="Your sentence">
-        <span aria-hidden="true" className="text-2xl">🚂</span>
+      <div className={cn('flex min-h-[72px] flex-wrap items-center gap-2 rounded-md p-3', state === 'right' ? 'bg-teal-100 ring-2 ring-teal dark:bg-teal-900' : state === 'wrong' ? 'bg-red-100 ring-2 ring-red-700 dark:bg-red-950' : 'bg-card')} aria-label="Your sentence">
+        <MaterialIcon name="train" className="text-teal-700 dark:text-teal-300" />
         {state === 'wrong' && tries >= 3
           ? <span className="text-lg font-bold">{item.sentence}</span>
           : placed.map((k, n) => (
-            <button key={n} type="button" disabled={!!state} onClick={() => setPlaced((p) => p.filter((_, x) => x !== n))} className="rounded-xl border-2 border-ink bg-gold px-3 py-2 text-lg font-bold">{item.words[k]}</button>
+            <button key={n} type="button" disabled={!!state} onClick={() => setPlaced((p) => p.filter((_, x) => x !== n))} aria-label={`Take out ${item.words[k]}`} className={cn('min-h-12 rounded-md bg-gold px-3 text-lg font-bold text-ink-900 transition-colors hover:bg-gold-600', focusRing)}>{item.words[k]}</button>
           ))}
       </div>
       <div className="flex flex-wrap justify-center gap-2">
         {item.words.map((w, k) => (
           <button key={k} type="button" disabled={placed.includes(k) || !!state} onClick={() => { const n = [...placed, k]; setPlaced(n); if (n.length === item.words.length) check(n); }}
-            className="rounded-xl border-4 border-ink bg-white px-4 py-2 text-lg font-bold shadow-[0_3px_0_#0C1C38] disabled:opacity-30">{w}</button>
+            className={optionClass(undefined, 'px-4 text-lg disabled:opacity-30')}>{w}</button>
         ))}
       </div>
     </div>
@@ -67,7 +70,7 @@ export function Gap({ activity, tier, accent, onAnswer, onDone }: Of<'gap'>) {
     <div className="space-y-6">
       <Dots n={activity.items.length} at={i} results={results} />
       <p className={cn('text-center font-semibold leading-relaxed', big(tier) ? 'text-3xl' : 'text-2xl')}>
-        {before}<span className={cn('mx-1 inline-block min-w-20 border-b-4 px-2 text-center', solved ? 'border-teal text-teal-700' : 'border-ink')}>{solved ? item.answer : '?'}</span>{after}
+        {before}<span className={cn('mx-1 inline-block min-w-20 rounded-md px-2 text-center', solved ? 'bg-teal-100 text-teal-900 dark:bg-teal-900 dark:text-teal-50' : 'bg-card')}>{solved ? item.answer : '?'}</span>{after}
       </p>
       <div className="mx-auto grid max-w-lg grid-cols-1 gap-3 sm:grid-cols-2">
         {item.options.map((o) => (
@@ -106,18 +109,18 @@ export function Story({ activity, tier, accent, onAnswer, onDone }: Of<'story'>)
     return (
       <div className="space-y-5">
         <h3 className={cn('text-center font-display font-bold', big(tier) ? 'text-3xl' : 'text-2xl')}>{activity.title}</h3>
-        <div className="mx-auto max-w-2xl rounded-2xl border-4 border-ink bg-[#FFF8EA] p-5">
+        <div className="mx-auto max-w-2xl rounded-md bg-card p-5 sm:p-7">
           {lineByLine
             ? <p className="text-center text-2xl font-semibold leading-relaxed">{activity.paragraphs[line]}</p>
             : activity.paragraphs.map((p, k) => <p key={k} className="mb-3 text-lg leading-relaxed last:mb-0">{p}</p>)}
         </div>
         <div className="flex flex-wrap justify-center gap-3">
-          <button type="button" onClick={() => void say(lineByLine ? activity.paragraphs[line]! : activity.paragraphs.join(' ').slice(0, 300), accent, pace)} className="inline-flex min-h-12 items-center gap-2 rounded-full border-4 border-ink bg-[#D6EBE8] px-5 font-bold"><Volume2 className="h-5 w-5" /> {lineByLine ? 'Again' : 'Read it to me'}</button>
-          <button type="button" onClick={() => (lineByLine && line + 1 < activity.paragraphs.length ? setLine(line + 1) : setReading(false))} className="inline-flex min-h-12 items-center gap-2 rounded-full border-4 border-ink bg-gold px-5 font-bold">
-            {lineByLine && line + 1 < activity.paragraphs.length ? 'Next' : 'Questions'} <ArrowRight className="h-5 w-5" />
+          <button type="button" onClick={() => void say(lineByLine ? activity.paragraphs[line]! : activity.paragraphs.join(' ').slice(0, 300), accent, pace)} className={buttonClass({ variant: 'outlined', color: 'action', size: 'lg' })}><Volume2 /> {lineByLine ? 'Hear it again' : 'Read it to me'}</button>
+          <button type="button" onClick={() => (lineByLine && line + 1 < activity.paragraphs.length ? setLine(line + 1) : setReading(false))} className={buttonClass({ color: 'accent', size: 'lg' })}>
+            {lineByLine && line + 1 < activity.paragraphs.length ? 'Next line' : 'Answer questions'} <ArrowRight />
           </button>
         </div>
-        {activity.source && <p className="text-center text-xs text-ink/70">Source: {activity.source.url ? <a href={activity.source.url} target="_blank" rel="noopener noreferrer" className="underline">{activity.source.title}</a> : activity.source.title}, {activity.source.licence}</p>}
+        {activity.source && <p className="text-center text-sm text-muted-fg">Source: {activity.source.url ? <a href={activity.source.url} target="_blank" rel="noopener noreferrer" className="underline">{activity.source.title}</a> : activity.source.title}, {activity.source.licence}</p>}
       </div>
     );
   }
@@ -142,7 +145,7 @@ export function Story({ activity, tier, accent, onAnswer, onDone }: Of<'story'>)
           </OptionButton>
         ))}
       </div>
-      <button type="button" onClick={() => setReading(true)} className="mx-auto block text-sm font-semibold underline">Read the story again</button>
+      <button type="button" onClick={() => setReading(true)} className={cn(helperPill, 'mx-auto flex')}>Read the story again</button>
     </div>
   );
 }

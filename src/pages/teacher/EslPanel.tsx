@@ -46,7 +46,7 @@ export function EslPanel({ v, name }: { v: EslTeacherView; name: string }) {
       </div>
       {v.notes.length > 0 ? (
         <div className="mt-5">
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Sparkles className="h-4 w-4" /> Notes from Zuva</h3>
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Sparkles className="text-gold-700 dark:text-gold" /> Notes from Zuva</h3>
           <ul className="mt-2 space-y-2">
             {v.notes.map((n) => (
               <li key={n.id} className="rounded-lg border border-border p-3 text-sm">

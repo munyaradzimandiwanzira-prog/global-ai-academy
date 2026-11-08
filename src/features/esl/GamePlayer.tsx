@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ACTIVITY_INFO, eslBand, type Accent, type Activity, type EslBandId } from '@shared/esl';
+import { eslBand, type Accent, type Activity, type EslBandId } from '@shared/esl';
 import { ArrowRight, RotateCcw, Star, ThumbsDown, ThumbsUp } from '@/components/icons';
 import { Spinner } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { play } from '@/features/kids/sfx';
 import { say, stopSpeaking } from './voice';
 import { ZuvaSays, type Answer } from './games/kit';
+import { GameIcon, focusRing } from './ui';
+import { buttonClass } from '@/components/ui/Button';
 import type { Guest } from './store';
 
 const Word = () => import('./games/WordGames');
@@ -65,7 +67,6 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
   const started = useRef(0);
   const finished = useRef(false);
   const ctx = useMemo(() => contextWords(activity), [activity]);
-  const info = ACTIVITY_INFO[activity.kind];
   const Game = GAMES[activity.kind] as unknown as React.ComponentType<Record<string, unknown>>;
 
   const post = useCallback((body: Record<string, unknown>) => {
@@ -112,15 +113,16 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
   };
 
   return (
-    <div className={cn('rounded-3xl border-4 border-ink bg-[#EEF4F3] p-4 text-ink sm:p-6', tier === 'early' && 'font-kids')}>
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 font-display text-xl font-bold"><span aria-hidden="true">{info.emoji}</span> {activity.title}</h3>
-        {activity.origin === 'zuva' && <span className="chip bg-gold-100 text-gold-700">Made by Zuva</span>}
+    <div className={cn('rounded-md bg-muted p-4 text-fg sm:p-6', tier === 'early' && 'font-kids')}>
+      <div className="mb-5 flex items-center gap-3">
+        <GameIcon kind={activity.kind} className="text-teal-700 dark:text-teal-300" />
+        <h3 className="font-display text-xl font-bold">{activity.title}</h3>
+        {activity.origin === 'zuva' && <p className="text-[15px] text-muted-fg">made for you by Zuva</p>}
       </div>
       {phase === 'intro' && (
         <div className="space-y-5">
           <ZuvaSays text={activity.intro} accent={accent} pace={tier} />
-          <button type="button" onClick={begin} className="mx-auto flex min-h-14 items-center gap-2 rounded-full border-4 border-ink bg-gold px-8 text-xl font-bold shadow-[0_4px_0_#0C1C38] active:translate-y-0.5">Let’s go! <ArrowRight className="h-6 w-6" /></button>
+          <button type="button" onClick={begin} className={buttonClass({ color: 'accent', size: 'lg' }, 'mx-auto flex h-14 px-8 text-lg')}>Start the game <ArrowRight /></button>
         </div>
       )}
       {phase === 'play' && (
@@ -131,19 +133,19 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
       {phase === 'done' && (
         <div className="space-y-5 text-center">
           <div className="flex justify-center gap-2" aria-label={`${stars} of 3 stars`}>
-            {[1, 2, 3].map((n) => <Star key={n} className={cn('h-14 w-14', n <= stars ? 'fill-gold text-gold' : 'text-ink/20')} />)}
+            {[1, 2, 3].map((n) => <Star key={n} className={cn('text-[64px]', n <= stars ? 'text-gold-700 dark:text-gold' : 'text-fg/20')} />)}
           </div>
           <p className="text-xl font-bold">{answers.current.filter((a) => a.correct).length} of {answers.current.length} right</p>
           <div>
             <p className="mb-2 font-semibold">Did you enjoy this game?</p>
             <div className="flex justify-center gap-3">
-              <button type="button" aria-pressed={liked === true} onClick={() => react(true)} className={cn('grid h-14 w-14 place-items-center rounded-full border-4 border-ink', liked === true ? 'bg-teal text-white' : 'bg-white')} aria-label="I liked it"><ThumbsUp className="h-6 w-6" /></button>
-              <button type="button" aria-pressed={liked === false} onClick={() => react(false)} className={cn('grid h-14 w-14 place-items-center rounded-full border-4 border-ink', liked === false ? 'bg-[#E2553E] text-white' : 'bg-white')} aria-label="I didn’t like it"><ThumbsDown className="h-6 w-6" /></button>
+              <button type="button" aria-pressed={liked === true} onClick={() => react(true)} className={cn('grid h-14 w-14 place-items-center rounded-full transition-colors', focusRing, liked === true ? 'bg-teal text-white' : 'bg-card hover:bg-teal/10')} aria-label="I liked it"><ThumbsUp /></button>
+              <button type="button" aria-pressed={liked === false} onClick={() => react(false)} className={cn('grid h-14 w-14 place-items-center rounded-full transition-colors', focusRing, liked === false ? 'bg-red-700 text-white' : 'bg-card hover:bg-red-700/10')} aria-label="I didn’t like it"><ThumbsDown /></button>
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={begin} className="inline-flex min-h-12 items-center gap-2 rounded-full border-4 border-ink bg-white px-5 font-bold"><RotateCcw className="h-5 w-5" /> Play again</button>
-            {onNext && <button type="button" onClick={onNext} className="inline-flex min-h-12 items-center gap-2 rounded-full border-4 border-ink bg-gold px-5 font-bold">Next game <ArrowRight className="h-5 w-5" /></button>}
+            <button type="button" onClick={begin} className={buttonClass({ variant: 'outlined', size: 'lg' })}><RotateCcw /> Play again</button>
+            {onNext && <button type="button" onClick={onNext} className={buttonClass({ color: 'accent', size: 'lg' })}>Next game <ArrowRight /></button>}
           </div>
         </div>
       )}

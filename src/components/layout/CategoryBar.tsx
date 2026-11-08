@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, ChevronDown, Lock } from '@/components/icons';
+import { ArrowRight, ChevronDown, Lock, MaterialIcon, type SymbolName } from '@/components/icons';
 import { TrackMark } from '@/components/ui';
 import { getCatalogTrack, lessonPath, tracksByCategory } from '@/lib/catalog';
 import { CATEGORY_BLURBS, CATEGORY_LABELS, CATEGORY_SHORT, LEVEL_LABELS, type TrackCategory } from '@shared/content';
@@ -21,6 +21,24 @@ const COMPARTMENTS: { label: string; items: Panel[] }[] = [
   { label: 'Foundations', items: ['languages', 'web', 'frameworks', 'databases', 'tools'] },
   { label: 'Specialise', items: ['maths-data', 'ai', 'agentic', 'mobile', 'cloud', 'hardware'] },
 ];
+
+/** One Material Symbol per path, so each stone is labelled by a picture as well as its name. */
+const PATH_SYMBOL: Record<Panel, { symbol: SymbolName }> = {
+  cambridge: { symbol: 'school' },
+  kids: { symbol: 'child_care' },
+  start: { symbol: 'flag' },
+  languages: { symbol: 'code' },
+  web: { symbol: 'language' },
+  frameworks: { symbol: 'layers' },
+  databases: { symbol: 'database' },
+  tools: { symbol: 'build' },
+  'maths-data': { symbol: 'functions' },
+  ai: { symbol: 'neurology' },
+  agentic: { symbol: 'smart_toy' },
+  mobile: { symbol: 'smartphone' },
+  cloud: { symbol: 'cloud' },
+  hardware: { symbol: 'memory' },
+};
 
 /** The chevron band of the Great Enclosure's outer wall, as a repeating strip. */
 const CHEVRON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8'%3E%3Cpath d='M0 7 8 1 16 7' fill='none' stroke='%23E2B13C' stroke-opacity='.55' stroke-width='1.5'/%3E%3C/svg%3E")`;
@@ -52,16 +70,19 @@ export function CategoryBar() {
   const active = groups.find((g) => g.category === open);
   // A dressed stone: flat face, a darker bed joint underneath, no mortar between stones.
   const stone = (on: boolean) => cn(
-    'flex min-h-11 grow items-center justify-center gap-1 rounded-[3px] px-2.5 text-[13.5px] font-semibold leading-none transition-[background-color,color,transform] duration-[180ms] active:scale-[.97] sm:min-h-9',
+    'flex min-h-11 grow items-center justify-center gap-1.5 rounded-[3px] px-2.5 text-[13.5px] font-semibold leading-none transition-[background-color,color,transform] duration-[180ms] active:scale-[.97] sm:min-h-9',
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold',
     on ? 'bg-gold text-ink' : 'bg-white/[0.09] text-white hover:bg-white/[0.17]',
   );
+
+  const glyph = (cat: Panel) => <MaterialIcon name={PATH_SYMBOL[cat].symbol} className="text-[20px] leading-none" />;
 
   const renderStone = (cat: Panel) => {
     const on = current === cat || open === cat;
     if (cat === 'cambridge') {
       return (
         <button key={cat} type="button" className={stone(on)} aria-expanded={open === cat} aria-controls={open === cat ? panelId : undefined} onClick={() => toggle(cat)}>
+          {glyph(cat)}
           Cambridge
           <ChevronDown className={cn('text-[18px] transition-transform', open === cat && 'rotate-180')} />
         </button>
@@ -72,12 +93,14 @@ export function CategoryBar() {
     if (tracks.length === 1) {
       return (
         <Link key={cat} to={cat === 'kids' ? '/kids' : lessonPath(tracks[0]!.id)} className={stone(on)} aria-current={current === cat ? 'page' : undefined}>
+          {glyph(cat)}
           {CATEGORY_SHORT[cat]}
         </Link>
       );
     }
     return (
       <button key={cat} type="button" className={stone(on)} aria-expanded={open === cat} aria-controls={open === cat ? panelId : undefined} onClick={() => toggle(cat)}>
+        {glyph(cat)}
         {CATEGORY_SHORT[cat]}
         <ChevronDown className={cn('text-[18px] transition-transform', open === cat && 'rotate-180')} />
       </button>

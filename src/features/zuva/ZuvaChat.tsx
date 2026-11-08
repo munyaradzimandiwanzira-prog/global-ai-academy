@@ -117,12 +117,12 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
       <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
         <div className="flex items-start gap-2">
           {kids && <Zuva size={44} />}
-          <div className={cn('max-w-[92%] rounded-2xl px-4 py-2.5', kids ? 'rounded-tl-sm border-2 border-ink bg-white text-lg text-ink' : 'bg-muted text-sm')}>{kids ? greeting : <Markdown className="prose-sm">{greeting}</Markdown>}</div>
+          <div className={cn('max-w-[92%] rounded-2xl px-4 py-2.5', kids ? 'rounded-tl-sm bg-muted text-lg text-fg' : 'bg-muted text-sm')}>{kids ? greeting : <Markdown className="prose-sm">{greeting}</Markdown>}</div>
         </div>
         {messages.length === 0 && !compact && (
           <div className="flex flex-wrap gap-2">
             {starters.map((s) => (
-              <button key={s} type="button" onClick={() => void send(s)} className={cn('rounded-full border-2 px-3 py-2 text-left font-semibold transition-transform active:scale-95', kids ? 'min-h-11 border-ink/30 bg-white text-base text-ink' : 'border-border text-sm hover:border-teal')}>{s}</button>
+              <button key={s} type="button" onClick={() => void send(s)} className={cn('rounded-full border-2 px-3 py-2 text-left font-semibold transition-transform active:scale-95', kids ? 'min-h-11 border-transparent bg-muted text-base text-fg hover:bg-teal/10' : 'border-border text-sm hover:border-teal')}>{s}</button>
             ))}
           </div>
         )}
@@ -131,28 +131,28 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
             {m.role === 'assistant' && m.working.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {m.working.map((w, i) => (
-                  <span key={i} className={cn('inline-flex items-center gap-1 rounded-full bg-[#D6EBE8] px-2.5 py-1 text-xs font-semibold text-ink', m.pending && i === m.working.length - 1 && 'animate-pulse')}>{w}…</span>
+                  <span key={i} className={cn('inline-flex items-center gap-1 rounded-full bg-teal-100 px-2.5 py-1 text-sm font-semibold text-teal-900 dark:bg-teal-900 dark:text-teal-50', m.pending && i === m.working.length - 1 && 'animate-pulse')}>{w}…</span>
                 ))}
               </div>
             )}
             {m.cards.map((c, i) => <div key={i} className="w-full"><ZuvaCardView card={c} kids={kids} onAsk={(t) => void send(t)} /></div>)}
             {(m.text || m.pending) && (
               <div className={cn('flex max-w-[92%] items-start gap-2', m.role === 'user' && 'flex-row-reverse')}>
-                <div className={cn('rounded-2xl px-4 py-2.5', m.role === 'user' ? (kids ? 'bg-ink text-lg text-white' : 'bg-ink text-sm text-white') : kids ? 'border-2 border-ink bg-white text-lg text-ink' : 'bg-muted text-sm', m.error && 'border-[#E2553E] text-[#9B2C1D]')}>
+                <div className={cn('rounded-2xl px-4 py-2.5', m.role === 'user' ? (kids ? 'bg-ink text-lg text-white' : 'bg-ink text-sm text-white') : kids ? 'bg-muted text-lg text-fg' : 'bg-muted text-sm', m.error && 'text-red-700 dark:text-red-300')}>
                   {m.pending && !m.text ? (
                     <span className="inline-flex gap-1" aria-label="Zuva is thinking"><span className="h-2 w-2 animate-bounce rounded-full bg-current opacity-60" /><span className="h-2 w-2 animate-bounce rounded-full bg-current opacity-60 [animation-delay:.15s]" /><span className="h-2 w-2 animate-bounce rounded-full bg-current opacity-60 [animation-delay:.3s]" /></span>
                   ) : m.role === 'assistant' ? <AssistantText text={m.text} animate={m.id === messages[messages.length - 1]?.id} kids={kids} /> : m.text}
                 </div>
                 {m.role === 'assistant' && m.text && !m.error && typeof window !== 'undefined' && 'speechSynthesis' in window && (
-                  <button type="button" onClick={() => talk(m.text)} className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D6EBE8] text-ink" aria-label="Read this aloud"><Volume2 /></button>
+                  <button type="button" onClick={() => talk(m.text)} className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-teal-700 hover:bg-teal/10 dark:text-teal-300" aria-label="Read this aloud"><Volume2 /></button>
                 )}
               </div>
             )}
             {m.actions.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {m.actions.map((a, i) => a.kind === 'speak'
-                  ? <button key={i} type="button" onClick={() => (voice ? voice(a.text, a.pace) : speak(a.text))} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'min-h-11 border-4 border-ink bg-[#D6EBE8] text-ink' : 'btn-outline btn-sm')}><Volume2 /> {a.label}</button>
-                  : <Link key={i} to={a.to} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'min-h-11 border-4 border-ink bg-gold text-ink' : 'btn-primary btn-sm')}>{a.label} <ArrowRight /></Link>)}
+                  ? <button key={i} type="button" onClick={() => (voice ? voice(a.text, a.pace) : speak(a.text))} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'btn-outline-run min-h-11' : 'btn-outline btn-sm')}><Volume2 /> {a.label}</button>
+                  : <Link key={i} to={a.to} className={cn('inline-flex items-center gap-1.5 rounded-full px-4 font-bold', kids ? 'btn-gold min-h-11' : 'btn-primary btn-sm')}>{a.label} <ArrowRight /></Link>)}
               </div>
             )}
           </div>
@@ -163,16 +163,16 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
           {recording && (
             <>
               <span className="flex h-6 items-end gap-0.5" aria-hidden="true">
-                {[0.6, 1, 0.8, 0.5].map((k, i) => <motion.span key={i} className="w-1.5 rounded bg-[#E2553E]" animate={{ height: `${6 + dictation.level * 18 * k}px` }} transition={{ duration: 0.08 }} />)}
+                {[0.6, 1, 0.8, 0.5].map((k, i) => <motion.span key={i} className="w-1.5 rounded bg-red-700" animate={{ height: `${6 + dictation.level * 18 * k}px` }} transition={{ duration: 0.08 }} />)}
               </span>
               <span className="font-semibold">Listening… {dictation.seconds}s. Tap stop when you’re done.</span>
             </>
           )}
           {dictation.state === 'transcribing' && <span className="inline-flex items-center gap-2 font-semibold"><Loader2 className="animate-spin" /> Writing down what you said…</span>}
-          {dictation.error && !recording && <span className="text-[#9B2C1D]">{dictation.error}</span>}
+          {dictation.error && !recording && <span className="text-red-700 dark:text-red-300">{dictation.error}</span>}
         </div>
       )}
-      <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className={cn('flex items-end gap-2 border-t border-border p-3', kids && 'bg-[#EEF4F3]')}>
+      <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className={cn('flex items-end gap-2 border-t border-border p-3', kids && 'bg-muted')}>
         {dictation.supported && (
           <button
             type="button"
@@ -180,7 +180,7 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
             disabled={busy || dictation.state === 'transcribing' || dictation.state === 'asking'}
             aria-pressed={recording}
             aria-label={recording ? 'Stop recording' : 'Talk to Zuva'}
-            className={cn('flex shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 disabled:opacity-40', kids ? 'h-14 w-14 border-4 border-ink' : 'h-[42px] w-[42px] border-2 border-border', recording ? 'bg-[#E2553E] text-white' : kids ? 'bg-gold text-ink' : 'bg-card')}
+            className={cn('flex shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 disabled:opacity-40', kids ? 'h-14 w-14' : 'h-[42px] w-[42px] border-2 border-border', recording ? 'bg-red-700 text-white' : kids ? 'bg-gold text-ink' : 'bg-card')}
           >
             {recording ? <StopCircle /> : <Mic />}
           </button>
@@ -191,11 +191,11 @@ export function ZuvaChat({ mode, skin, greeting, starters, getContext, threadKey
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(input); } }}
           rows={1}
           maxLength={2000}
-          placeholder={kids ? 'Type, or tap the microphone and talk…' : 'Ask Zuva, or tap the mic to dictate…'}
+          placeholder={kids ? 'Type or talk to Zuva…' : 'Ask Zuva, or tap the mic to dictate…'}
           className={cn('input max-h-32 min-h-[42px] resize-none', kids && 'min-h-14 rounded-2xl border-2 border-ink text-lg')}
           aria-label="Message to Zuva"
         />
-        <button disabled={busy || !input.trim()} className={cn('shrink-0', kids ? 'flex h-14 w-14 items-center justify-center rounded-full border-4 border-ink bg-[#23807F] text-white disabled:opacity-40' : 'btn-run h-[42px] px-3')} aria-label="Send"><Send /></button>
+        <button disabled={busy || !input.trim()} className={cn('shrink-0', kids ? 'flex h-14 w-14 items-center justify-center rounded-full bg-teal text-white hover:bg-teal-600 disabled:opacity-40' : 'btn-run h-[42px] px-3')} aria-label="Send"><Send /></button>
       </form>
     </div>
   );

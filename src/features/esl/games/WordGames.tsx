@@ -7,6 +7,7 @@ import { soundHint, type Activity } from '@shared/esl';
 import { Delete, Lightbulb, Volume2 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { say } from '../voice';
+import { focusRing, helperPill, optionClass } from '../ui';
 import { Dots, OptionButton, Picture, SoundButton, SpeakCheck, ZuvaSays, big, cheer, useItemClock, type GameProps } from './kit';
 
 type Of<K extends Activity['kind']> = GameProps<Extract<Activity, { kind: K }>>;
@@ -79,7 +80,7 @@ export function SayIt({ activity, tier, accent, context, onAnswer, onDone }: Of<
           s.next(r.ok);
         } else { s.setTries(s.tries + 1); cheer(tier, accent, false); }
       }} />
-      <button type="button" onClick={hint} className="inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 border-ink/30 bg-white px-4 text-sm font-bold"><Lightbulb className="h-4 w-4" /> {s.hints ? 'Say it for me' : 'Give me a clue'}</button>
+      <button type="button" onClick={hint} className={helperPill}><Lightbulb /> {s.hints ? 'Say it for me' : 'Give me a clue'}</button>
     </div>
   );
 }
@@ -165,14 +166,15 @@ export function SoundOut({ activity, tier, accent, context, onAnswer, onDone }: 
       <div className="flex justify-center gap-2">
         {item.sounds.map((snd, k) => (
           <button key={k} type="button" onClick={() => { setTapped((t) => (t.includes(k) ? t : [...t, k])); void say(soundHint(snd), accent, 'word'); }}
-            className={cn('grid h-16 min-w-16 place-items-center rounded-2xl border-4 border-ink px-3 font-mono text-3xl font-bold shadow-[0_4px_0_#0C1C38]', tapped.includes(k) ? 'bg-gold' : 'bg-white')}>
+            aria-label={`Sound ${snd.replace('_e', ' magic e')}`} aria-pressed={tapped.includes(k)}
+            className={cn('grid h-16 min-w-16 place-items-center rounded-md px-3 font-display text-3xl font-bold transition-colors', focusRing, tapped.includes(k) ? 'bg-gold text-ink-900' : 'bg-card hover:bg-gold-100 dark:hover:bg-night-700')}>
             {snd.replace('_e', '…e')}
           </button>
         ))}
       </div>
       {all && (
         <>
-          <button type="button" onClick={() => void say(item.sounds.map((x) => x.replace('_e', '')).join('… ') + '… ' + item.word, accent, 'word')} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#D6EBE8] px-4 font-bold"><Volume2 className="h-4 w-4" /> Blend it with Zuva</button>
+          <button type="button" onClick={() => void say(item.sounds.map((x) => x.replace('_e', '')).join('… ') + '… ' + item.word, accent, 'word')} className={helperPill}><Volume2 /> Blend it with Zuva</button>
           <SpeakCheck key={s.i} target={item.word} tier={tier} accent={accent} context={context} onResult={(r) => {
             if (r.ok || s.tries >= MAX_TRIES) { cheer(tier, accent, r.ok); onAnswer({ item: item.word, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: 0, input: r.input, heard: r.heard }); s.next(r.ok); }
             else { s.setTries(s.tries + 1); cheer(tier, accent, false); }
@@ -208,7 +210,7 @@ export function Spell({ activity, tier, accent, onAnswer, onDone }: Of<'spell'>)
       <div className="flex items-center justify-center gap-4"><Picture word={word} emoji={item.emoji} size={120} /><SoundButton text={word} accent={accent} pace="word" label="Hear it" /></div>
       <div className="flex flex-wrap justify-center gap-1.5" aria-label="Your spelling">
         {slots.map((ch, k) => (
-          <span key={k} className={cn('grid h-14 w-11 place-items-center rounded-xl border-4 font-mono text-3xl font-bold', ch === ' ' ? 'border-transparent' : state === 'right' ? 'border-teal bg-[#D6EBE8]' : state === 'wrong' ? 'border-[#E2553E] bg-[#FCE3DE]' : 'border-ink bg-white')}>
+          <span key={k} className={cn('grid h-14 w-11 place-items-center rounded-md font-display text-3xl font-bold', ch === ' ' ? '' : state === 'right' ? 'bg-teal-100 text-teal-900 ring-2 ring-teal dark:bg-teal-900 dark:text-teal-50' : state === 'wrong' ? 'bg-red-100 text-red-900 ring-2 ring-red-700 dark:bg-red-950 dark:text-red-100' : 'bg-card ring-2 ring-inset ring-fg/15')}>
             {state === 'wrong' && s.tries >= MAX_TRIES ? ch : built[k] ?? ''}
           </span>
         ))}
@@ -216,11 +218,11 @@ export function Spell({ activity, tier, accent, onAnswer, onDone }: Of<'spell'>)
       <div className="flex flex-wrap justify-center gap-2">
         {item.letters.map((l, k) => (
           <button key={k} type="button" disabled={picked.includes(k) || !!state} onClick={() => { const n = [...picked, k]; setPicked(n); if (n.length === item.letters.length) check(n.map((x) => item.letters[x]).join('')); }}
-            className="grid h-14 w-12 place-items-center rounded-xl border-4 border-ink bg-gold font-mono text-3xl font-bold shadow-[0_4px_0_#0C1C38] disabled:opacity-30">{l}</button>
+            aria-label={`Letter ${l}`} className={optionClass(undefined, 'h-14 w-12 bg-gold font-display text-3xl text-ink-900 hover:bg-gold-600 disabled:opacity-30')}>{l}</button>
         ))}
-        <button type="button" aria-label="Remove last letter" onClick={() => setPicked((p) => p.slice(0, -1))} disabled={!picked.length || !!state} className="grid h-14 w-14 place-items-center rounded-xl border-4 border-ink bg-white disabled:opacity-30"><Delete className="h-6 w-6" /></button>
+        <button type="button" aria-label="Remove last letter" onClick={() => setPicked((p) => p.slice(0, -1))} disabled={!picked.length || !!state} className={optionClass(undefined, 'h-14 w-14 disabled:opacity-30')}><Delete /></button>
       </div>
-      <button type="button" onClick={() => { s.setHints(s.hints + 1); void say(word.split('').join(', '), accent, 'word'); }} className="inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 border-ink/30 bg-white px-4 text-sm font-bold"><Lightbulb className="h-4 w-4" /> Spell it for me</button>
+      <button type="button" onClick={() => { s.setHints(s.hints + 1); void say(word.split('').join(', '), accent, 'word'); }} className={helperPill}><Lightbulb /> Spell it for me</button>
     </div>
   );
 }

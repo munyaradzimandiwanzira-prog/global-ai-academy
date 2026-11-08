@@ -21,13 +21,13 @@ export default function CambridgeHub() {
             <h2 className="mt-4 font-display text-2xl font-bold">English as a Second Language, new this term</h2>
             <p className="mt-2 text-ink dark:text-white/90">Ages 2 to 20, from first words to Cambridge B2 First. 36 weeks of speaking, listening, phonics, reading and writing games. Zuva listens, sounds out words with you, makes new games as you grow and tells your teacher how you’re doing.</p>
             <p className="mt-3 text-[15px]">{ESL_BANDS.map((b) => `${b.name} (${b.ages})`).join(' · ')}</p>
-            <span className="mt-5 inline-flex items-center gap-1 font-bold">Start English <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
+            <span className="mt-5 inline-flex items-center gap-1 font-bold">Start English <ArrowRight className="transition-transform duration-[180ms] group-hover:translate-x-1 motion-reduce:transition-none" /></span>
           </Link>
           <Link to="/kids/curriculum" className="group flex flex-col rounded-[4px] bg-white p-6 transition-colors hover:bg-granite-100 dark:bg-night-700 dark:hover:bg-night-800">
             <TrackMark short="Kz" color="#1F7A6E" size={64} />
             <h2 className="mt-4 font-display text-2xl font-bold">Kids Zone by Cambridge stage</h2>
             <p className="mt-2 text-ink dark:text-white/90">87 levels of coding, science and maths games mapped to Cambridge Primary Stages 1–6 and Lower Secondary Stage 7 (Computing, Science and Mathematics).</p>
-            <span className="mt-auto inline-flex items-center gap-1 pt-5 font-bold">See the stage map <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
+            <span className="mt-auto inline-flex items-center gap-1 pt-5 font-bold">See the stage map <ArrowRight className="transition-transform duration-[180ms] group-hover:translate-x-1 motion-reduce:transition-none" /></span>
           </Link>
         </div>
       </div>
