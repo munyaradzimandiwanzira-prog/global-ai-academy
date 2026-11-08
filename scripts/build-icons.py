@@ -7,7 +7,8 @@ Builds the self-hosted Material Symbols Outlined subset used by <MaterialIcon>.
   2. Pins the variable font to the locked axes FILL 0 · wght 100 · GRAD 0 · opsz 24 (a static instance,
      exactly what Google Fonts serves for `@24,100,0,0`).
   3. Keeps only those glyphs (addressed by their private-use code points, so no ligature table ships)
-     and writes public/fonts/material-symbols-outlined.woff2 and src/components/icon-codepoints.ts.
+     and writes src/assets/fonts/material-symbols-outlined.woff2 (hashed by Vite at build time)
+     and src/components/icon-codepoints.ts.
 
 Fails loudly if a name doesn't exist in the font, so a wrong name can never reach the screen as text.
 Run: npm run icons   (needs: pip install fonttools brotli)
@@ -23,7 +24,7 @@ from fontTools.varLib import instancer
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / 'node_modules/@fontsource-variable/material-symbols-outlined/files/material-symbols-outlined-latin-full-normal.woff2'
-OUT_FONT = ROOT / 'public/fonts/material-symbols-outlined.woff2'
+OUT_FONT = ROOT / 'src/assets/fonts/material-symbols-outlined.woff2'
 OUT_TS = ROOT / 'src/components/icon-codepoints.ts'
 AXES = {'FILL': 0, 'wght': 100, 'GRAD': 0, 'opsz': 24}
 

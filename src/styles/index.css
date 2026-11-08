@@ -3,13 +3,15 @@
 @tailwind utilities;
 
 /* Material Symbols Outlined — self-hosted subset, static instance FILL 0 · wght 100 · GRAD 0 · opsz 24
-   (scripts/build-icons.py). `block` keeps a blank 24px box, never a flash of the wrong glyph. */
+   (scripts/build-icons.py). `block` keeps a blank 24px box, never a flash of the wrong glyph.
+   Imported through Vite so the file name carries a content hash: when the icon set changes, browsers
+   fetch the new subset instead of drawing new symbols with a cached old one (which shows empty boxes). */
 @font-face {
   font-family: 'Material Symbols Outlined';
   font-style: normal;
   font-weight: 100;
   font-display: block;
-  src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+  src: url('../assets/fonts/material-symbols-outlined.woff2') format('woff2');
 }
 
 @layer base {
