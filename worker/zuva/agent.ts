@@ -33,6 +33,10 @@ import { eslBand, hasBlockedWord } from '@shared/esl';
 import { eslSystemPrompt } from '../esl/persona';
 import { eslContextBlock, loadEslContext } from '../esl/context';
 import type { EslSession } from '../esl/mcp';
+import { mathsSystemPrompt } from '../maths/persona';
+import { loadMathsContext, mathsContextBlock } from '../maths/context';
+import type { MathsSession } from '../maths/tools';
+import type { MathsStage } from '@shared/maths';
 
 type ChatInput = z.infer<typeof zuvaChatSchema>;
 const MAX_STEPS = 4;
@@ -88,10 +92,12 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
   const background: Promise<unknown>[] = [];
   const teacherMode = input.mode === 'teacher';
   const eslMode = input.mode === 'esl';
-  const agentName = teacherMode ? 'teacher' : eslMode ? 'esl' : 'tutor';
+  const mathsMode = input.mode === 'maths';
+  const agentName = teacherMode ? 'teacher' : eslMode ? 'esl' : mathsMode ? 'maths' : 'tutor';
   // English learners under 13 get the children's safety rules (input scrubbing, stricter moderation).
-  const eslChild = eslMode && (eslBand(input.esl?.band)?.tier !== 'secondary');
-  const safetyMode = eslMode ? (eslChild ? 'kids' : 'learner') : input.mode;
+  // Maths covers Stages 1–6 (about ages 5–11): always the children's rules.
+  const eslChild = (eslMode && (eslBand(input.esl?.band)?.tier !== 'secondary')) || mathsMode;
+  const safetyMode = eslMode || mathsMode ? (eslChild ? 'kids' : 'learner') : input.mode;
   const speakerTag = teacherMode ? 'teacher_message' : 'learner_message';
 
   const work = async () => {
@@ -131,21 +137,26 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
 
       const teacher = teacherMode && user ? await loadTeacherContext(env.DB, user) : null;
       const eslIn = input.esl ?? { week: 1, band: 'starters' as const, accent: 'gb' as const };
-      const eslCtx = eslMode ? await loadEslContext(env.DB, user, eslIn) : null;
+      const eslCtx = eslMode ? await loadEslContext(env.DB, user, { ...eslIn, support: eslIn.support }) : null;
+      const mathsIn = input.maths ?? { stage: 1 };
+      const mathsCtx = mathsMode ? await loadMathsContext(env.DB, user, { stage: mathsIn.stage as MathsStage, unitId: mathsIn.unitId, support: mathsIn.support, guest: mathsIn.guest }) : null;
       const memoryText = memories.length ? `\n\nThings you remember about this learner (use naturally, don't recite):\n<memory>\n${memories.map((m) => `- ${asData(m)}`).join('\n')}\n</memory>` : '';
       const summaryText = thread?.summary ? `\n\nSummary of this conversation so far:\n<memory>\n${asData(thread.summary)}\n</memory>` : '';
       const messages: AgentMessage[] = [{
         role: 'system',
-        content: eslCtx ? `${eslSystemPrompt(eslCtx.band, eslCtx.accent)}${memoryText}${summaryText}\n\nToday's date is ${new Date().toISOString().slice(0, 10)}.` : systemPrompt(input.mode, learner, memories, thread?.summary, teacher),
+        content: eslCtx ? `${eslSystemPrompt(eslCtx.band, eslCtx.accent)}${memoryText}${summaryText}\n\nToday's date is ${new Date().toISOString().slice(0, 10)}.`
+          : mathsCtx ? `${mathsSystemPrompt(mathsCtx.stage)}${memoryText}${summaryText}\n\nToday's date is ${new Date().toISOString().slice(0, 10)}.` : systemPrompt(input.mode, learner, memories, thread?.summary, teacher),
       }];
       if (eslCtx) messages.push({ role: 'system', content: `What you know right now (data):\n${eslContextBlock(eslCtx, { activityId: eslIn.activityId, kind: eslIn.kind, item: eslIn.item, heard: eslIn.heard, task: eslIn.task })}` });
-      const situation = eslMode ? '' : situationBlock(input);
+      if (mathsCtx) messages.push({ role: 'system', content: `What you know right now (data):\n${mathsContextBlock(mathsCtx, { activityId: mathsIn.activityId, kind: mathsIn.kind, item: mathsIn.item, task: mathsIn.task })}` });
+      const situation = eslMode || mathsMode ? '' : situationBlock(input);
       if (situation || verdict.note) messages.push({ role: 'system', content: [situation, verdict.note].filter(Boolean).join('\n') });
       for (const m of history) messages.push(m.role === 'user' ? { role: 'user', content: `<${speakerTag}>${asData(m.content)}</${speakerTag}>` } : { role: 'assistant', content: m.content });
       messages.push({ role: 'user', content: `<${speakerTag}>${asData(verdict.text)}</${speakerTag}>` });
 
       const esl: EslSession | undefined = eslCtx ? { env, user, ctx: eslCtx, memoryEnabled, emit, tainted: false } : undefined;
-      const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, stage: stageOf(input.stage)?.id, memoryEnabled, emit, esl };
+      const maths: MathsSession | undefined = mathsCtx ? { env, user, ctx: mathsCtx, emit } : undefined;
+      const ctx: ToolCtx = { env, user, learner, mode: input.mode, activity: input.activity, stage: stageOf(input.stage)?.id, memoryEnabled, emit, esl, maths };
       const tools = toolsFor(ctx);
       const model = env.ZUVA_MODEL || 'gpt-5.5';
       // Children get quick, short answers; grown-up learners get deeper reasoning.
@@ -161,7 +172,7 @@ export function zuvaStream(c: Ctx, input: ChatInput, quota: { used: number; limi
       }
       reply = await checkOutput(env, safetyMode, reply || 'Hmm, I’m not sure. Can you say that another way?');
       // Zuva never swears, whatever it was asked: a reply with a blocked word is replaced, not shown.
-      if (eslMode && hasBlockedWord(reply)) reply = 'Let’s keep our words kind and friendly. Shall we play the next game?';
+      if ((eslMode || mathsMode) && hasBlockedWord(reply)) reply = 'Let’s keep our words kind and friendly. Shall we play the next game?';
       emit({ t: 'text', text: reply });
       await save(verdict.text, reply);
       emit({ t: 'done', threadId: thread?.id, quota });

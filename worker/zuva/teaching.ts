@@ -11,7 +11,9 @@ import { chatJson } from '../lib/openai';
 import { asData } from '../lib/prompts';
 import { getTrack, lessonExists, lessonOutline } from '../lib/catalog';
 import { eslViewText } from '../esl/report';
+import { mathsViewText } from '../maths/report';
 import { eslWeek } from '@shared/esl';
+import { mathsUnit, unitsForStage, type MathsStage } from '@shared/maths';
 import { unavailable } from '../lib/errors';
 
 const model = (env: Env) => env.ZUVA_MODEL || 'gpt-5.5';
@@ -24,6 +26,7 @@ export function realPath(path: string): boolean {
   const [, a, b, c] = p!.split('/');
   if (a === 'learn') return !!getTrack(b ?? '') && (!c || lessonExists(b!, c));
   if (a === 'kids') return q ? KID_LEVELS.some((l) => levelHref(l) === path) : true;
+  if (a === 'cambridge' && b === 'maths') return !c || !!mathsUnit(c);
   if (a === 'cambridge' && b === 'esl' && c === 'week') { const n = Number(p!.split('/')[4]); return Number.isInteger(n) && n >= 1 && n <= 36; }
   return true;
 }
@@ -52,6 +55,7 @@ export async function writeStudentReport(env: Env, d: StudentDetail, catalogHint
     struggles: d.struggles,
     activeDaysLast4Weeks: d.activityByDay.length,
     english: d.esl ? eslViewText(d.esl) : null,
+    maths: d.maths ? mathsViewText(d.maths) : null,
   };
   const raw = await chatJson<Partial<StudentReportContent>>(env, {
     model: model(env), reasoningEffort: 'medium', maxTokens: 1400,
@@ -87,6 +91,7 @@ export function catalogHintsFor(d: StudentDetail): { title: string; path: string
   if (stage || d.student.level === 'kids') {
     for (const l of KID_LEVELS.filter((x) => x.stage === (stage ?? 2)).slice(0, 10)) hints.push({ title: `Kids Zone: ${l.name}`, path: levelHref(l) });
   }
+  if (d.maths) for (const u of unitsForStage(d.maths.stage as MathsStage).slice(0, 6)) hints.push({ title: `Maths: ${u.title}`, path: `/cambridge/maths/${u.id}` });
   if (d.esl) {
     for (let w = Math.max(1, d.esl.week - 1); w <= Math.min(36, d.esl.week + 1); w++) hints.push({ title: `English week ${w}: ${eslWeek(w)?.title ?? ''}`, path: `/cambridge/esl/week/${w}` });
   }

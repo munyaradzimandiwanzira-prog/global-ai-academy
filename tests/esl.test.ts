@@ -38,7 +38,8 @@ describe('ESL curriculum', () => {
     expect(kinds('tiny')).not.toContain('write');
     expect(kinds('little')).toContain('sound');
     expect(kinds('first')).toContain('write');
-    expect(new Set(ESL_BANDS.flatMap((b) => kinds(b.id)))).toEqual(new Set(ACTIVITY_KINDS));
+    // Every game type is used somewhere (the Portuguese-speaker ones when help is on).
+    expect(new Set(ESL_BANDS.flatMap((b) => buildUnit(5, b.id, 'gb', { support: 'pt-MZ' }).map((a) => a.kind)))).toEqual(new Set(ACTIVITY_KINDS));
   });
   it('is the same each time it is opened', () => {
     expect(buildUnit(7, 'movers', 'gb')).toEqual(buildUnit(7, 'movers', 'gb'));

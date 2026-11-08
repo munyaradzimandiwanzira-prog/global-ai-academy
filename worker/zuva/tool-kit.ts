@@ -5,6 +5,7 @@ import type { ZuvaActivity, ZuvaEvent, ZuvaMode } from '@shared/zuva';
 import type { StageId } from '@shared/kids-curriculum';
 import type { LearnerContext } from './profile';
 import type { EslSession } from '../esl/mcp';
+import type { MathsSession } from '../maths/tools';
 
 export interface ToolCtx {
   /** Kids Zone stage the child picked, if any. */
@@ -18,6 +19,8 @@ export interface ToolCtx {
   emit: (e: ZuvaEvent) => void;
   /** English course session (identity, level, taint flag), when mode is 'esl'. */
   esl?: EslSession;
+  /** Maths course session, when mode is 'maths'. */
+  maths?: MathsSession;
 }
 
 export interface ZuvaTool {

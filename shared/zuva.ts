@@ -6,7 +6,7 @@
  */
 import type { Activity } from './esl';
 
-export type ZuvaMode = 'kids' | 'learner' | 'teacher' | 'esl';
+export type ZuvaMode = 'kids' | 'learner' | 'teacher' | 'esl' | 'maths';
 
 /** Something Zuva offers to do in the app. The learner always taps to accept; Zuva never navigates on its own. */
 export type ZuvaAction =
@@ -54,7 +54,11 @@ export interface EslFeedbackCard {
   corrections: { wrong: string; right: string; why: string }[];
   well: string[]; nextStep: string;
 }
-export type ZuvaCard = ExperimentCard | QuizCard | AssignmentDraftCard | LessonPlanCard | ReportCard | EslGameCard | EslFeedbackCard;
+/** A maths game Zuva offers (made by the course generators, so every answer is correct). */
+export interface MathsGameCard { kind: 'maths_game'; unitId: string; activity: import('./maths').MathsActivity; reason?: string }
+/** Feedback on a "Convince me" explanation. */
+export interface MathsFeedbackCard { kind: 'maths_feedback'; verdict: 'convincing' | 'nearly' | 'not yet'; well: string[]; improve: string[]; nextStep: string }
+export type ZuvaCard = ExperimentCard | QuizCard | AssignmentDraftCard | LessonPlanCard | ReportCard | EslGameCard | EslFeedbackCard | MathsGameCard | MathsFeedbackCard;
 
 export type ZuvaEvent =
   | { t: 'status'; text: string }
@@ -87,5 +91,5 @@ export interface ZuvaActivity {
 }
 
 /** Paths Zuva may offer as buttons. Anything else is dropped, so a model can't send learners elsewhere. */
-export const ZUVA_SAFE_PATHS = [/^\/teach(\/[a-z-]+(\/[A-Za-z0-9-]{1,40})?)?$/, /^\/classes(\/[A-Za-z0-9-]{1,40})?$/, /^\/assignments\/[A-Za-z0-9-]{1,40}$/, /^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/, /^\/cambridge(\/esl(\/week\/\d{1,2})?)?$/, /^\/signup\?next=\/cambridge\/esl$/, /^\/pricing$/];
+export const ZUVA_SAFE_PATHS = [/^\/teach(\/[a-z-]+(\/[A-Za-z0-9-]{1,40})?)?$/, /^\/classes(\/[A-Za-z0-9-]{1,40})?$/, /^\/assignments\/[A-Za-z0-9-]{1,40}$/, /^\/kids(\/[a-z]+)?(\?(level=\d{1,2}|challenge=[a-z]+|topic=[a-z]+|mode=[a-z]+&level=\d))?$/, /^\/learn\/[a-z0-9-]+(\/[a-z0-9-]+)?$/, /^\/tutorials$/, /^\/playground$/, /^\/exercises$/, /^\/careers(\/[a-z0-9-]+)?$/, /^\/start$/, /^\/settings$/, /^\/cambridge(\/esl(\/week\/\d{1,2})?)?$/, /^\/cambridge\/maths(\/s[1-6]-[a-z0-9]+)?$/, /^\/signup\?next=\/cambridge\/(esl|maths)$/, /^\/pricing$/];
 export const isSafeZuvaPath = (p: string) => ZUVA_SAFE_PATHS.some((r) => r.test(p));

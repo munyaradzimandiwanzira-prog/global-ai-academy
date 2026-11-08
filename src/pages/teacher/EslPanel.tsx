@@ -1,4 +1,4 @@
-import type { EslTeacherView } from '@shared/teaching';
+import type { EslTeacherView, MathsTeacherView } from '@shared/teaching';
 import { ProgressBar } from '@/components/ui';
 import { Sparkles } from '@/components/icons';
 import { shortDate } from './shared';
@@ -9,6 +9,15 @@ const pct = (n: number | null) => (n == null ? '–' : `${Math.round(n * 100)}%`
 
 /** English as a Second Language: the learner model Zuva keeps, without the learner's chats. */
 export function EslPanel({ v, name }: { v: EslTeacherView; name: string }) {
+  return <CoursePanel v={v} name={name} id="esl" heading="English with Zuva" sub={`${v.bandName} · week ${v.week} of 36 · ${v.accent === 'us' ? 'American' : 'British'} English`} />;
+}
+
+/** Cambridge Maths: the same learner model, by stage. */
+export function MathsPanel({ v, name }: { v: MathsTeacherView; name: string }) {
+  return <CoursePanel v={v} name={name} id="maths" heading="Cambridge Maths with Zuva" sub={`Stage ${v.stage} · ${v.unitsDone} of ${v.unitsTotal} units done`} />;
+}
+
+function CoursePanel({ v, name, id, heading, sub }: { v: EslTeacherView | MathsTeacherView; name: string; id: string; heading: string; sub: string }) {
   // Several skills share an area (speaking:w1, speaking:w2…): show one bar per area.
   const byArea = new Map<string, { sum: number; n: number; attempts: number }>();
   for (const s of v.skills) {
@@ -20,17 +29,25 @@ export function EslPanel({ v, name }: { v: EslTeacherView; name: string }) {
   const chips = (xs: string[], tone: string) => <ul className="mt-1 flex flex-wrap gap-1.5">{xs.map((x) => <li key={x} className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}>{x}</li>)}</ul>;
 
   return (
-    <section className="card p-5" aria-labelledby="esl">
+    <section className="card p-5" aria-labelledby={id}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="esl" className="font-display text-lg font-semibold">English with Zuva</h2>
-        <span className="text-sm text-muted-fg">{v.bandName} · week {v.week} of 36 · {v.accent === 'us' ? 'American' : 'British'} English</span>
+        <h2 id={id} className="font-display text-lg font-semibold">{heading}</h2>
+        <span className="text-sm text-muted-fg">{sub}</span>
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <div><dt className="text-muted-fg">Weeks done</dt><dd className="text-lg font-semibold tabular">{v.unitsDone}</dd></div>
+        <div><dt className="text-muted-fg">{id === 'esl' ? 'Weeks done' : 'Units done'}</dt><dd className="text-lg font-semibold tabular">{v.unitsDone}</dd></div>
         <div><dt className="text-muted-fg">Stars</dt><dd className="text-lg font-semibold tabular">{v.stars}</dd></div>
         <div><dt className="text-muted-fg">Accuracy</dt><dd className="text-lg font-semibold tabular">{pct(v.accuracy)}</dd></div>
         <div><dt className="text-muted-fg">Trend</dt><dd className="text-lg font-semibold">{{ up: 'Improving', down: 'Slipping', steady: 'Steady', new: 'Just started' }[v.trend]}</dd></div>
       </dl>
+      {v.supportLang === 'pt-MZ' && (
+        <p className="mt-3 text-[15px]">
+          <strong>Portuguese help:</strong>{' '}
+          {v.supportUse?.recentRate != null
+            ? <>used on {pct(v.supportUse.recentRate)} of answers in the last two weeks{v.supportUse.previousRate != null && <> ({pct(v.supportUse.previousRate)} the two weeks before{v.supportUse.recentRate < v.supportUse.previousRate ? ', growing more independent' : ''})</>}.</>
+            : 'switched on, not used yet.'}
+        </p>
+      )}
       {areas.length > 0 && (
         <ul className="mt-4 space-y-2" aria-label="Mastery by skill">
           {areas.map((a) => <li key={a.area}><div className="flex justify-between text-sm"><span>{a.area}</span><span className="tabular text-muted-fg">{pct(a.mastery)} · {a.attempts} answers</span></div><ProgressBar value={a.mastery * 100} label={`${a.area} mastery`} className="mt-1" /></li>)}

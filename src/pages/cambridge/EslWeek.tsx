@@ -10,8 +10,10 @@ import { ZuvaChat } from '@/features/zuva/ZuvaChat';
 import { useEsl } from '@/features/esl/store';
 import { GamePlayer } from '@/features/esl/GamePlayer';
 import { EslPlaceContext, type EslPlace } from '@/features/esl/EslContext';
-import { say } from '@/features/esl/voice';
+import { sayMixed } from '@/features/esl/voice';
 import { AccentSwitch, MuteSwitch } from './EslHome';
+import { HelpSwitch } from '@/features/esl/support';
+import { PT_WEEKS } from '@shared/esl';
 import { GameIcon, focusRing } from '@/features/esl/ui';
 import { buttonClass } from '@/components/ui/Button';
 import { MaterialIcon } from '@/components/icons';
@@ -33,16 +35,17 @@ export default function EslWeek() {
   const { user, settings, guest } = esl;
   const band = eslBand(settings?.band);
   const accent = settings?.accent ?? 'gb';
+  const support = settings?.support ?? 'off';
   const [current, setCurrent] = useState<Activity | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [doneLocal, setDoneLocal] = useState<string[]>([]);
   const player = useRef<HTMLDivElement>(null);
 
   const unit = useQuery({
-    queryKey: ['esl-unit', weekNo, settings?.band, accent, user?.id ?? guest?.name],
+    queryKey: ['esl-unit', weekNo, settings?.band, accent, support, user?.id ?? guest?.name],
     enabled: !!w && !!settings,
     retry: false,
-    queryFn: () => api.get<Unit>(`/api/esl/unit/${weekNo}?band=${settings!.band}&accent=${accent}${!user && guest?.name ? `&name=${encodeURIComponent(guest.name)}` : ''}`),
+    queryFn: () => api.get<Unit>(`/api/esl/unit/${weekNo}?band=${settings!.band}&accent=${accent}&support=${support}${!user && guest?.name ? `&name=${encodeURIComponent(guest.name)}` : ''}`),
   });
 
   useEffect(() => { if (w) document.title = `Week ${w.week}: ${w.title} | English with Zuva`; }, [w]);
@@ -58,12 +61,12 @@ export default function EslWeek() {
     return () => { window.removeEventListener('pagehide', end); end(); };
   }, [user, settings?.band, weekNo]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const place: EslPlace | null = useMemo(() => (settings ? { week: weekNo, band: settings.band, accent, signedIn: !!user, guest, sessionId } : null), [settings, weekNo, accent, user, guest, sessionId]);
+  const place: EslPlace | null = useMemo(() => (settings ? { week: weekNo, band: settings.band, accent, signedIn: !!user, guest, sessionId, support } : null), [settings, weekNo, accent, user, guest, sessionId, support]);
   const getContext = useCallback(() => ({
     page: { path: `/cambridge/esl/week/${weekNo}`, title: w ? `Week ${weekNo}: ${w.title}` : undefined },
-    esl: { week: weekNo, band: settings?.band ?? 'starters', accent, activityId: current?.id, kind: current?.kind, guest: user ? undefined : guest ? { name: guest.name, age: guest.age ?? undefined, trial: guest.trial } : { trial: true } },
-  }), [weekNo, w, settings?.band, accent, current, user, guest]);
-  const voice = useCallback((t: string, p?: 'word' | 'early' | 'primary' | 'secondary') => void say(t, accent, p ?? band?.tier ?? 'primary'), [accent, band?.tier]);
+    esl: { week: weekNo, band: settings?.band ?? 'starters', accent, support, activityId: current?.id, kind: current?.kind, guest: user ? undefined : guest ? { name: guest.name, age: guest.age ?? undefined, trial: guest.trial } : { trial: true } },
+  }), [weekNo, w, settings?.band, accent, support, current, user, guest]);
+  const voice = useCallback((t: string, p?: 'word' | 'early' | 'primary' | 'secondary') => void sayMixed(t, accent, p ?? band?.tier ?? 'primary', support), [accent, band?.tier, support]);
   const onTool = useCallback((name: string) => { if (name === 'esl_set_preferences') void qc.invalidateQueries({ queryKey: ['esl-me'] }); }, [qc]);
 
   if (!w) return <Navigate to="/cambridge/esl" replace />;
@@ -83,6 +86,7 @@ export default function EslWeek() {
     : tier === 'primary'
       ? `Hi${name ? ` ${name}` : ''}! This week: ${theme}. Play the games, and ask me for help, a story or a brand-new game.`
       : `Hi${name ? ` ${name}` : ''}. Week ${w.week}: ${w.title}. Grammar focus: ${w.grammar}. Ask me anything, practise a conversation, or send me your writing.`;
+  const greetingFull = support === 'pt-MZ' ? `${greeting}\n\n(Podes pedir-me ajuda em português. Praticamos em inglês.)` : greeting;
 
   return (
     <EslPlaceContext.Provider value={place}>
@@ -91,6 +95,7 @@ export default function EslWeek() {
           <nav aria-label="Course" className="mb-6 flex flex-wrap items-center gap-2">
             <Link to="/cambridge/esl" className={buttonClass({ variant: 'text' }, 'min-h-11 -ml-3')}><ArrowLeft /> All 36 weeks</Link>
             <AccentSwitch value={accent} onChange={(a) => void esl.save({ accent: a })} />
+            <HelpSwitch value={support} onChange={(v) => void esl.save({ support: v })} />
             <MuteSwitch />
             <a href="#zuva-chat" className={buttonClass({ variant: 'outlined', color: 'action' }, 'min-h-11 lg:hidden')}><MaterialIcon name="forum" /> Talk to Zuva</a>
           </nav>
@@ -100,6 +105,7 @@ export default function EslWeek() {
               <p className="text-[15px] text-muted-fg">Week {w.week} of 36, {band!.name} (ages {band!.ages})</p>
               <h1 className="font-display text-[clamp(1.875rem,4vw,2.5rem)] font-bold leading-[1.1] tracking-[-0.02em]">{tier === 'secondary' ? w.title : w.theme}</h1>
               {tier !== 'early' && <p className="mt-1">{tier === 'secondary' ? `Grammar: ${w.grammar}` : w.title}</p>}
+              {support === 'pt-MZ' && <p lang="pt-MZ" className="mt-1 text-[15px] text-muted-fg">{tier === 'secondary' ? PT_WEEKS[weekNo]?.title : PT_WEEKS[weekNo]?.theme}</p>}
             </div>
           </header>
 
@@ -162,7 +168,7 @@ export default function EslWeek() {
             <aside id="zuva-chat" className="scroll-mt-20 lg:sticky lg:top-20 lg:self-start" aria-label="Zuva, your English teacher">
               <div className="flex h-[min(78vh,680px)] min-h-[420px] flex-col overflow-hidden rounded-md bg-card">
                 <h2 className="bg-muted px-4 py-2.5 font-display font-bold">Zuva, your English teacher</h2>
-                <ZuvaChat mode="esl" skin={tier === 'secondary' ? 'grown' : 'kids'} greeting={greeting} starters={STARTERS[tier]} getContext={getContext}
+                <ZuvaChat mode="esl" skin={tier === 'secondary' ? 'grown' : 'kids'} greeting={greetingFull} starters={STARTERS[tier]} getContext={getContext}
                   threadKey={`esl:${weekNo}:${settings.band}`} signedIn={!!user} autoSpeak={tier === 'early'} voice={voice} onTool={onTool} />
               </div>
             </aside>

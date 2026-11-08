@@ -14,7 +14,7 @@ import { ZuvaCardView } from './ZuvaCards';
 
 export interface ChatMsg { id: number; role: 'user' | 'assistant'; text: string; cards: ZuvaCard[]; actions: ZuvaAction[]; working: string[]; pending: boolean; error?: boolean }
 
-type Context = Pick<ZuvaChatRequest, 'page' | 'lesson' | 'activity' | 'stage' | 'esl'>;
+type Context = Pick<ZuvaChatRequest, 'page' | 'lesson' | 'activity' | 'stage' | 'esl' | 'maths'>;
 
 export interface ZuvaChatProps {
   mode: ZuvaMode;

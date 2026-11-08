@@ -14,7 +14,7 @@ export async function eslTeacherView(db: D1Database, studentId: string): Promise
   const [p, prog, notes] = await Promise.all([
     patterns(db, studentId),
     db.prepare('SELECT COUNT(completed_at) AS done, COALESCE(SUM(stars), 0) AS stars, MAX(updated_at) AS last FROM esl_progress WHERE user_id = ?').bind(studentId).first<{ done: number; stars: number; last: string | null }>(),
-    db.prepare('SELECT id, area, note, suggestion, source, created_at FROM esl_teacher_notes WHERE student_id = ? ORDER BY created_at DESC LIMIT 12').bind(studentId)
+    db.prepare("SELECT id, area, note, suggestion, source, created_at FROM esl_teacher_notes WHERE student_id = ? AND course = 'esl' ORDER BY created_at DESC LIMIT 12").bind(studentId)
       .all<{ id: string; area: string; note: string; suggestion: string; source: 'zuva' | 'weekly'; created_at: string }>(),
   ]);
   return {
@@ -22,6 +22,8 @@ export async function eslTeacherView(db: D1Database, studentId: string): Promise
     bandName: eslBand(learner.band)?.name ?? learner.band,
     accent: learner.accent,
     week: learner.week,
+    supportLang: learner.support,
+    supportUse: p.support ?? null,
     unitsDone: prog?.done ?? 0,
     stars: prog?.stars ?? 0,
     lastActive: p.overall.lastActive ?? prog?.last ?? null,
@@ -52,6 +54,7 @@ export function eslViewText(v: EslTeacherView): string {
     `Slower at: ${join(v.slow.map((s) => `${s.title} ~${s.avgSeconds}s`))}. Quicker at: ${join(v.fast.map((s) => `${s.title} ~${s.avgSeconds}s`))}.`,
     `Enjoys: ${join(v.enjoys.map((e) => e.title))}. Avoids: ${join(v.avoids.map((e) => e.title))}.`,
     `Tricky words: ${join(v.trickyWords)}.`,
+    v.supportLang === 'pt-MZ' ? `Portuguese help is on. ${v.supportUse?.recentRate != null ? `Used on ${Math.round(v.supportUse.recentRate * 100)}% of answers in the last two weeks${v.supportUse.previousRate != null ? ` (${Math.round(v.supportUse.previousRate * 100)}% the two weeks before)` : ''}.` : 'Not used yet.'}` : '',
     v.notes.length ? `Notes from Zuva: ${v.notes.slice(0, 5).map((n) => `[${n.at.slice(0, 10)}] ${n.area}: ${n.note}${n.suggestion ? ` Try: ${n.suggestion}` : ''}`).join(' | ')}` : '',
   ].filter(Boolean).join('\n');
 }

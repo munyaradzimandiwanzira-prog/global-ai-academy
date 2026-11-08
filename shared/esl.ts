@@ -15,15 +15,16 @@
  *   talk   Talk Time        a spoken or typed role-play with Zuva                   speaking
  *   write  Write and Check  a writing task marked by Zuva against simple criteria   writing
  */
+import { PT_FALSE_FRIENDS, PT_FIXES, PT_PAIRS, type SupportLang } from './esl-pt';
 import { z } from 'zod';
 import { ESL_BANDS, ESL_WEEKS, RHYMES, eslBand, localize, spellings, type Accent, type EslBand, type EslBandId, type EslWeek, type Pic } from './esl-curriculum';
 
 export * from './esl-curriculum';
 
-export const ACTIVITY_KINDS = ['echo', 'say', 'pick', 'sound', 'rhyme', 'spell', 'order', 'gap', 'story', 'talk', 'write'] as const;
+export const ACTIVITY_KINDS = ['echo', 'say', 'pick', 'sound', 'rhyme', 'spell', 'order', 'gap', 'story', 'talk', 'write', 'pairs', 'friends', 'fix'] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
-export const ACTIVITY_INFO: Record<ActivityKind, { title: string; skill: 'speaking' | 'listening' | 'phonics' | 'spelling' | 'grammar' | 'reading' | 'writing'; emoji: string; voice: boolean }> = {
+export const ACTIVITY_INFO: Record<ActivityKind, { title: string; skill: 'speaking' | 'listening' | 'phonics' | 'spelling' | 'grammar' | 'reading' | 'writing' | 'vocabulary'; emoji: string; voice: boolean }> = {
   echo: { title: 'Copy Cat', skill: 'speaking', emoji: '🦜', voice: true },
   say: { title: 'Say What You See', skill: 'speaking', emoji: '🗣️', voice: true },
   pick: { title: 'Listen and Tap', skill: 'listening', emoji: '👂🏾', voice: false },
@@ -35,6 +36,10 @@ export const ACTIVITY_INFO: Record<ActivityKind, { title: string; skill: 'speaki
   story: { title: 'Story Time', skill: 'reading', emoji: '📖', voice: false },
   talk: { title: 'Talk Time', skill: 'speaking', emoji: '💬', voice: true },
   write: { title: 'Write and Check', skill: 'writing', emoji: '📝', voice: false },
+  // Practice designed for Portuguese speakers (shown when Portuguese help is on).
+  pairs: { title: 'Sound Twins', skill: 'phonics', emoji: '👂🏾', voice: false },
+  friends: { title: 'False Friends', skill: 'vocabulary', emoji: '🤔', voice: false },
+  fix: { title: 'Fix It', skill: 'grammar', emoji: '🛠️', voice: false },
 };
 
 // ── Activity schema (also used to validate games Zuva creates) ─────────────
@@ -56,6 +61,9 @@ export const activitySchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('gap'), items: z.array(z.object({ text: text(200).refine((t) => t.includes('___'), 'Needs ___'), answer: text(40), options: z.array(text(40)).min(2).max(4) })).min(1).max(10) }),
   z.object({ kind: z.literal('story'), title: text(80), paragraphs: z.array(text(400)).min(1).max(12), questions: z.array(z.object({ q: text(200), answer: text(60), options: z.array(option).min(2).max(4) })).min(1).max(6), source: z.object({ title: text(120), url: z.string().url().max(300).optional(), licence: text(80) }).optional() }),
   z.object({ kind: z.literal('talk'), scenario: text(400), opener: text(300), goals: z.array(text(120)).min(1).max(5) }),
+  z.object({ kind: z.literal('pairs'), items: z.array(z.object({ a: word, b: word, target: word, tip: text(200).optional() })).min(1).max(10) }),
+  z.object({ kind: z.literal('friends'), items: z.array(z.object({ en: word, example: text(200), answer: text(60), options: z.array(text(60)).min(2).max(4) })).min(1).max(8) }),
+  z.object({ kind: z.literal('fix'), items: z.array(z.object({ text: text(200).refine((t) => t.includes('___'), 'Needs ___'), answer: text(40), options: z.array(text(40)).min(2).max(4), why: text(200).optional() })).min(1).max(10) }),
   z.object({ kind: z.literal('write'), prompt: text(400), minWords: z.number().int().min(5).max(400), maxWords: z.number().int().min(10).max(500), criteria: z.array(text(120)).min(1).max(5) }),
 ]);
 
@@ -184,7 +192,7 @@ function storyFor(w: EslWeek, band: EslBand, accent: Accent): ActivityBody & { k
   };
 }
 
-export interface UnitOptions { name?: string; age?: number }
+export interface UnitOptions { name?: string; age?: number; /** Portuguese help on: adds practice for Portuguese speakers. */ support?: SupportLang }
 
 /**
  * The games for one week at one band, in teaching order: hear and copy → recognise → produce →
@@ -262,6 +270,20 @@ export function buildUnit(weekNo: number, bandId: EslBandId, accent: Accent, opt
       add({ kind: 'write', prompt: L(w.write), minWords: lo, maxWords: hi, criteria: band.id === 'key' ? ['Answers every part of the task', 'Clear, simple sentences', 'Correct spelling and punctuation'] : ['Content: answers the task fully', 'Organisation: clear paragraphs and linking', 'Language: range and accuracy of grammar and vocabulary', 'Communicative achievement: right tone for the reader'] }, `Writing task (${lo}–${hi} words). I’ll check it against Cambridge-style criteria.`, 'writing');
     }
   }
+
+  // Portuguese speakers: sounds that merge, false friends and grammar that transfers. Added at the
+  // end so the ids of the core games never change when a learner turns help on or off.
+  if (opts.support === 'pt-MZ' && band.tier !== 'early') {
+    const rot = <T,>(xs: T[], n: number) => Array.from({ length: Math.min(n, xs.length) }, (_, i) => xs[(w.week * 3 + i) % xs.length]!);
+    add({ kind: 'pairs', items: rot(PT_PAIRS, band.tier === 'primary' ? 4 : 6).map((p, i) => ({ a: p.a, b: p.b, target: (w.week + i) % 2 ? p.b : p.a, tip: p.tip })) }, 'Sound Twins! Listen carefully: which word did I say?');
+    add({ kind: 'fix', items: rot(PT_FIXES.filter((f) => band.tier === 'secondary' || f.level === 'primary'), band.tier === 'primary' ? 3 : 5).map((f, i) => ({ text: f.text, answer: f.answer, options: seededShuffle(f.options, `${seed}:f${i}`), why: f.why })) }, 'Fix It! Choose the correct English.');
+    if (band.tier === 'secondary' || band.id === 'flyers') {
+      add({ kind: 'friends', items: rot(PT_FALSE_FRIENDS, 4).map((f, i) => {
+        const others = seededShuffle(PT_FALSE_FRIENDS.filter((x) => x !== f).map((x) => x.right), `${seed}:ff${i}`).slice(0, 1);
+        return { en: f.en, example: f.example, answer: f.right, options: seededShuffle([f.right, f.trap.split(' (')[0]!, ...others], `${seed}:fo${i}`) };
+      }) }, 'False Friends! Some English words look like Portuguese words but mean something else.');
+    }
+  }
   return out;
 }
 
@@ -275,8 +297,12 @@ export const unitSize = (bandId: EslBandId) => buildUnit(1, bandId, 'gb').length
  * to the moderation model. Kept deliberately broad (whole words only).
  */
 const BLOCK = ['damn', 'hell', 'crap', 'shit', 'fuck', 'bitch', 'bastard', 'arse', 'ass', 'piss', 'dick', 'cock', 'pussy', 'slut', 'whore', 'sex', 'sexy', 'nude', 'naked', 'porn', 'kill', 'killed', 'murder', 'gun', 'guns', 'knife', 'blood', 'bloody', 'dead', 'die', 'suicide', 'drug', 'drugs', 'beer', 'wine', 'alcohol', 'cigarette', 'smoke', 'gamble', 'stupid', 'idiot', 'dumb', 'ugly', 'fat', 'retard', 'hate', 'nigger', 'nigga', 'kaffir', 'coon', 'monkey-face', 'savage', 'tribe-war', 'witch', 'devil', 'satan'];
-const BLOCK_RE = new RegExp(`\\b(${BLOCK.map((w) => w.replace(/[-]/g, '\\-')).join('|')})\\b`, 'i');
-/** Safe words that contain a blocked word inside (Scunthorpe problem) are fine because we match whole words. */
+/** Portuguese equivalents (Zuva may explain in Portuguese, so its Portuguese is checked too). */
+const BLOCK_PT = ['merda', 'caralho', 'porra', 'puta', 'putas', 'foda', 'foder', 'fodido', 'cona', 'cabrão', 'cabrao', 'paneleiro', 'viado', 'bicha', 'otário', 'otario', 'idiota', 'estúpido', 'estupido', 'imbecil', 'sexo', 'pornografia', 'nua', 'matar', 'assassinar', 'sangue', 'droga', 'drogas', 'cerveja', 'cigarro', 'suicídio', 'suicidio', 'feiticeiro', 'macaco-feio'];
+const esc = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Letter-aware word boundaries: \b would split Portuguese words at accented letters.
+const BLOCK_RE = new RegExp(`(?<![\\p{L}])(${[...BLOCK, ...BLOCK_PT].map(esc).join('|')})(?![\\p{L}])`, 'iu');
+/** Whole-word check (so safe words that contain a blocked word inside, like Scunthorpe, pass). */
 export const hasBlockedWord = (s: string) => BLOCK_RE.test(s);
 
 /** Every learner-facing string inside an activity, for safety checks. */
@@ -296,6 +322,9 @@ export interface Patterns {
   avoids: { kind: string; title: string; why: string }[];
   dueWords: string[];
   trickyWords: string[];
+  /** Share of answers that used Portuguese help (null when help was never on). */
+  support?: { recentRate: number | null; previousRate: number | null; answers: number } | null;
 }
 
 export { ESL_BANDS, ESL_WEEKS };
+export * from './esl-pt';

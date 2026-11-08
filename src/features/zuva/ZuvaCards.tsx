@@ -138,11 +138,15 @@ export function QuizCardView({ card, kids }: { card: QuizCard; kids: boolean }) 
 
 const EslGameCardView = lazy(() => import('@/features/esl/EslCards').then((m) => ({ default: m.EslGameCard })));
 const EslFeedbackCardView = lazy(() => import('@/features/esl/EslCards').then((m) => ({ default: m.EslFeedbackCard })));
+const MathsGameCardView = lazy(() => import('@/features/maths/MathsCards').then((m) => ({ default: m.MathsGameCard })));
+const MathsFeedbackCardView = lazy(() => import('@/features/maths/MathsCards').then((m) => ({ default: m.MathsFeedbackCard })));
 
 export function ZuvaCardView({ card, kids, onAsk }: { card: ZuvaCard; kids: boolean; onAsk: (text: string) => void }) {
   switch (card.kind) {
     case 'esl_game': return <Suspense fallback={null}><EslGameCardView card={card} /></Suspense>;
     case 'esl_feedback': return <Suspense fallback={null}><EslFeedbackCardView card={card} /></Suspense>;
+    case 'maths_game': return <Suspense fallback={null}><MathsGameCardView card={card} /></Suspense>;
+    case 'maths_feedback': return <Suspense fallback={null}><MathsFeedbackCardView card={card} /></Suspense>;
     case 'experiment': return <ExperimentCardView card={card} kids={kids} onAsk={onAsk} />;
     case 'quiz': return <QuizCardView card={card} kids={kids} />;
     case 'assignment_draft': return <AssignmentDraftView card={card} />;

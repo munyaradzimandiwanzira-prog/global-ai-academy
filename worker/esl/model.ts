@@ -33,12 +33,15 @@ export interface AttemptInput {
   hints?: number;
   input?: 'voice' | 'tap' | 'type' | 'grown-up';
   heard?: string | null;
+  /** The learner looked at the Portuguese meaning for this answer. */
+  support?: boolean;
 }
 
 /** How much one answer is worth as evidence of mastery (0–1). */
-export function evidence(a: Pick<AttemptInput, 'correct' | 'tries' | 'hints' | 'score'>): number {
+export function evidence(a: Pick<AttemptInput, 'correct' | 'tries' | 'hints' | 'score' | 'support'>): number {
   if (!a.correct) return 0;
-  const tries = Math.max(1, a.tries ?? 1), hints = Math.max(0, a.hints ?? 0);
+  // Looking at the Portuguese meaning counts like one hint: right, but not yet independent.
+  const tries = Math.max(1, a.tries ?? 1), hints = Math.max(0, a.hints ?? 0) + (a.support ? 1 : 0);
   const base = typeof a.score === 'number' ? Math.max(0.5, Math.min(1, a.score)) : 1;
   return Math.max(0.35, base - 0.2 * (tries - 1) - 0.15 * hints);
 }
@@ -56,7 +59,7 @@ export function nextBox(box: number, e: number): number {
   return Math.min(BOX_DAYS.length - 1, box + 1);
 }
 
-export async function recordAttempts(db: D1Database, userId: string, sessionId: string | null, list: AttemptInput[]): Promise<void> {
+export async function recordAttempts(db: D1Database, userId: string, sessionId: string | null, list: AttemptInput[], course: Course = 'esl'): Promise<void> {
   if (!list.length) return;
   const now = nowIso();
   const stmts: D1PreparedStatement[] = [];
@@ -64,14 +67,14 @@ export async function recordAttempts(db: D1Database, userId: string, sessionId: 
   const skills = new Map<string, AttemptInput[]>();
   const items = new Map<string, AttemptInput[]>();
   for (const a of list) {
-    stmts.push(db.prepare('INSERT INTO esl_attempts (user_id, session_id, week, band, activity_id, kind, skill, item, correct, score, ms, tries, hints, input, heard) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-      .bind(userId, sessionId, a.week, a.band, a.activityId, a.kind, a.skill, a.item.slice(0, 200), a.correct ? 1 : 0, a.score ?? null, a.ms ?? null, a.tries ?? 1, a.hints ?? 0, a.input ?? 'tap', a.heard?.slice(0, 120) ?? null));
+    stmts.push(db.prepare(`INSERT INTO ${T(course)}_attempts (user_id, session_id, week, band, activity_id, kind, skill, item, correct, score, ms, tries, hints, input, heard, support_used) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .bind(userId, sessionId, a.week, a.band, a.activityId, a.kind, a.skill, a.item.slice(0, 200), a.correct ? 1 : 0, a.score ?? null, a.ms ?? null, a.tries ?? 1, a.hints ?? 0, a.input ?? 'tap', a.heard?.slice(0, 120) ?? null, a.support ? 1 : 0));
     const s = skills.get(a.skill) ?? []; s.push(a); skills.set(a.skill, s);
     const k = `${a.kind}:${a.item.toLowerCase().slice(0, 120)}`; const i = items.get(k) ?? []; i.push(a); items.set(k, i);
   }
   const keys = [...skills.keys()];
   const existing = keys.length
-    ? (await db.prepare(`SELECT skill, mastery, attempts, correct, avg_ms, streak FROM esl_skills WHERE user_id = ? AND skill IN (${keys.map(() => '?').join(',')})`).bind(userId, ...keys).all<{ skill: string; mastery: number; attempts: number; correct: number; avg_ms: number | null; streak: number }>()).results
+    ? (await db.prepare(`SELECT skill, mastery, attempts, correct, avg_ms, streak FROM ${T(course)}_skills WHERE user_id = ? AND skill IN (${keys.map(() => '?').join(',')})`).bind(userId, ...keys).all<{ skill: string; mastery: number; attempts: number; correct: number; avg_ms: number | null; streak: number }>()).results
     : [];
   const bySkill = new Map(existing.map((r) => [r.skill, r]));
   for (const [skill, as] of skills) {
@@ -88,20 +91,20 @@ export async function recordAttempts(db: D1Database, userId: string, sessionId: 
         streak: a.correct ? s.streak + 1 : 0,
       };
     }
-    stmts.push(db.prepare(`INSERT INTO esl_skills (user_id, skill, mastery, attempts, correct, avg_ms, streak, last_at) VALUES (?,?,?,?,?,?,?,?)
+    stmts.push(db.prepare(`INSERT INTO ${T(course)}_skills (user_id, skill, mastery, attempts, correct, avg_ms, streak, last_at) VALUES (?,?,?,?,?,?,?,?)
       ON CONFLICT(user_id, skill) DO UPDATE SET mastery = excluded.mastery, attempts = excluded.attempts, correct = excluded.correct, avg_ms = excluded.avg_ms, streak = excluded.streak, last_at = excluded.last_at`)
       .bind(userId, skill, s.mastery, s.attempts, s.correct, s.avg_ms, s.streak, now));
   }
   const itemKeys = [...items.keys()];
   const prevItems = itemKeys.length
-    ? (await db.prepare(`SELECT item, box, seen, misses FROM esl_items WHERE user_id = ? AND item IN (${itemKeys.map(() => '?').join(',')})`).bind(userId, ...itemKeys).all<{ item: string; box: number; seen: number; misses: number }>()).results
+    ? (await db.prepare(`SELECT item, box, seen, misses FROM ${T(course)}_items WHERE user_id = ? AND item IN (${itemKeys.map(() => '?').join(',')})`).bind(userId, ...itemKeys).all<{ item: string; box: number; seen: number; misses: number }>()).results
     : [];
   const byItem = new Map(prevItems.map((r) => [r.item, r]));
   for (const [key, as] of items) {
     let it = byItem.get(key) ?? { item: key, box: 0, seen: 0, misses: 0 };
     for (const a of as) { const e = evidence(a); it = { item: key, box: nextBox(it.box, e), seen: it.seen + 1, misses: it.misses + (a.correct ? 0 : 1) }; }
     const due = new Date(Date.now() + BOX_DAYS[it.box]! * DAY).toISOString();
-    stmts.push(db.prepare(`INSERT INTO esl_items (user_id, item, skill, box, seen, misses, last_at, due_at) VALUES (?,?,?,?,?,?,?,?)
+    stmts.push(db.prepare(`INSERT INTO ${T(course)}_items (user_id, item, skill, box, seen, misses, last_at, due_at) VALUES (?,?,?,?,?,?,?,?)
       ON CONFLICT(user_id, item) DO UPDATE SET box = excluded.box, seen = excluded.seen, misses = excluded.misses, last_at = excluded.last_at, due_at = excluded.due_at`)
       .bind(userId, key, as[0]!.skill, it.box, it.seen, it.misses, now, due));
   }
@@ -109,9 +112,9 @@ export async function recordAttempts(db: D1Database, userId: string, sessionId: 
 }
 
 export type EngagementEvent = 'start' | 'finish' | 'replay' | 'quit' | 'like' | 'dislike';
-export async function recordEngagement(db: D1Database, userId: string, kind: ActivityKind, event: EngagementEvent, ms = 0): Promise<void> {
+export async function recordEngagement(db: D1Database, userId: string, kind: string, event: EngagementEvent, ms = 0, course: Course = 'esl'): Promise<void> {
   const col = { start: 'started', finish: 'finished', replay: 'replays', quit: 'quits', like: 'likes', dislike: 'dislikes' }[event];
-  await db.prepare(`INSERT INTO esl_engagement (user_id, kind, ${col}, total_ms) VALUES (?, ?, 1, ?)
+  await db.prepare(`INSERT INTO ${T(course)}_engagement (user_id, kind, ${col}, total_ms) VALUES (?, ?, 1, ?)
     ON CONFLICT(user_id, kind) DO UPDATE SET ${col} = ${col} + 1, total_ms = total_ms + excluded.total_ms`).bind(userId, kind, Math.max(0, Math.min(ms, 3_600_000))).run();
 }
 
@@ -123,13 +126,22 @@ export interface ItemRow { item: string; skill: string; box: number; seen: numbe
 export interface KindTiming { kind: string; avgMs: number; n: number }
 
 
-const SKILL_NAMES: Record<string, string> = { speaking: 'speaking', listening: 'listening', phonics: 'phonics (sounds)', spelling: 'spelling', grammar: 'grammar and sentences', reading: 'reading and understanding stories', writing: 'writing' };
+/** A course the learner model serves. Each keeps its own tables with the same columns (esl_*, maths_*). */
+export type Course = 'esl' | 'maths';
+const T = (course: Course) => course;
+
+/** How a course names its skills, game kinds and units in patterns. */
+export interface CourseNames { skills: Record<string, string>; kind: (kind: string) => string; unit: (skill: string) => string | undefined }
+
+const SKILL_NAMES: Record<string, string> = { speaking: 'speaking', listening: 'listening', phonics: 'phonics (sounds)', spelling: 'spelling', grammar: 'grammar and sentences', reading: 'reading and understanding stories', writing: 'writing', vocabulary: 'word meanings (vocabulary)' };
 const titleOf = (kind: string) => ACTIVITY_INFO[kind as ActivityKind]?.title ?? kind;
 const weekTitle = (skill: string) => { const n = Number(skill.split(':w')[1]); return ESL_WEEKS.find((w) => w.week === n)?.title; };
 const itemLabel = (key: string) => key.split(':').slice(1).join(':');
+export const ESL_NAMES: CourseNames = { skills: SKILL_NAMES, kind: titleOf, unit: weekTitle };
 
 /** Pure: turns raw learner-model rows into patterns (kept pure so it is easy to test). */
-export function derivePatterns(skills: SkillRow[], engagement: EngagementRow[], items: ItemRow[], timing: KindTiming[], recent: { correct: number; at: string }[], now = Date.now()): Patterns {
+export function derivePatterns(skills: SkillRow[], engagement: EngagementRow[], items: ItemRow[], timing: KindTiming[], recent: { correct: number; at: string }[], now = Date.now(), names: CourseNames = ESL_NAMES): Patterns {
+  const SKILL_NAMES = names.skills, titleOf = names.kind, weekTitle = names.unit;
   const attempts = skills.reduce((n, s) => n + s.attempts, 0);
   const correct = skills.reduce((n, s) => n + s.correct, 0);
   const week = 7 * DAY;
@@ -178,21 +190,38 @@ export function derivePatterns(skills: SkillRow[], engagement: EngagementRow[], 
   return { overall: { attempts, accuracy: attempts ? Math.round((correct / attempts) * 100) / 100 : null, lastActive, trend }, skills: areaList, struggles: struggles.slice(0, 5), strengths: strengths.slice(0, 4), slow, fast, enjoys, avoids, dueWords, trickyWords };
 }
 
-export async function patterns(db: D1Database, userId: string): Promise<Patterns> {
-  const [skills, engagement, items, timing, recent] = await Promise.all([
-    db.prepare('SELECT skill, mastery, attempts, correct, avg_ms, streak, last_at FROM esl_skills WHERE user_id = ?').bind(userId).all<SkillRow>(),
-    db.prepare('SELECT kind, started, finished, replays, quits, likes, dislikes, total_ms FROM esl_engagement WHERE user_id = ?').bind(userId).all<EngagementRow>(),
-    db.prepare('SELECT item, skill, box, seen, misses, due_at FROM esl_items WHERE user_id = ? ORDER BY due_at LIMIT 400').bind(userId).all<ItemRow>(),
-    db.prepare(`SELECT kind, AVG(ms) AS avgMs, COUNT(*) AS n FROM (SELECT kind, ms FROM esl_attempts WHERE user_id = ? AND ms IS NOT NULL AND ms BETWEEN 300 AND 600000 ORDER BY id DESC LIMIT 600) GROUP BY kind`).bind(userId).all<KindTiming>(),
-    db.prepare('SELECT correct, created_at AS at FROM esl_attempts WHERE user_id = ? AND created_at > ? ORDER BY id DESC LIMIT 800').bind(userId, new Date(Date.now() - 14 * DAY).toISOString()).all<{ correct: number; at: string }>(),
+export async function patterns(db: D1Database, userId: string, course: Course = 'esl', names: CourseNames = ESL_NAMES): Promise<Patterns> {
+  const [skills, engagement, items, timing, recent, supportRow] = await Promise.all([
+    db.prepare(`SELECT skill, mastery, attempts, correct, avg_ms, streak, last_at FROM ${T(course)}_skills WHERE user_id = ?`).bind(userId).all<SkillRow>(),
+    db.prepare(`SELECT kind, started, finished, replays, quits, likes, dislikes, total_ms FROM ${T(course)}_engagement WHERE user_id = ?`).bind(userId).all<EngagementRow>(),
+    db.prepare(`SELECT item, skill, box, seen, misses, due_at FROM ${T(course)}_items WHERE user_id = ? ORDER BY due_at LIMIT 400`).bind(userId).all<ItemRow>(),
+    db.prepare(`SELECT kind, AVG(ms) AS avgMs, COUNT(*) AS n FROM (SELECT kind, ms FROM ${T(course)}_attempts WHERE user_id = ? AND ms IS NOT NULL AND ms BETWEEN 300 AND 600000 ORDER BY id DESC LIMIT 600) GROUP BY kind`).bind(userId).all<KindTiming>(),
+    db.prepare(`SELECT correct, created_at AS at FROM ${T(course)}_attempts WHERE user_id = ? AND created_at > ? ORDER BY id DESC LIMIT 800`).bind(userId, new Date(Date.now() - 14 * DAY).toISOString()).all<{ correct: number; at: string }>(),
+    supportUse(db, userId, course),
   ]);
-  return derivePatterns(skills.results, engagement.results, items.results, timing.results, recent.results);
+  return { ...derivePatterns(skills.results, engagement.results, items.results, timing.results, recent.results, Date.now(), names), support: supportRow };
+}
+
+/**
+ * How much the learner leans on Portuguese: the share of answers where they looked at the meaning,
+ * in the last 14 days and the 14 before. Falling = growing independent; Zuva fades the help.
+ */
+export async function supportUse(db: D1Database, userId: string, course: Course = 'esl'): Promise<Patterns['support']> {
+  const now = Date.now();
+  const r = await db.prepare(`SELECT
+      SUM(CASE WHEN created_at > ?1 THEN 1 ELSE 0 END) AS recentN, SUM(CASE WHEN created_at > ?1 THEN support_used ELSE 0 END) AS recentS,
+      SUM(CASE WHEN created_at <= ?1 THEN 1 ELSE 0 END) AS prevN, SUM(CASE WHEN created_at <= ?1 THEN support_used ELSE 0 END) AS prevS
+    FROM ${T(course)}_attempts WHERE user_id = ?2 AND created_at > ?3`).bind(new Date(now - 14 * DAY).toISOString(), userId, new Date(now - 28 * DAY).toISOString())
+    .first<{ recentN: number | null; recentS: number | null; prevN: number | null; prevS: number | null }>();
+  const recentN = r?.recentN ?? 0, prevN = r?.prevN ?? 0;
+  if (!recentN && !prevN) return null;
+  return { recentRate: recentN ? (r?.recentS ?? 0) / recentN : null, previousRate: prevN ? (r?.prevS ?? 0) / prevN : null, answers: recentN };
 }
 
 /** The game kinds that train a skill area. */
 const TRAINS: Record<string, ActivityKind[]> = {
-  speaking: ['say', 'echo', 'talk'], listening: ['pick', 'story'], phonics: ['sound', 'rhyme'], spelling: ['spell'],
-  grammar: ['order', 'gap'], reading: ['story'], writing: ['write'],
+  speaking: ['say', 'echo', 'talk'], listening: ['pick', 'story'], phonics: ['sound', 'rhyme', 'pairs'], spelling: ['spell'],
+  grammar: ['order', 'gap', 'fix'], reading: ['story'], writing: ['write'], vocabulary: ['friends', 'pick'],
 };
 
 /**

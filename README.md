@@ -19,6 +19,12 @@ A hands-on AI and software engineering school for Zimbabwean learners, from a ch
 - **Zuva the English tutor** (`worker/esl/`): an agent mode (`mode: 'esl'`) with age-tuned personas (joyful early-years style for 2–6), 13 MCP-style tools (`worker/esl/mcp.ts`: learner profile and patterns, next activity, make a game, pronounce, mark writing, stories from Aesop (Project Gutenberg) and Simple English Wikipedia, notes for the teacher, preferences, sign-up), and layered memory: working (the screen and last messages), episodic (sittings and their summaries), semantic (profile and memories) and skill (mastery per skill, Leitner spaced review per word, enjoyment per game; `worker/esl/model.ts`).
 - Guard rails: data fencing against prompt injection, a taint rule (after reading the web, no notes, settings or memories can change in that turn), blocklist plus moderation on everything generated, kids safety mode for under-13s, cost caps on voice and pictures.
 - Teachers see an English panel per learner (mastery, struggles, pace, enjoyment, tricky words, Zuva's notes and a weekly summary), never the chats; teacher Zuva has an `esl_progress` tool.
+- **Portuguese help** (`shared/esl-pt.ts`, Mozambican Portuguese): a learner setting that explains instructions, gives meanings after a try or as a hint (counted like a hint by the learner model), speaks Portuguese, and adds Sound Twins (minimal pairs), False Friends and Fix It for Portuguese speakers. Course sentences are translated once on the server, found by game and position (never free text), cached and safety-checked. Teachers see how often each learner uses it and whether that is falling. All Portuguese is marked AI-translated until a Portuguese-speaking teacher reviews it.
+
+**Cambridge Maths with Zuva** (`/cambridge/maths`, `shared/maths.ts`, `worker/maths/`)
+- Stages 1–6 (about ages 5–11) across Number, Geometry and measure, Statistics and probability, with Thinking and Working Mathematically in "Convince me" puzzles. Our own mapping to Cambridge Primary Mathematics, not endorsed by Cambridge. Units 1–2 of each stage are free.
+- Seven game types (Quick Maths keypad, Pick It with clocks, shapes, charts, fractions and arrays, Number Line, Build the Number, Fraction Bars, Story Problems with bar models, Convince Me). Questions come from seeded generators, never from a language model, so every answer is correct and every practice round is fresh. Answers accept 0,5 and 0.5 and equivalent fractions.
+- The same learner-model engine as English (`worker/esl/model.ts`, `course = 'maths'`, separate `maths_*` tables), a maths Zuva mode with its own tools (practice, next activity, reasoning feedback, teacher notes), Portuguese help, and a maths panel for teachers.
 
 **Plans** (`shared/config.ts`; yearly billing is 10 months for 12)
 
@@ -137,6 +143,7 @@ The English course end to end (43 checks: gating, the learner model, voice and p
 
 ```bash
 node tests/e2e-esl.mjs
+node tests/e2e-maths-pt.mjs   # 35 checks: Portuguese help and Cambridge Maths
 ```
 
 Every page (689 public pages, at phone and desktop width) for console errors, failed requests, error screens and sideways scrolling:

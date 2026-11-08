@@ -149,12 +149,16 @@ account.get('/export', async (c) => {
   const user = await freshUser(c);
   await hit(c.env.DB, `export:${user.id}`, 5, 3600, 'You can download your data 5 times an hour.');
   const q = (sql: string) => c.env.DB.prepare(sql).bind(user.id).all().then((r) => r.results);
-  const [esl, eslAttempts, eslSkills, eslSessions, eslNotes] = await Promise.all([
-    q('SELECT band, accent, age, week, voice, created_at, updated_at FROM esl_learners WHERE user_id = ?'),
+  const [esl, eslAttempts, eslSkills, eslSessions, eslNotes, maths, mathsAttempts, mathsSkills, mathsProgress] = await Promise.all([
+    q('SELECT band, accent, age, week, voice, support, created_at, updated_at FROM esl_learners WHERE user_id = ?'),
     q('SELECT week, band, kind, skill, item, correct, score, ms, tries, hints, input, heard, created_at FROM esl_attempts WHERE user_id = ? ORDER BY id'),
     q('SELECT skill, mastery, attempts, correct, avg_ms, last_at FROM esl_skills WHERE user_id = ?'),
     q('SELECT week, band, started_at, ended_at, summary FROM esl_sessions WHERE user_id = ?'),
-    c.env.DB.prepare('SELECT area, note, suggestion, created_at FROM esl_teacher_notes WHERE student_id = ?').bind(user.id).all().then((r) => r.results),
+    c.env.DB.prepare('SELECT course, area, note, suggestion, created_at FROM esl_teacher_notes WHERE student_id = ?').bind(user.id).all().then((r) => r.results),
+    q('SELECT stage, age, support, voice, created_at, updated_at FROM maths_learners WHERE user_id = ?'),
+    q('SELECT week AS stage, band AS unit, kind, skill, item, correct, ms, tries, hints, support_used, created_at FROM maths_attempts WHERE user_id = ? ORDER BY id'),
+    q('SELECT skill, mastery, attempts, correct, avg_ms, last_at FROM maths_skills WHERE user_id = ?'),
+    q('SELECT unit_id, done, stars, completed_at FROM maths_progress WHERE user_id = ?'),
   ]);
   const [progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests, zuvaProfile, zuvaMemories, zuvaChats] = await Promise.all([
     q('SELECT track_id, lesson_slug, status, completed_at, updated_at FROM progress WHERE user_id = ?'),
@@ -178,6 +182,7 @@ account.get('/export', async (c) => {
     exportedAt: nowIso(),
     site: c.env.APP_NAME,
     englishCourse: { settings: esl[0] ?? null, answers: eslAttempts, skills: eslSkills, sessions: eslSessions, notesToTeachers: eslNotes },
+    mathsCourse: { settings: maths[0] ?? null, answers: mathsAttempts, skills: mathsSkills, progress: mathsProgress },
     account: {
       ...toPublicUser(user),
       termsAcceptedAt: user.terms_accepted_at,
@@ -221,7 +226,8 @@ account.post('/delete', async (c) => {
     ...['sessions', 'email_tokens', 'progress', 'activity', 'xp_events', 'goals', 'projects', 'capstones', 'submissions',
       'certificates', 'exam_attempts', 'classroom_members', 'messages', 'learner_reports', 'teacher_requests', 'waitlist',
       'mfa_recovery_codes', 'mfa_challenges', 'zuva_threads', 'zuva_memories', 'zuva_profiles',
-      'esl_learners', 'esl_attempts', 'esl_skills', 'esl_items', 'esl_engagement', 'esl_sessions', 'esl_progress', 'esl_generated'].map(del),
+      'esl_learners', 'esl_attempts', 'esl_skills', 'esl_items', 'esl_engagement', 'esl_sessions', 'esl_progress', 'esl_generated',
+      'maths_learners', 'maths_attempts', 'maths_skills', 'maths_items', 'maths_engagement', 'maths_progress'].map(del),
     db.prepare('DELETE FROM esl_teacher_notes WHERE student_id = ?').bind(id),
     db.prepare('DELETE FROM contact_messages WHERE email = ?').bind(user.email),
     db.prepare(

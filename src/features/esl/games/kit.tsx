@@ -9,7 +9,7 @@ import { hear, micSupported, say, useMic, type Pace } from '../voice';
 import { focusRing, helperPill, optionClass } from '../ui';
 import { buttonClass } from '@/components/ui/Button';
 
-export interface Answer { item: string; correct: boolean; score?: number | null; ms: number; tries: number; hints: number; input: 'voice' | 'tap' | 'type' | 'grown-up'; heard?: string | null }
+export interface Answer { item: string; correct: boolean; score?: number | null; ms: number; tries: number; hints: number; input: 'voice' | 'tap' | 'type' | 'grown-up'; heard?: string | null; /** Looked at the Portuguese meaning. */ support?: boolean }
 
 export interface GameProps<A extends Activity = Activity> {
   activity: A;
@@ -41,6 +41,13 @@ const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]!;
 export function cheer(tier: EslTier, accent: Accent, ok: boolean) {
   play(ok ? 'right' : 'wrong');
   void say(localize(pick(ok ? PRAISE[tier] : RETRY[tier]), accent), accent, tier);
+}
+
+/** Whether the Portuguese meaning was opened for the current item (reset when the item changes). */
+export function useHelpUsed(key: unknown): [boolean, () => void] {
+  const [used, setUsed] = useState<{ key: unknown; v: boolean }>({ key, v: false });
+  const v = used.key === key ? used.v : false;
+  return [v, () => setUsed({ key, v: true })];
 }
 
 /** Times one item: from when it appears to the answer. */

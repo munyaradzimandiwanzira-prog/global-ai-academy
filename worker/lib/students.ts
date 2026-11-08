@@ -8,6 +8,7 @@ import { KID_LEVELS, STAGES } from '@shared/kids-curriculum';
 import { effectivePlan, type UserRow } from './db';
 import { getTrack } from './catalog';
 import { eslTeacherView } from '../esl/report';
+import { mathsTeacherView } from '../maths/report';
 import { workMatrix } from './assignments';
 
 interface RosterRow {
@@ -73,7 +74,7 @@ export async function studentDetail(db: D1Database, teacherId: string, studentId
     row = { id: u.id, name: u.name, email: u.email, level: u.level, plan, paid: plan !== 'free', avatarColor: u.avatar_color, xp: u.xp, streak: u.streak, lastActiveDay: u.last_active_day, linkedAt: u.created_at, source: 'admin', classes: [], lessonsDone: 0, kidsStars: 0, assignmentsOpen: 0, assignmentsDone: 0, avgScore: null };
   }
   const since = new Date(Date.now() - 28 * 86_400_000).toISOString();
-  const [progress, practice, kids, days, esl] = await Promise.all([
+  const [progress, practice, kids, days, esl, maths] = await Promise.all([
     db.prepare("SELECT track_id, SUM(status = 'completed') AS done, MAX(updated_at) AS last FROM progress WHERE user_id = ? GROUP BY track_id ORDER BY last DESC LIMIT 12").bind(studentId).all<{ track_id: string; done: number; last: string }>(),
     db.prepare("SELECT kind, ref_id, passed, attempts, score, updated_at FROM activity WHERE user_id = ? AND kind != 'kids' ORDER BY updated_at DESC LIMIT 25").bind(studentId).all<{ kind: string; ref_id: string; passed: number; attempts: number; score: number | null; updated_at: string }>(),
     db.prepare("SELECT ref_id FROM activity WHERE user_id = ? AND kind = 'kids' AND passed = 1").bind(studentId).all<{ ref_id: string }>(),
@@ -84,6 +85,7 @@ export async function studentDetail(db: D1Database, teacherId: string, studentId
        ) GROUP BY day ORDER BY day`,
     ).bind(studentId, since).all<{ day: string; count: number }>(),
     eslTeacherView(db, studentId).catch(() => null),
+    mathsTeacherView(db, studentId).catch(() => null),
   ]);
   const doneKids = new Set(kids.results.map((k) => k.ref_id));
   const kidsByStage = STAGES.map((s) => {
@@ -113,5 +115,6 @@ export async function studentDetail(db: D1Database, teacherId: string, studentId
     struggles: practice.results.filter((p) => !p.passed && p.attempts >= 3).slice(0, 6).map((p) => `${p.kind} ${p.ref_id} (${p.attempts} tries)`),
     activityByDay: days.results.map((d) => ({ day: d.day, count: Number(d.count) })),
     esl,
+    maths,
   };
 }

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { bandForAge, type Accent, type EslBandId, type Patterns } from '@shared/esl';
+import { bandForAge, type Accent, type EslBandId, type Patterns, type SupportLang } from '@shared/esl';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { storage } from '@/lib/utils';
 
-export interface EslSettings { band: EslBandId; accent: Accent; age: number | null; week: number; voice: boolean }
+export interface EslSettings { band: EslBandId; accent: Accent; age: number | null; week: number; voice: boolean; support?: SupportLang }
 export interface Guest { name: string; age: number | null; trial: boolean }
 export interface EslMe {
   settings: EslSettings | null;
@@ -32,7 +32,7 @@ export function useEsl() {
 
   const settings: EslSettings | null = user ? me.data?.settings ?? null : local;
   const save = useCallback(async (s: Partial<EslSettings>) => {
-    const base: EslSettings = settings ?? { band: 'starters', accent: 'gb', age: null, week: 1, voice: true };
+    const base: EslSettings = settings ?? { band: 'starters', accent: 'gb', age: null, week: 1, voice: true, support: 'off' };
     const next = { ...base, ...s };
     if (s.age && !s.band) next.band = bandForAge(s.age).id;
     if (user) {

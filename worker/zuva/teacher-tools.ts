@@ -16,6 +16,7 @@ import { resourceProblem } from '../lib/assignments';
 import { makeLessonPlan, makeStudentReport } from '../routes/teach';
 import { obj, str, type ToolCtx, type ZuvaTool } from './tool-kit';
 import { eslTeacherView, eslViewText } from '../esl/report';
+import { mathsTeacherView, mathsViewText } from '../maths/report';
 
 const first = (name: string) => name.split(/\s+/)[0] ?? name;
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -124,8 +125,8 @@ export const TEACHER_TOOLS: ZuvaTool[] = [
       const d = await studentDetail(ctx.env.DB, t.id, s.id, isAdmin(t));
       if (!d) return 'Learner not found.';
       const { email: _email, ...student } = d.student;
-      const { esl, ...rest } = d;
-      return `${JSON.stringify({ ...rest, student, page: `/teach/students/${s.id}` }).slice(0, 3200)}${esl ? `\n${eslViewText(esl).slice(0, 1200)}` : ''}`;
+      const { esl, maths, ...rest } = d;
+      return `${JSON.stringify({ ...rest, student, page: `/teach/students/${s.id}` }).slice(0, 2800)}${esl ? `\n${eslViewText(esl).slice(0, 1000)}` : ''}${maths ? `\n${mathsViewText(maths).slice(0, 900)}` : ''}`;
     },
   },
   {
@@ -141,6 +142,20 @@ export const TEACHER_TOOLS: ZuvaTool[] = [
       const v = await eslTeacherView(ctx.env.DB, s.id);
       if (!v) return `${s.name} has not started the English course yet. Its first four weeks are free at /cambridge/esl.`;
       return `${eslViewText(v)}\nPage: /teach/students/${s.id}`;
+    },
+  },
+  {
+    label: 'Reading maths progress',
+    modes: ['teacher'],
+    signedIn: true,
+    spec: { name: 'maths_progress', description: 'Cambridge Maths progress for ONE learner: stage, units done, mastery per strand (number, geometry and measure, statistics), reasoning, struggles, strengths, pace, enjoyment, tricky facts, Portuguese help use and the tutor’s notes. Use it to plan maths support.', parameters: obj({ student: { type: 'string', description: 'Learner id or name' } }, ['student']) },
+    run: async (ctx, args) => {
+      const s = await findStudent(ctx, str(args.student, 80));
+      if (typeof s === 'string') return s;
+      await assertCanSeeStudent(ctx.env.DB, teacherOf(ctx), s.id);
+      const v = await mathsTeacherView(ctx.env.DB, s.id);
+      if (!v) return `${s.name} has not started Cambridge Maths yet. Units 1–2 of each stage are free at /cambridge/maths.`;
+      return `${mathsViewText(v)}\nPage: /teach/students/${s.id}`;
     },
   },
   {

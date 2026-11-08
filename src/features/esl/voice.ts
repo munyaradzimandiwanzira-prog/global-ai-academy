@@ -22,16 +22,19 @@ export function stopSpeaking() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
-function browserSay(text: string, accent: Accent, pace: Pace): Promise<void> {
+export type VoiceLang = 'en' | 'pt-MZ';
+
+function browserSay(text: string, accent: Accent, pace: Pace, voiceLang: VoiceLang = 'en'): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return resolve();
     const u = new SpeechSynthesisUtterance(text);
-    const lang = accent === 'us' ? 'en-US' : 'en-GB';
+    // Devices rarely have a Mozambican voice; European Portuguese is the closest standard.
+    const lang = voiceLang === 'pt-MZ' ? 'pt-PT' : accent === 'us' ? 'en-US' : 'en-GB';
     u.lang = lang;
     u.rate = pace === 'early' || pace === 'word' ? 0.8 : pace === 'primary' ? 0.92 : 1;
     u.pitch = pace === 'early' ? 1.2 : 1.05;
     const voices = window.speechSynthesis.getVoices();
-    const v = voices.find((x) => x.lang === lang && /female|samantha|serena|libby|sonia|jenny|aria|google/i.test(x.name)) ?? voices.find((x) => x.lang === lang) ?? voices.find((x) => x.lang.startsWith('en'));
+    const v = voices.find((x) => x.lang === lang && /female|samantha|serena|libby|sonia|jenny|aria|google/i.test(x.name)) ?? voices.find((x) => x.lang === lang) ?? voices.find((x) => x.lang.startsWith(voiceLang === 'pt-MZ' ? 'pt' : 'en'));
     if (v) u.voice = v;
     u.onend = () => resolve();
     u.onerror = () => resolve();
@@ -41,20 +44,20 @@ function browserSay(text: string, accent: Accent, pace: Pace): Promise<void> {
 }
 
 /** Say something in Zuva's voice. Resolves when it has finished (or straight away when muted). */
-export async function say(text: string, accent: Accent, pace: Pace = 'primary'): Promise<void> {
+export async function say(text: string, accent: Accent, pace: Pace = 'primary', lang: VoiceLang = 'en'): Promise<void> {
   const clean = text.replace(/[*_#`>]/g, '').replace(/\s+/g, ' ').trim();
   if (!clean || muted.get()) return;
   stopSpeaking();
-  if (!serverVoice || clean.length > 300 || (typeof navigator !== 'undefined' && !navigator.onLine)) return browserSay(clean, accent, pace);
-  const key = `${accent}|${pace}|${clean}`;
+  if (!serverVoice || clean.length > 300 || (typeof navigator !== 'undefined' && !navigator.onLine)) return browserSay(clean, accent, pace, lang);
+  const key = `${lang}|${accent}|${pace}|${clean}`;
   try {
     let url = clips.get(key);
     if (!url) {
-      const res = await fetch('/api/esl/speak', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: clean, accent, pace }) });
+      const res = await fetch('/api/esl/speak', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: clean, accent, pace, lang }) });
       if (!res.ok) {
         // Out of today's voice budget or not configured: use the device voice for the rest of the visit.
         if (res.status === 503 || res.status === 429) serverVoice = false;
-        return browserSay(clean, accent, pace);
+        return browserSay(clean, accent, pace, lang);
       }
       url = URL.createObjectURL(await res.blob());
       clips.set(key, url);
@@ -64,10 +67,10 @@ export async function say(text: string, accent: Accent, pace: Pace = 'primary'):
       current = a;
       a.onended = () => resolve();
       a.onerror = () => resolve();
-      a.play().catch(() => browserSay(clean, accent, pace).then(resolve));
+      a.play().catch(() => browserSay(clean, accent, pace, lang).then(resolve));
     });
   } catch {
-    return browserSay(clean, accent, pace);
+    return browserSay(clean, accent, pace, lang);
   }
 }
 
@@ -167,4 +170,20 @@ export async function hear(blob: Blob, target: string, tier: EslTier, context: s
   const data = (await res.json().catch(() => null)) as (HearResult & { error?: { message: string } }) | null;
   if (!res.ok || !data) throw new Error(data?.error?.message ?? 'Zuva couldn’t hear that. Try again.');
   return data;
+}
+
+/** Rough test for a Portuguese passage (accented letters or common function words). */
+const PT_HINT = /[ãõçâêôáéíóú]|\b(não|você|tu|em português|para|também|muito|está|estás|isto|porque|significa|palavra|quando|depois|fazer|podes)\b/i;
+
+/**
+ * Read a reply that mixes English with Portuguese explanations: each part in its own voice.
+ * Portuguese is usually in brackets or on its own line (the persona asks Zuva to do that).
+ */
+export async function sayMixed(text: string, accent: Accent, pace: Pace, support: 'off' | 'pt-MZ'): Promise<void> {
+  if (support !== 'pt-MZ') return say(text, accent, pace);
+  const parts = text.split(/(\([^)]{3,}\)|\n+)/).map((p) => p.replace(/^\(|\)$/g, '').trim()).filter(Boolean);
+  for (const p of parts) {
+    if (muted.get()) return;
+    await say(p, accent, pace, PT_HINT.test(p) ? 'pt-MZ' : 'en');
+  }
 }

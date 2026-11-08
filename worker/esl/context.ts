@@ -9,18 +9,18 @@
  *   episodic    the last few sittings (esl_sessions) and the thread summary
  *   working     the game on screen right now and the last ten messages (added by the agent)
  */
-import { eslBand, eslWeek, type Accent, type EslBandId } from '@shared/esl';
+import { eslBand, eslWeek, type Accent, type EslBandId, type SupportLang } from '@shared/esl';
 import { effectivePlan, type UserRow } from '../lib/db';
 import { can } from '@shared/rbac';
 import { ESL_FREE_WEEKS } from '@shared/esl';
 import { asData } from '../lib/prompts';
 import { patterns, type Patterns } from './model';
 
-export interface EslLearner { band: EslBandId; accent: Accent; age: number | null; week: number; voice: boolean }
+export interface EslLearner { band: EslBandId; accent: Accent; age: number | null; week: number; voice: boolean; support: SupportLang }
 
 export async function loadEslLearner(db: D1Database, userId: string): Promise<EslLearner | null> {
-  const r = await db.prepare('SELECT band, accent, age, week, voice FROM esl_learners WHERE user_id = ?').bind(userId).first<{ band: EslBandId; accent: Accent; age: number | null; week: number; voice: number }>();
-  return r ? { band: r.band, accent: r.accent, age: r.age, week: r.week, voice: !!r.voice } : null;
+  const r = await db.prepare('SELECT band, accent, age, week, voice, support FROM esl_learners WHERE user_id = ?').bind(userId).first<{ band: EslBandId; accent: Accent; age: number | null; week: number; voice: number; support: SupportLang }>();
+  return r ? { band: r.band, accent: r.accent, age: r.age, week: r.week, voice: !!r.voice, support: r.support ?? 'off' } : null;
 }
 
 export interface EslContext {
@@ -38,11 +38,13 @@ export interface EslContext {
   sessions: { week: number; at: string; summary: string }[];
   /** Plus (or trial, teacher, admin): weeks 5–36 are open. */
   pro: boolean;
+  /** Language Zuva may explain in. */
+  support: SupportLang;
 }
 
-export async function loadEslContext(db: D1Database, user: UserRow | null, input: { band: EslBandId; accent: Accent; week: number; guest?: { name?: string; age?: number; trial: boolean } }): Promise<EslContext> {
+export async function loadEslContext(db: D1Database, user: UserRow | null, input: { band: EslBandId; accent: Accent; week: number; support?: SupportLang; guest?: { name?: string; age?: number; trial: boolean } }): Promise<EslContext> {
   if (!user) {
-    return { signedIn: false, firstName: input.guest?.name?.split(/\s+/)[0] ?? null, guest: input.guest ?? { trial: true }, band: input.band, accent: input.accent, week: input.week, age: input.guest?.age ?? null, teachers: [], classes: [], unitsDone: 0, patterns: null, sessions: [], pro: false };
+    return { signedIn: false, firstName: input.guest?.name?.split(/\s+/)[0] ?? null, guest: input.guest ?? { trial: true }, band: input.band, accent: input.accent, week: input.week, age: input.guest?.age ?? null, teachers: [], classes: [], unitsDone: 0, patterns: null, sessions: [], pro: false, support: input.support ?? 'off' };
   }
   const [learner, teachers, classes, done, sessions, p] = await Promise.all([
     loadEslLearner(db, user.id),
@@ -66,6 +68,7 @@ export async function loadEslContext(db: D1Database, user: UserRow | null, input
     patterns: p.overall.attempts ? p : null,
     sessions: sessions.results,
     pro: can({ role: user.role, plan: effectivePlan(user) }, 'content.pro'),
+    support: input.support ?? learner?.support ?? 'off',
   };
 }
 
@@ -96,5 +99,8 @@ Words due for review today: ${list(p.dueWords)}. Tricky words: ${list(p.trickyWo
   const episodes = c.sessions.length ? `<recent_sessions>${c.sessions.map((s) => `Week ${s.week}, ${s.at.slice(0, 10)}: ${asData(s.summary)}`).join('\n')}</recent_sessions>` : '';
   const now = screen.kind ? `<screen>Playing ${asData(screen.kind)}${screen.activityId ? ` (${asData(screen.activityId)})` : ''}${screen.item ? `. Current item: ${asData(screen.item)}` : ''}${screen.heard ? `. The speech recogniser heard: "${asData(screen.heard)}"` : ''}${screen.task ? `. Task: ${asData(screen.task)}` : ''}.</screen>` : '';
   const access = c.pro ? '' : `<access>Weeks 1–${ESL_FREE_WEEKS} are free. Weeks ${ESL_FREE_WEEKS + 1}–36 need Plus (there is a free 7-day trial${c.signedIn ? '' : ' after making a free account'}). If they ask for later weeks, say so kindly once and offer the /pricing page; never pressure a child, talk to the grown-up.</access>`;
-  return [who, level, social, access, skill, episodes, now].filter(Boolean).join('\n');
+  const sp = c.support === 'pt-MZ'
+    ? `<support_language>Portuguese help is ON (Mozambican Portuguese, European spelling, Mozambican words such as machimbombo, chapa, mata-bicho, machamba). ${c.patterns?.support ? `They used Portuguese help on ${Math.round((c.patterns.support.recentRate ?? 0) * 100)}% of answers in the last two weeks${c.patterns.support.previousRate != null ? ` (${Math.round(c.patterns.support.previousRate * 100)}% the two weeks before)` : ''}.` : ''}</support_language>`
+    : '';
+  return [who, level, social, access, sp, skill, episodes, now].filter(Boolean).join('\n');
 }

@@ -24,6 +24,9 @@ const GAME_SYMBOL: Record<ActivityKind, { symbol: SymbolName }> = {
   story: { symbol: 'menu_book' },
   talk: { symbol: 'forum' },
   write: { symbol: 'edit' },
+  pairs: { symbol: 'hearing' },
+  friends: { symbol: 'translate' },
+  fix: { symbol: 'build' },
 };
 
 export function GameIcon({ kind, className }: { kind: ActivityKind; className?: string }) {

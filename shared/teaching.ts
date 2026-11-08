@@ -64,10 +64,17 @@ export interface StudentDetail {
   activityByDay: { day: string; count: number }[];
   /** English as a Second Language: learning patterns only (Zuva's chats with the learner stay private). */
   esl?: EslTeacherView | null;
+  /** Cambridge Maths: learning patterns only. */
+  maths?: MathsTeacherView | null;
 }
+
+/** Cambridge Maths, the same learner model as English (no bands or accents; a stage instead). */
+export type MathsTeacherView = Omit<EslTeacherView, 'band' | 'bandName' | 'accent' | 'week'> & { stage: number; unitsTotal: number };
 
 export interface EslTeacherView {
   band: string; bandName: string; accent: 'gb' | 'us'; week: number;
+  /** Portuguese help: whether it is on, and the share of answers that used it (last 14 days vs the 14 before). */
+  supportLang: 'off' | 'pt-MZ'; supportUse: { recentRate: number | null; previousRate: number | null; answers: number } | null;
   unitsDone: number; stars: number; lastActive: string | null;
   attempts: number; accuracy: number | null; trend: 'up' | 'down' | 'steady' | 'new';
   skills: { area: string; mastery: number; attempts: number }[];

@@ -26,7 +26,7 @@ export async function cached(db: D1Database, key: string): Promise<{ mime: strin
   return { mime: row.mime, bytes };
 }
 
-async function store(db: D1Database, key: string, kind: 'tts' | 'image' | 'text', mime: string, bytes: ArrayBuffer | Uint8Array) {
+export async function store(db: D1Database, key: string, kind: 'tts' | 'image' | 'text', mime: string, bytes: ArrayBuffer | Uint8Array) {
   const buf = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   // D1 rows top out at 2 MB; anything bigger is served once and not kept.
   if (buf.byteLength > 1_900_000) return;
@@ -46,21 +46,26 @@ const PACE: Record<EslTier | 'word', string> = {
   word: 'Say this single word or short phrase very clearly, once, as a teacher modelling pronunciation for a learner, with a tiny pause before it.',
 };
 
-export async function ttsKey(text: string, accent: Accent, pace: EslTier | 'word', env: Env) {
-  return `tts:${await sha256Hex([env.ESL_TTS_MODEL || 'gpt-4o-mini-tts', env.ESL_TTS_VOICE || 'coral', accent, pace, text].join('|'))}`;
+export type VoiceLang = 'en' | 'pt-MZ';
+const PT_VOICE = 'Speak in clear, warm European Portuguese as spoken by a teacher in Mozambique (Maputo): standard pronunciation, never Brazilian.';
+
+export async function ttsKey(text: string, accent: Accent, pace: EslTier | 'word', env: Env, lang: VoiceLang = 'en') {
+  // English keys keep their old shape so clips already made stay cached.
+  const parts = [env.ESL_TTS_MODEL || 'gpt-4o-mini-tts', env.ESL_TTS_VOICE || 'coral', lang === 'en' ? accent : lang, pace, text];
+  return `tts:${await sha256Hex(parts.join('|'))}`;
 }
 
-export async function tts(env: Env, text: string, accent: Accent, pace: EslTier | 'word'): Promise<{ mime: string; bytes: ArrayBuffer; cached: boolean }> {
+export async function tts(env: Env, text: string, accent: Accent, pace: EslTier | 'word', lang: VoiceLang = 'en'): Promise<{ mime: string; bytes: ArrayBuffer; cached: boolean }> {
   const clean = text.replace(/\s+/g, ' ').trim();
   if (!clean || clean.length > MAX_TTS) throw badRequest(`Say up to ${MAX_TTS} characters at a time.`);
   if (hasBlockedWord(clean)) throw badRequest('Zuva won’t say that.');
-  const key = await ttsKey(clean, accent, pace, env);
+  const key = await ttsKey(clean, accent, pace, env, lang);
   const hitC = await cached(env.DB, key);
   if (hitC) return { ...hitC, cached: true };
   await hit(env.DB, 'esl:tts:global', Number(env.ESL_TTS_DAILY_LIMIT) || 3000, DAY, 'Zuva’s voice is resting for today. Your device will read it instead.');
   const m = await moderate(env, clean);
   if (m?.flagged) throw badRequest('Zuva won’t say that.');
-  const bytes = await speech(env, { text: clean, voice: env.ESL_TTS_VOICE || 'coral', instructions: `${ACCENTS[accent]} ${PACE[pace]} Never add words of your own.` });
+  const bytes = await speech(env, { text: clean, voice: env.ESL_TTS_VOICE || 'coral', instructions: `${lang === 'pt-MZ' ? PT_VOICE : ACCENTS[accent]} ${PACE[pace]} Never add words of your own${lang === 'pt-MZ' ? ' and never translate: read the text exactly as written' : ''}.` });
   await store(env.DB, key, 'tts', 'audio/mpeg', bytes);
   return { mime: 'audio/mpeg', bytes, cached: false };
 }

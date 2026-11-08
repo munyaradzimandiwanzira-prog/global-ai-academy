@@ -3,6 +3,7 @@
  *   npx tsx scripts/list-urls.ts                       one path per line (for the crawler)
  *   npx tsx scripts/list-urls.ts --sitemap public/sitemap.xml   writes the sitemap (run by `npm run build`)
  */
+import { MATHS_UNITS } from '../shared/maths';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseTrack } from '../plugins/content-parser';
@@ -13,7 +14,7 @@ import { KID_GAMES } from '../shared/kids-games';
 const PLAYGROUND_LANGS = ['python', 'javascript', 'typescript', 'html', 'css', 'sql', 'postgres', 'cypher', 'java', 'kotlin', 'php', 'cpp', 'c', 'swift', 'go', 'bash'];
 
 const dir = join(import.meta.dirname, '../content/tracks');
-const out = new Set<string>(['/', '/tutorials', '/exercises', '/start', '/reference', '/quiz', '/challenges', '/lab', '/careers', '/pricing', '/leaderboard', '/verify', '/contact', '/about', '/privacy', '/terms', '/login', '/signup', '/forgot-password', '/playground', '/kids', '/kids/curriculum', '/cambridge', '/cambridge/esl']);
+const out = new Set<string>(['/', '/tutorials', '/exercises', '/start', '/reference', '/quiz', '/challenges', '/lab', '/careers', '/pricing', '/leaderboard', '/verify', '/contact', '/about', '/privacy', '/terms', '/login', '/signup', '/forgot-password', '/playground', '/kids', '/kids/curriculum', '/cambridge', '/cambridge/esl', '/cambridge/maths', ...MATHS_UNITS.map((u) => `/cambridge/maths/${u.id}`)]);
 for (const f of readdirSync(dir).filter((x) => x.endsWith('.md')).sort()) {
   const t = parseTrack(readFileSync(join(dir, f), 'utf8'), f);
   out.add(`/learn/${t.meta.id}`);

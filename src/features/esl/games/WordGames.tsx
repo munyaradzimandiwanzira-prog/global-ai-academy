@@ -8,7 +8,8 @@ import { Delete, Lightbulb, Volume2 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { say } from '../voice';
 import { focusRing, helperPill, optionClass } from '../ui';
-import { Dots, OptionButton, Picture, SoundButton, SpeakCheck, ZuvaSays, big, cheer, useItemClock, type GameProps } from './kit';
+import { Gloss, Meaning } from '../support';
+import { useHelpUsed, Dots, OptionButton, Picture, SoundButton, SpeakCheck, ZuvaSays, big, cheer, useItemClock, type GameProps } from './kit';
 
 type Of<K extends Activity['kind']> = GameProps<Extract<Activity, { kind: K }>>;
 const MAX_TRIES = 3;
@@ -35,6 +36,7 @@ export function Echo({ activity, tier, accent, context, onAnswer, onDone }: Of<'
   const s = useItems(activity.items.length, onDone);
   const item = activity.items[s.i]!;
   const clock = useItemClock(s.i);
+  const [helped, markHelp] = useHelpUsed(s.i);
   return (
     <div className="space-y-6 text-center">
       <Dots n={activity.items.length} at={s.i} results={s.results} />
@@ -45,10 +47,11 @@ export function Echo({ activity, tier, accent, context, onAnswer, onDone }: Of<'
       <SpeakCheck key={s.i} target={item.text} tier={tier} accent={accent} context={context} onResult={(r) => {
         if (r.ok || s.tries >= MAX_TRIES) {
           cheer(tier, accent, r.ok);
-          onAnswer({ item: item.text, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: s.hints, input: r.input, heard: r.heard });
+          onAnswer({ item: item.text, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: s.hints, input: r.input, heard: r.heard, support: helped });
           s.next(r.ok);
         } else { s.setTries(s.tries + 1); cheer(tier, accent, false); setTimeout(() => void say(item.text, accent, tier === 'secondary' ? 'secondary' : 'word'), 1400); }
       }} />
+      <Gloss key={s.i} activityId={activity.id} field="item" index={s.i} onUse={markHelp} />
     </div>
   );
 }
@@ -60,6 +63,7 @@ export function SayIt({ activity, tier, accent, context, onAnswer, onDone }: Of<
   const item = activity.items[s.i]!;
   const clock = useItemClock(s.i);
   const [shown, setShown] = useState(false);
+  const [helped, markHelp] = useHelpUsed(s.i);
   useEffect(() => setShown(false), [s.i]);
   const hint = () => {
     s.setHints(s.hints + 1);
@@ -76,11 +80,14 @@ export function SayIt({ activity, tier, accent, context, onAnswer, onDone }: Of<
         if (r.ok || s.tries >= MAX_TRIES) {
           cheer(tier, accent, r.ok);
           if (!r.ok) { setShown(true); setTimeout(() => void say(item.word, accent, 'word'), 1200); }
-          onAnswer({ item: item.word, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: s.hints, input: r.input, heard: r.heard });
+          onAnswer({ item: item.word, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: s.hints, input: r.input, heard: r.heard, support: helped });
           s.next(r.ok);
         } else { s.setTries(s.tries + 1); cheer(tier, accent, false); }
       }} />
-      <button type="button" onClick={hint} className={helperPill}><Lightbulb /> {s.hints ? 'Say it for me' : 'Give me a clue'}</button>
+      <div className="flex flex-wrap justify-center gap-1">
+        <button type="button" onClick={hint} className={helperPill}><Lightbulb /> {s.hints ? 'Say it for me' : 'Give me a clue'}</button>
+        <Meaning key={s.i} word={item.word} onUse={markHelp} />
+      </div>
     </div>
   );
 }
@@ -156,6 +163,7 @@ export function SoundOut({ activity, tier, accent, context, onAnswer, onDone }: 
   const item = activity.items[s.i]!;
   const clock = useItemClock(s.i);
   const [tapped, setTapped] = useState<number[]>([]);
+  const [helped, markHelp] = useHelpUsed(s.i);
   useEffect(() => setTapped([]), [s.i]);
   const all = tapped.length >= item.sounds.length;
   return (
@@ -176,11 +184,12 @@ export function SoundOut({ activity, tier, accent, context, onAnswer, onDone }: 
         <>
           <button type="button" onClick={() => void say(item.sounds.map((x) => x.replace('_e', '')).join('… ') + '… ' + item.word, accent, 'word')} className={helperPill}><Volume2 /> Blend it with Zuva</button>
           <SpeakCheck key={s.i} target={item.word} tier={tier} accent={accent} context={context} onResult={(r) => {
-            if (r.ok || s.tries >= MAX_TRIES) { cheer(tier, accent, r.ok); onAnswer({ item: item.word, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: 0, input: r.input, heard: r.heard }); s.next(r.ok); }
+            if (r.ok || s.tries >= MAX_TRIES) { cheer(tier, accent, r.ok); onAnswer({ item: item.word, correct: r.ok, score: r.score, ms: clock(), tries: s.tries, hints: 0, input: r.input, heard: r.heard, support: helped }); s.next(r.ok); }
             else { s.setTries(s.tries + 1); cheer(tier, accent, false); }
           }} />
         </>
       )}
+      <Meaning key={s.i} word={item.word} onUse={markHelp} />
     </div>
   );
 }
@@ -193,6 +202,7 @@ export function Spell({ activity, tier, accent, onAnswer, onDone }: Of<'spell'>)
   const clock = useItemClock(s.i);
   const [picked, setPicked] = useState<number[]>([]);
   const [state, setState] = useState<'right' | 'wrong' | null>(null);
+  const [helped, markHelp] = useHelpUsed(s.i);
   useEffect(() => { setPicked([]); setState(null); void say(item.word, accent, 'word'); }, [s.i]); // eslint-disable-line react-hooks/exhaustive-deps
   const built = picked.map((k) => item.letters[k]).join('');
   const word = item.word;
@@ -201,7 +211,7 @@ export function Spell({ activity, tier, accent, onAnswer, onDone }: Of<'spell'>)
     const ok = letters.toLowerCase() === word.toLowerCase();
     setState(ok ? 'right' : 'wrong');
     cheer(tier, accent, ok);
-    if (ok || s.tries >= MAX_TRIES) { onAnswer({ item: word, correct: ok, ms: clock(), tries: s.tries, hints: s.hints, input: 'tap' }); s.next(ok); }
+    if (ok || s.tries >= MAX_TRIES) { onAnswer({ item: word, correct: ok, ms: clock(), tries: s.tries, hints: s.hints, input: 'tap', support: helped }); s.next(ok); }
     else { s.setTries(s.tries + 1); setTimeout(() => { setPicked([]); setState(null); }, 900); }
   };
   return (
@@ -222,7 +232,10 @@ export function Spell({ activity, tier, accent, onAnswer, onDone }: Of<'spell'>)
         ))}
         <button type="button" aria-label="Remove last letter" onClick={() => setPicked((p) => p.slice(0, -1))} disabled={!picked.length || !!state} className={optionClass(undefined, 'h-14 w-14 disabled:opacity-30')}><Delete /></button>
       </div>
-      <button type="button" onClick={() => { s.setHints(s.hints + 1); void say(word.split('').join(', '), accent, 'word'); }} className={helperPill}><Lightbulb /> Spell it for me</button>
+      <div className="flex flex-wrap justify-center gap-1">
+        <button type="button" onClick={() => { s.setHints(s.hints + 1); void say(word.split('').join(', '), accent, 'word'); }} className={helperPill}><Lightbulb /> Spell it for me</button>
+        <Meaning key={s.i} word={word} onUse={markHelp} />
+      </div>
     </div>
   );
 }

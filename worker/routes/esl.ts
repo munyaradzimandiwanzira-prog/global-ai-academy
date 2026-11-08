@@ -6,7 +6,8 @@
  *   GET  /unit/:week             the games for a week (?band=&accent=), plus games Zuva made me
  *   POST /sessions               start a sitting; POST /sessions/:id/end summarises it
  *   POST /attempts               record answers and engagement (learner model)
- *   POST /speak                  Zuva's voice for a short text (cached)
+ *   POST /gloss                  Portuguese meaning of a piece of a game (by position; cached)
+ *   POST /speak                  Zuva's voice for a short text (cached; English or Portuguese)
  *   GET  /image/:word            the picture card for a word (cached)
  *   POST /hear                   what the learner said, checked against the target (audio never stored)
  */
@@ -25,6 +26,7 @@ import { newId } from '../lib/crypto';
 import { transcribe } from '../lib/openai';
 import { notify } from '../lib/teaching';
 import { image, tts, COURSE_WORDS } from '../esl/media';
+import { findActivity, gloss, textAt } from '../esl/gloss';
 import { patterns, recordAttempts, recordEngagement } from '../esl/model';
 import { loadEslLearner } from '../esl/context';
 
@@ -33,6 +35,7 @@ const BANDS = ESL_BANDS.map((b) => b.id) as [EslBandId, ...EslBandId[]];
 const band = z.enum(BANDS);
 const accent = z.enum(['gb', 'us']);
 const kind = z.enum(ACTIVITY_KINDS);
+const support = z.enum(['off', 'pt-MZ']);
 
 esl.get('/course', (c) => {
   c.header('cache-control', 'public, max-age=300');
@@ -42,7 +45,7 @@ esl.get('/course', (c) => {
   });
 });
 
-const settingsSchema = z.object({ band, accent, age: z.number().int().min(2).max(99).nullable().optional(), week: z.number().int().min(1).max(36).optional(), voice: z.boolean().optional() });
+const settingsSchema = z.object({ band, accent, support: support.optional(), age: z.number().int().min(2).max(99).nullable().optional(), week: z.number().int().min(1).max(36).optional(), voice: z.boolean().optional() });
 
 esl.get('/me', async (c) => {
   const user = requireUser(c);
@@ -51,7 +54,7 @@ esl.get('/me', async (c) => {
     loadEslLearner(db, user.id),
     db.prepare('SELECT week, band, done, stars, completed_at FROM esl_progress WHERE user_id = ?').bind(user.id).all<{ week: number; band: string; done: string; stars: number; completed_at: string | null }>(),
     patterns(db, user.id),
-    db.prepare('SELECT area, note, suggestion, created_at FROM esl_teacher_notes WHERE student_id = ? ORDER BY created_at DESC LIMIT 5').bind(user.id).all(),
+    db.prepare("SELECT area, note, suggestion, created_at FROM esl_teacher_notes WHERE student_id = ? AND course = 'esl' ORDER BY created_at DESC LIMIT 5").bind(user.id).all(),
     db.prepare('SELECT COUNT(*) AS n FROM esl_generated WHERE user_id = ?').bind(user.id).first<{ n: number }>(),
   ]);
   return c.json({
@@ -66,9 +69,9 @@ esl.get('/me', async (c) => {
 esl.put('/me', async (c) => {
   const user = requireUser(c);
   const s = await body(c, settingsSchema);
-  await c.env.DB.prepare(`INSERT INTO esl_learners (user_id, band, accent, age, week, voice) VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET band = excluded.band, accent = excluded.accent, age = COALESCE(excluded.age, age), week = COALESCE(?, week), voice = COALESCE(?, voice), updated_at = ?`)
-    .bind(user.id, s.band, s.accent, s.age ?? null, s.week ?? 1, s.voice === false ? 0 : 1, s.week ?? null, s.voice === undefined ? null : s.voice ? 1 : 0, nowIso()).run();
+  await c.env.DB.prepare(`INSERT INTO esl_learners (user_id, band, accent, age, week, voice, support) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET band = excluded.band, accent = excluded.accent, age = COALESCE(excluded.age, age), week = COALESCE(?, week), voice = COALESCE(?, voice), support = COALESCE(?, support), updated_at = ?`)
+    .bind(user.id, s.band, s.accent, s.age ?? null, s.week ?? 1, s.voice === false ? 0 : 1, s.support ?? 'off', s.week ?? null, s.voice === undefined ? null : s.voice ? 1 : 0, s.support ?? null, nowIso()).run();
   return c.json({ settings: await loadEslLearner(c.env.DB, user.id) });
 });
 
@@ -87,7 +90,9 @@ esl.get('/unit/:week', async (c) => {
   const settings = user ? await loadEslLearner(c.env.DB, user.id) : null;
   const bandId = b.success ? b.data : settings?.band ?? 'starters';
   const acc = a.success ? a.data : settings?.accent ?? 'gb';
-  const activities = buildUnit(week, bandId, acc, { name: name || undefined, age: settings?.age ?? undefined });
+  const sp = support.safeParse(c.req.query('support'));
+  const help = sp.success ? sp.data : settings?.support ?? 'off';
+  const activities = buildUnit(week, bandId, acc, { name: name || undefined, age: settings?.age ?? undefined, support: help });
   let done: string[] = [];
   let zuvaGames: Activity[] = [];
   if (user) {
@@ -98,7 +103,7 @@ esl.get('/unit/:week', async (c) => {
     done = row ? (JSON.parse(row.done) as string[]) : [];
     zuvaGames = made.results.map((r) => JSON.parse(r.spec) as Activity);
   }
-  return c.json({ week, band: bandId, accent: acc, activities, done, zuvaGames });
+  return c.json({ week, band: bandId, accent: acc, support: help, activities, done, zuvaGames });
 });
 
 esl.post('/sessions', async (c) => {
@@ -115,6 +120,7 @@ const attemptSchema = z.object({
   correct: z.boolean(), score: z.number().min(0).max(1).nullable().optional(), ms: z.number().int().min(0).max(600_000).nullable().optional(),
   tries: z.number().int().min(1).max(20).optional(), hints: z.number().int().min(0).max(20).optional(),
   input: z.enum(['voice', 'tap', 'type', 'grown-up']).optional(), heard: z.string().max(120).nullable().optional(),
+  support: z.boolean().optional(),
 });
 const attemptsSchema = z.object({
   sessionId: z.string().max(40).nullable().optional(),
@@ -132,7 +138,8 @@ async function activitySkill(db: D1Database, userId: string, week: number, bandI
     const row = await db.prepare('SELECT spec FROM esl_generated WHERE id = ? AND user_id = ?').bind(activityId, userId).first<{ spec: string }>();
     return row ? (JSON.parse(row.spec) as Activity).skill : null;
   }
-  return buildUnit(week, bandId, 'gb').find((a) => a.id === activityId)?.skill ?? null;
+  // The Portuguese-speaker games only exist in units built with help on, after the core games.
+  return buildUnit(week, bandId, 'gb', { support: 'pt-MZ' }).find((a) => a.id === activityId)?.skill ?? null;
 }
 const knownActivity = async (db: D1Database, userId: string, week: number, bandId: EslBandId, activityId: string) => !!(await activitySkill(db, userId, week, bandId, activityId));
 
@@ -160,7 +167,7 @@ esl.post('/attempts', async (c) => {
     const done = new Set<string>(row ? JSON.parse(row.done) : []);
     const isCourse = !activityId.startsWith('z-');
     if (isCourse) done.add(activityId);
-    const unit = buildUnit(week, b, 'gb');
+    const unit = buildUnit(week, b, 'gb');  // core games only: completing a unit never needs the optional extras
     unitComplete = unit.every((a) => done.has(a.id));
     await db.prepare(`INSERT INTO esl_progress (user_id, week, band, done, stars, completed_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id, week, band) DO UPDATE SET done = excluded.done, stars = esl_progress.stars + ?, completed_at = COALESCE(esl_progress.completed_at, excluded.completed_at), updated_at = excluded.updated_at`)
@@ -230,13 +237,32 @@ export async function weeklyTeacherNote(env: Env, studentId: string, studentName
 
 // ── Voice, pictures, listening ──────────────────────────────────────────────
 
-const speakSchema = z.object({ text: z.string().trim().min(1).max(300), accent, pace: z.enum(['word', 'early', 'primary', 'secondary']) });
+const glossSchema = z.object({
+  week: z.number().int().min(1).max(36), band, activityId: z.string().min(1).max(80),
+  field: z.enum(['intro', 'item', 'paragraph', 'question', 'option']), index: z.number().int().min(0).max(40).default(0), sub: z.number().int().min(0).max(6).default(0),
+});
+
+/** Portuguese for a piece of a game, found by position (the browser never sends text to translate). */
+esl.post('/gloss', async (c) => {
+  const g = await body(c, glossSchema);
+  const user = c.get('user');
+  await hit(c.env.DB, `esl:gloss:${user?.id ?? clientKey(c)}`, user ? 600 : 120, 3600, 'Slow down a little!');
+  if (!eslWeekOpen(g.week, hasPro(user))) throw upgradeRequired('This week is part of Plus.');
+  const a = await findActivity(c.env.DB, user?.id ?? null, g.week, g.band, g.activityId, user?.name.split(/\s+/)[0]);
+  const english = textAt(a, g.field, g.index, g.sub);
+  if (!english) throw notFound('Nothing there to translate.');
+  const out = await gloss(c.env, english);
+  c.header('cache-control', 'private, max-age=86400');
+  return c.json({ en: english, ...out, reviewed: false });
+});
+
+const speakSchema = z.object({ text: z.string().trim().min(1).max(300), accent, pace: z.enum(['word', 'early', 'primary', 'secondary']), lang: z.enum(['en', 'pt-MZ']).default('en') });
 
 esl.post('/speak', async (c) => {
   const s = await body(c, speakSchema);
   const user = c.get('user');
   await hit(c.env.DB, `esl:speak:${user?.id ?? clientKey(c)}`, user ? 400 : 80, 3600, 'Zuva needs a little rest. Your device will read it instead.');
-  const out = await tts(c.env, s.text, s.accent, s.pace);
+  const out = await tts(c.env, s.text, s.accent, s.pace, s.lang);
   return new Response(out.bytes, { headers: { 'content-type': out.mime, 'cache-control': 'private, max-age=86400', 'x-cache': out.cached ? 'hit' : 'miss' } });
 });
 

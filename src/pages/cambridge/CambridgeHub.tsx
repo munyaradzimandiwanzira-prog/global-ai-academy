@@ -15,13 +15,19 @@ export default function CambridgeHub() {
           <h1 className="font-display text-4xl font-bold sm:text-5xl">Cambridge courses, taught by Zuva</h1>
           <p className="text-lg text-ink dark:text-white/90">Courses that follow Cambridge stages and levels, so learners, parents and teachers can see exactly where they are. Our own mapping, not endorsed by Cambridge.</p>
         </header>
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           <Link to="/cambridge/esl" className="group flex flex-col rounded-[4px] bg-white p-6 transition-colors hover:bg-granite-100 dark:bg-night-700 dark:hover:bg-night-800">
             <Zuva size={64} />
-            <h2 className="mt-4 font-display text-2xl font-bold">English as a Second Language, new this term</h2>
+            <h2 className="mt-4 font-display text-2xl font-bold">English as a Second Language</h2>
             <p className="mt-2 text-ink dark:text-white/90">Ages 2 to 20, from first words to Cambridge B2 First. 36 weeks of speaking, listening, phonics, reading and writing games. Zuva listens, sounds out words with you, makes new games as you grow and tells your teacher how you’re doing.</p>
             <p className="mt-3 text-[15px]">{ESL_BANDS.map((b) => `${b.name} (${b.ages})`).join(' · ')}</p>
             <span className="mt-5 inline-flex items-center gap-1 font-bold">Start English <ArrowRight className="transition-transform duration-[180ms] group-hover:translate-x-1 motion-reduce:transition-none" /></span>
+          </Link>
+          <Link to="/cambridge/maths" className="group flex flex-col rounded-[4px] bg-white p-6 transition-colors hover:bg-granite-100 dark:bg-night-700 dark:hover:bg-night-800">
+            <TrackMark short="Ma" color="#284A80" size={64} />
+            <h2 className="mt-4 font-display text-2xl font-bold">Cambridge Maths, new this term</h2>
+            <p className="mt-2 text-ink dark:text-white/90">Stages 1 to 6 (about ages 5–11): number, geometry and measure, statistics and probability. Quick Maths sprints, number lines, place-value blocks, fraction bars, story problems and “Convince me” reasoning puzzles, with fresh practice every day and help in Portuguese.</p>
+            <span className="mt-auto inline-flex items-center gap-1 pt-5 font-bold">Start maths <ArrowRight className="transition-transform duration-[180ms] group-hover:translate-x-1 motion-reduce:transition-none" /></span>
           </Link>
           <Link to="/kids/curriculum" className="group flex flex-col rounded-[4px] bg-white p-6 transition-colors hover:bg-granite-100 dark:bg-night-700 dark:hover:bg-night-800">
             <TrackMark short="Kz" color="#1F7A6E" size={64} />

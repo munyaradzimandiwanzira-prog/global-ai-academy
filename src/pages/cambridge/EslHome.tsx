@@ -8,6 +8,8 @@ import { Zuva } from '@/features/kids/Zuva';
 import { cn } from '@/lib/utils';
 import { buttonClass } from '@/components/ui/Button';
 import { focusRing, surface } from '@/features/esl/ui';
+import { HelpSwitch } from '@/features/esl/support';
+import type { SupportLang } from '@shared/esl';
 import { useEsl } from '@/features/esl/store';
 import { say, useMutedEsl } from '@/features/esl/voice';
 
@@ -36,10 +38,11 @@ export function MuteSwitch() {
 }
 
 /** First visit: who is learning (guests: name too), age and accent. */
-function Welcome({ signedIn, firstName, onSave, onGuest }: { signedIn: boolean; firstName?: string; onSave: (age: number, accent: Accent) => Promise<void>; onGuest?: (name: string, trial: boolean, age: number) => void }) {
+function Welcome({ signedIn, firstName, onSave, onGuest }: { signedIn: boolean; firstName?: string; onSave: (age: number, accent: Accent, support: SupportLang) => Promise<void>; onGuest?: (name: string, trial: boolean, age: number) => void }) {
   const [name, setName] = useState('');
   const [age, setAge] = useState<number | null>(null);
   const [accent, setAccent] = useState<Accent>('gb');
+  const [support, setSupport] = useState<SupportLang>('off');
   const [busy, setBusy] = useState(false);
   const greeting = signedIn ? `Hello ${firstName}! I’m Zuva, your English teacher. How old are you?` : 'Hello! I’m Zuva, your English teacher. What’s your name?';
   useEffect(() => { const t = setTimeout(() => void say(greeting, 'gb', 'primary'), 500); return () => clearTimeout(t); }, [greeting]);
@@ -48,7 +51,7 @@ function Welcome({ signedIn, firstName, onSave, onGuest }: { signedIn: boolean; 
     if (!ready) return;
     setBusy(true);
     if (!signedIn) onGuest?.(name.trim().split(/\s+/)[0]!.slice(0, 20), trial, age!);
-    await onSave(age!, accent);
+    await onSave(age!, accent, support);
     setBusy(false);
   };
   return (
@@ -72,6 +75,11 @@ function Welcome({ signedIn, firstName, onSave, onGuest }: { signedIn: boolean; 
             {age != null && <p className="mt-2 text-[15px]">Zuva will start you in <strong>{bandForAge(age).name}</strong> ({bandForAge(age).cambridge}). You can change it any time.</p>}
           </div>
           <div><p className="label text-[15px]">Which English?</p><AccentSwitch value={accent} onChange={setAccent} /></div>
+          <div>
+            <p className="label text-[15px]">Do you speak Portuguese? <span lang="pt-MZ" className="font-normal text-muted-fg">Falas português?</span></p>
+            <HelpSwitch value={support} onChange={setSupport} />
+            {support === 'pt-MZ' && <p lang="pt-MZ" className="mt-2 max-w-prose text-[15px] text-muted-fg">O Zuva explica em português quando precisares, mas pratica sempre em inglês. A ajuda diminui à medida que aprendes.</p>}
+          </div>
           {signedIn ? (
             <button type="button" disabled={!ready || busy} onClick={() => void save(false)} className={buttonClass({ size: 'lg' })}>Start learning English <ArrowRight /></button>
           ) : (
@@ -113,7 +121,7 @@ export default function EslHome() {
         </header>
 
         {needsWelcome ? (
-          <Welcome signedIn={!!user} firstName={firstName} onGuest={(name, trial, age) => esl.setGuest({ name, age, trial })} onSave={async (age, accent) => { await esl.save({ age, accent, band: bandForAge(age).id, week: 1, voice: true }); }} />
+          <Welcome signedIn={!!user} firstName={firstName} onGuest={(name, trial, age) => esl.setGuest({ name, age, trial })} onSave={async (age, accent, support) => { await esl.save({ age, accent, support, band: bandForAge(age).id, week: 1, voice: true }); }} />
         ) : (
           <section className={cn(surface, 'flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-8')} aria-labelledby="hello">
             <Zuva size={80} />
@@ -134,6 +142,7 @@ export default function EslHome() {
               </select>
             </label>
             <AccentSwitch value={settings.accent} onChange={(a) => void esl.save({ accent: a })} />
+            <HelpSwitch value={settings.support ?? 'off'} onChange={(v) => void esl.save({ support: v })} />
             <MuteSwitch />
           </section>
         )}

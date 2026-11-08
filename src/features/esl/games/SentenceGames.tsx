@@ -7,7 +7,8 @@ import { say } from '../voice';
 import { focusRing, helperPill, optionClass } from '../ui';
 import { buttonClass } from '@/components/ui/Button';
 import { MaterialIcon } from '@/components/icons';
-import { Dots, OptionButton, cheer, big, useItemClock, type GameProps } from './kit';
+import { Gloss } from '../support';
+import { useHelpUsed, Dots, OptionButton, cheer, big, useItemClock, type GameProps } from './kit';
 
 type Of<K extends Activity['kind']> = GameProps<Extract<Activity, { kind: K }>>;
 
@@ -19,10 +20,11 @@ export function Order({ activity, tier, accent, onAnswer, onDone }: Of<'order'>)
   const [results, setResults] = useState<(boolean | undefined)[]>([]);
   const item = activity.items[i]!;
   const clock = useItemClock(i);
+  const [helped, markHelp] = useHelpUsed(i);
   useEffect(() => { setPlaced([]); setState(null); setTries(1); }, [i]);
   const finish = (ok: boolean) => {
     setResults((r) => { const c = [...r]; c[i] = ok; return c; });
-    onAnswer({ item: item.sentence, correct: ok, ms: clock(), tries, hints: 0, input: 'tap' });
+    onAnswer({ item: item.sentence, correct: ok, ms: clock(), tries, hints: 0, input: 'tap', support: helped });
     void say(item.sentence, accent, tier === 'secondary' ? 'secondary' : 'primary');
     setTimeout(() => (i + 1 >= activity.items.length ? onDone() : setI(i + 1)), 2200);
   };
@@ -52,6 +54,7 @@ export function Order({ activity, tier, accent, onAnswer, onDone }: Of<'order'>)
             className={optionClass(undefined, 'px-4 text-lg disabled:opacity-30')}>{w}</button>
         ))}
       </div>
+      <div className="flex justify-center"><Gloss key={i} activityId={activity.id} field="item" index={i} onUse={markHelp} /></div>
     </div>
   );
 }
@@ -63,6 +66,7 @@ export function Gap({ activity, tier, accent, onAnswer, onDone }: Of<'gap'>) {
   const [results, setResults] = useState<(boolean | undefined)[]>([]);
   const item = activity.items[i]!;
   const clock = useItemClock(i);
+  const [helped, markHelp] = useHelpUsed(i);
   useEffect(() => { setState({}); setTries(1); }, [i]);
   const [before, after] = item.text.split('___');
   const solved = Object.values(state).includes('right');
@@ -80,13 +84,14 @@ export function Gap({ activity, tier, accent, onAnswer, onDone }: Of<'gap'>) {
             cheer(tier, accent, ok);
             if (ok || tries >= 2) {
               setResults((r) => { const c = [...r]; c[i] = ok; return c; });
-              onAnswer({ item: item.text, correct: ok, ms: clock(), tries, hints: 0, input: 'tap' });
+              onAnswer({ item: item.text, correct: ok, ms: clock(), tries, hints: 0, input: 'tap', support: helped });
               setTimeout(() => void say(item.text.replace('___', item.answer), accent, tier === 'secondary' ? 'secondary' : 'primary'), 600);
               setTimeout(() => (i + 1 >= activity.items.length ? onDone() : setI(i + 1)), 2600);
             } else setTries(tries + 1);
           }} className="text-xl">{o}</OptionButton>
         ))}
       </div>
+      <div className="flex justify-center"><Gloss key={i} activityId={activity.id} field="item" index={i} onUse={markHelp} /></div>
     </div>
   );
 }
@@ -103,6 +108,7 @@ export function Story({ activity, tier, accent, onAnswer, onDone }: Of<'story'>)
   const pace = tier === 'secondary' ? 'secondary' : tier;
   useEffect(() => { if (lineByLine && reading) void say(activity.paragraphs[line]!, accent, pace); }, [line, reading]); // eslint-disable-line react-hooks/exhaustive-deps
   const question = activity.questions[q]!;
+  const [helped, markHelp] = useHelpUsed(q);
   useEffect(() => { if (!reading) { setState({}); setTries(1); void say(question.q, accent, pace); } }, [reading, q]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (reading) {
@@ -114,6 +120,7 @@ export function Story({ activity, tier, accent, onAnswer, onDone }: Of<'story'>)
             ? <p className="text-center text-2xl font-semibold leading-relaxed">{activity.paragraphs[line]}</p>
             : activity.paragraphs.map((p, k) => <p key={k} className="mb-3 text-lg leading-relaxed last:mb-0">{p}</p>)}
         </div>
+        {lineByLine && <div className="flex justify-center"><Gloss key={line} activityId={activity.id} field="paragraph" index={line} /></div>}
         <div className="flex flex-wrap justify-center gap-3">
           <button type="button" onClick={() => void say(lineByLine ? activity.paragraphs[line]! : activity.paragraphs.join(' ').slice(0, 300), accent, pace)} className={buttonClass({ variant: 'outlined', color: 'action', size: 'lg' })}><Volume2 /> {lineByLine ? 'Hear it again' : 'Read it to me'}</button>
           <button type="button" onClick={() => (lineByLine && line + 1 < activity.paragraphs.length ? setLine(line + 1) : setReading(false))} className={buttonClass({ color: 'accent', size: 'lg' })}>
@@ -136,7 +143,7 @@ export function Story({ activity, tier, accent, onAnswer, onDone }: Of<'story'>)
             setState((s) => ({ ...s, [o.label]: ok ? 'right' : 'wrong', ...(!ok && tries >= 2 ? { [question.answer]: 'right' } : {}) }));
             cheer(tier, accent, ok);
             if (ok || tries >= 2) {
-              onAnswer({ item: `${activity.title}: ${question.q}`, correct: ok, ms: clock(), tries, hints: 0, input: 'tap' });
+              onAnswer({ item: `${activity.title}: ${question.q}`, correct: ok, ms: clock(), tries, hints: 0, input: 'tap', support: helped });
               setTimeout(() => (q + 1 >= activity.questions.length ? onDone() : setQ(q + 1)), 1500);
             } else setTries(tries + 1);
           }} className="flex-col py-3 text-lg">
@@ -145,7 +152,10 @@ export function Story({ activity, tier, accent, onAnswer, onDone }: Of<'story'>)
           </OptionButton>
         ))}
       </div>
-      <button type="button" onClick={() => setReading(true)} className={cn(helperPill, 'mx-auto flex')}>Read the story again</button>
+      <div className="flex flex-wrap justify-center gap-1">
+        <Gloss key={q} activityId={activity.id} field="question" index={q} onUse={markHelp} />
+        <button type="button" onClick={() => setReading(true)} className={helperPill}>Read the story again</button>
+      </div>
     </div>
   );
 }

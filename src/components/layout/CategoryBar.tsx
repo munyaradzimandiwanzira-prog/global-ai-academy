@@ -144,13 +144,22 @@ export function CategoryBar() {
                 <Link to="/cambridge" className="text-sm font-semibold text-teal-600 hover:underline dark:text-teal-400">All Cambridge courses</Link>
               </div>
               <p className="mt-1 max-w-2xl text-[15px] text-muted-fg">Courses that follow Cambridge stages and levels, taught by Zuva. Our own mapping, not endorsed by Cambridge.</p>
-              <ul className="mt-4 grid gap-x-6 sm:grid-cols-2">
+              <ul className="mt-4 grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
                 <li className="border-b border-border">
                   <Link to="/cambridge/esl" className="group flex items-center gap-3 py-2.5">
                     <TrackMark short="En" color="#C8961E" size={32} />
                     <span className="min-w-0 flex-1">
                       <span className="block font-semibold group-hover:text-teal-600 dark:group-hover:text-teal-400">English as a Second Language</span>
-                      <span className="block text-[13px] text-muted-fg">Ages 2–20 · {ESL_BANDS.length} levels · 36 weeks · first 4 weeks free</span>
+                      <span className="block text-[13px] text-muted-fg">Ages 2–20 · {ESL_BANDS.length} levels · help in Portuguese</span>
+                    </span>
+                  </Link>
+                </li>
+                <li className="border-b border-border">
+                  <Link to="/cambridge/maths" className="group flex items-center gap-3 py-2.5">
+                    <TrackMark short="Ma" color="#284A80" size={32} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold group-hover:text-teal-600 dark:group-hover:text-teal-400">Cambridge Maths</span>
+                      <span className="block text-[13px] text-muted-fg">Stages 1–6 · number, geometry, data · fresh practice daily</span>
                     </span>
                   </Link>
                 </li>

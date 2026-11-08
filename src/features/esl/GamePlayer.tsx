@@ -8,12 +8,15 @@ import { play } from '@/features/kids/sfx';
 import { say, stopSpeaking } from './voice';
 import { ZuvaSays, type Answer } from './games/kit';
 import { GameIcon, focusRing } from './ui';
+import { PT_UI } from '@shared/esl';
+import { PT_INTRO, PtLine, PtReviewNote, useSupport } from './support';
 import { buttonClass } from '@/components/ui/Button';
 import type { Guest } from './store';
 
 const Word = () => import('./games/WordGames');
 const Sentence = () => import('./games/SentenceGames');
 const TW = () => import('./games/TalkWrite');
+const PT = () => import('./games/PtGames');
 const GAMES = {
   echo: lazy(() => Word().then((m) => ({ default: m.Echo }))),
   say: lazy(() => Word().then((m) => ({ default: m.SayIt }))),
@@ -26,6 +29,9 @@ const GAMES = {
   story: lazy(() => Sentence().then((m) => ({ default: m.Story }))),
   talk: lazy(() => TW().then((m) => ({ default: m.Talk }))),
   write: lazy(() => TW().then((m) => ({ default: m.Write }))),
+  pairs: lazy(() => PT().then((m) => ({ default: m.Pairs }))),
+  friends: lazy(() => PT().then((m) => ({ default: m.Friends }))),
+  fix: lazy(() => PT().then((m) => ({ default: m.Fix }))),
 } as const;
 
 /** Words in a game, used to help the speech recogniser (never the answer alone). */
@@ -34,6 +40,7 @@ function contextWords(a: Activity): string[] {
     case 'say': case 'pick': case 'sound': case 'spell': return a.items.map((x) => x.word);
     case 'rhyme': return a.items.flatMap((x) => [x.word, ...x.options.map((o) => o.word)]);
     case 'echo': return a.items.flatMap((x) => x.text.split(/\s+/)).slice(0, 20);
+    case 'pairs': return a.items.flatMap((x) => [x.a, x.b]);
     default: return [];
   }
 }
@@ -68,6 +75,8 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
   const finished = useRef(false);
   const ctx = useMemo(() => contextWords(activity), [activity]);
   const Game = GAMES[activity.kind] as unknown as React.ComponentType<Record<string, unknown>>;
+  const help = useSupport();
+  const ptIntro = help.on && PT_INTRO[activity.kind] ? PT_UI[PT_INTRO[activity.kind]!] : null;
 
   const post = useCallback((body: Record<string, unknown>) => {
     if (!signedIn) return;
@@ -92,7 +101,7 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
 
   const onAnswer = useCallback((a: Answer) => {
     answers.current.push(a);
-    post({ attempts: [{ week, band, activityId: activity.id, kind: activity.kind, item: a.item.slice(0, 200), correct: a.correct, score: a.score ?? null, ms: a.ms, tries: a.tries, hints: a.hints, input: a.input, heard: a.heard ?? null }] });
+    post({ attempts: [{ week, band, activityId: activity.id, kind: activity.kind, item: a.item.slice(0, 200), correct: a.correct, score: a.score ?? null, ms: a.ms, tries: a.tries, hints: a.hints, input: a.input, heard: a.heard ?? null, support: !!a.support }] });
   }, [post, week, band, activity.id, activity.kind]);
 
   const onDone = useCallback(() => {
@@ -122,6 +131,7 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
       {phase === 'intro' && (
         <div className="space-y-5">
           <ZuvaSays text={activity.intro} accent={accent} pace={tier} />
+          {ptIntro && <PtLine text={ptIntro} className="mx-auto max-w-xl" />}
           <button type="button" onClick={begin} className={buttonClass({ color: 'accent', size: 'lg' }, 'mx-auto flex h-14 px-8 text-lg')}>Start the game <ArrowRight /></button>
         </div>
       )}
@@ -149,6 +159,7 @@ export function GamePlayer({ activity, week, band, accent, signedIn, guest, sess
           </div>
         </div>
       )}
+      <PtReviewNote />
     </div>
   );
 }

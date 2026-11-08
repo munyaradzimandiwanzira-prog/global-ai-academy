@@ -100,7 +100,7 @@ export const tutorSchema = z.object({
 
 /** Zuva agent chat. Guests send their short history; signed-in learners send a threadId instead. */
 export const zuvaChatSchema = z.object({
-  mode: z.enum(['kids', 'learner', 'teacher', 'esl']),
+  mode: z.enum(['kids', 'learner', 'teacher', 'esl', 'maths']),
   message: z.string().trim().min(1, 'Type or say something first').max(2000),
   threadId: z.string().max(40).optional(),
   history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(2000) })).max(8).optional(),
@@ -123,11 +123,24 @@ export const zuvaChatSchema = z.object({
     band: z.enum(['tiny', 'little', 'starters', 'movers', 'flyers', 'key', 'preliminary', 'first']),
     accent: z.enum(['gb', 'us']),
     activityId: z.string().max(80).optional(),
-    kind: z.enum(['echo', 'say', 'pick', 'sound', 'rhyme', 'spell', 'order', 'gap', 'story', 'talk', 'write']).optional(),
+    kind: z.enum(['echo', 'say', 'pick', 'sound', 'rhyme', 'spell', 'order', 'gap', 'story', 'talk', 'write', 'pairs', 'friends', 'fix']).optional(),
+    /** Language Zuva may explain in (the English being practised never changes). */
+    support: z.enum(['off', 'pt-MZ']).optional(),
     /** The talk or write task the learner is doing. */
     task: z.string().max(400).optional(),
     item: z.string().max(200).optional(),
     heard: z.string().max(200).optional(),
+    guest: z.object({ name: z.string().trim().max(40).optional(), age: z.number().int().min(2).max(99).optional(), trial: z.boolean() }).optional(),
+  }).optional(),
+  /** Maths course: stage, unit and game on screen. */
+  maths: z.object({
+    stage: z.number().int().min(1).max(6),
+    unitId: z.string().regex(/^s[1-6]-[a-z0-9]+$/).optional(),
+    activityId: z.string().max(80).optional(),
+    kind: z.enum(['sprint', 'choice', 'numberline', 'blocks', 'fraction', 'word', 'convince']).optional(),
+    item: z.string().max(400).optional(),
+    task: z.string().max(400).optional(),
+    support: z.enum(['off', 'pt-MZ']).optional(),
     guest: z.object({ name: z.string().trim().max(40).optional(), age: z.number().int().min(2).max(99).optional(), trial: z.boolean() }).optional(),
   }).optional(),
 });

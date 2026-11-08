@@ -17,6 +17,7 @@ import { HttpError } from '../lib/errors';
 import { TEACHER_TOOLS } from './teacher-tools';
 import { obj, str, type ToolCtx, type ZuvaTool } from './tool-kit';
 import { eslZuvaTools } from '../esl/adapter';
+import { mathsZuvaTools } from '../maths/tools';
 
 export type { ToolCtx, ZuvaTool } from './tool-kit';
 
@@ -80,7 +81,7 @@ const BASE_TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Getting a button ready',
-    modes: ['kids', 'learner', 'teacher', 'esl'],
+    modes: ['kids', 'learner', 'teacher', 'esl', 'maths'],
     spec: { name: 'open_page', description: 'Show the learner a button that opens a page in the Academy (a Kids Zone game like /kids/bridge, a lesson like /learn/python/lists, /tutorials, /playground). They choose whether to tap it.', parameters: obj({ path: { type: 'string' }, label: { type: 'string', description: 'Short button text, e.g. "Play Bridge Builder"' } }, ['path', 'label']) },
     run: async ({ emit }, args) => {
       const path = str(args.path, 120);
@@ -146,7 +147,7 @@ const BASE_TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Saving that to memory',
-    modes: ['kids', 'learner', 'teacher', 'esl'],
+    modes: ['kids', 'learner', 'teacher', 'esl', 'maths'],
     signedIn: true,
     needsMemory: true,
     spec: { name: 'remember', description: 'Save one lasting, learning-related fact the learner asked you to remember (an interest, goal, preference or struggle). Never personal details.', parameters: obj({ kind: { type: 'string', enum: MEMORY_KINDS }, content: { type: 'string', description: 'One short sentence, e.g. "Wants to build a weather station"' } }, ['kind', 'content']) },
@@ -158,7 +159,7 @@ const BASE_TOOLS: ZuvaTool[] = [
   },
   {
     label: 'Forgetting that',
-    modes: ['kids', 'learner', 'teacher', 'esl'],
+    modes: ['kids', 'learner', 'teacher', 'esl', 'maths'],
     signedIn: true,
     spec: { name: 'forget', description: 'Delete memories about something when the learner asks you to forget it.', parameters: obj({ about: { type: 'string' } }, ['about']) },
     run: async ({ env, user }, args) => {
@@ -169,7 +170,7 @@ const BASE_TOOLS: ZuvaTool[] = [
 ];
 
 export function toolsFor(ctx: Pick<ToolCtx, 'mode' | 'user' | 'memoryEnabled'>): ZuvaTool[] {
-  const TOOLS = [...BASE_TOOLS, ...TEACHER_TOOLS, ...(ctx.mode === 'esl' ? eslZuvaTools() : [])];
+  const TOOLS = [...BASE_TOOLS, ...TEACHER_TOOLS, ...(ctx.mode === 'esl' ? eslZuvaTools() : []), ...(ctx.mode === 'maths' ? mathsZuvaTools() : [])];
   return TOOLS.filter((t) => t.modes.includes(ctx.mode) && (!t.signedIn || ctx.user) && (!t.needsMemory || ctx.memoryEnabled));
 }
 
