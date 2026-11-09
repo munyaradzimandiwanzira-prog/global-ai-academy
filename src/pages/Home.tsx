@@ -162,7 +162,7 @@ export default function Home() {
           <div>
             <h1 className="display-xl max-w-[11ch]">Learn to code by running it.</h1>
             <p className="lede mt-6 max-w-xl text-white/85">
-              Free tutorials with a live editor on every page, an AI coach when you are stuck, and teachers when you want a class. Built in Harare for Zimbabwean learners, from a child’s first loop to lead AI engineer.
+              Free tutorials with a live editor on every page, an AI coach when you are stuck, and teachers when you want a class. Built in Harare for learners everywhere, from a child’s first loop to lead AI engineer.
             </p>
             <div className="mt-8"><HeroSearch /></div>
             <div className="mt-6 flex flex-wrap gap-3">

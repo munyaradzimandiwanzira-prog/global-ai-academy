@@ -100,7 +100,7 @@ export function catalogHintsFor(d: StudentDetail): { title: string; path: string
 
 // ── Lesson plans ───────────────────────────────────────────────────────────
 
-const PLAN_PROMPT = `You are Zuva, the AI teaching assistant of Global AI Academy, writing a lesson plan for a teacher in Zimbabwe.
+const PLAN_PROMPT = `You are Zuva, the AI teaching assistant of Global AI Academy, writing a lesson plan for a teacher.
 ${DATA_NOTE}
 Plan one session of the given length for the given course material. Ground everything in the lesson outlines provided; do not teach content the course does not cover unless it is clearly prerequisite.
 Make it practical for a real classroom: many learners share devices or use phones, data can be costly and power can cut out, so include an unplugged or paper fallback for at least one activity. Use local examples where natural (mobile money, kombis, markets, school life).

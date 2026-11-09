@@ -5,7 +5,7 @@ import { X, Lock } from '@/components/icons';
 import { useAuth } from '@/lib/auth';
 import { ZuvaChat } from '@/features/zuva/ZuvaChat';
 
-const STARTERS = ['Explain this lesson more simply', 'Give me a real-life Zimbabwean example', 'Quiz me on this lesson', 'What should I learn next?', 'Help me plan a hands-on project'];
+const STARTERS = ['Explain this lesson more simply', 'Give me a real-life example', 'Quiz me on this lesson', 'What should I learn next?', 'Help me plan a hands-on project'];
 
 /** Professor Zuva: the lesson tutor. Same agent as the Kids Zone, with the grown-up persona, lesson context, tools, memory and dictation. */
 export function TutorPanel({ open, onClose, trackId, lessonTitle, excerpt }: { open: boolean; onClose: () => void; trackId: string; lessonTitle: string; excerpt: string }) {

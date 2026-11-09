@@ -200,7 +200,7 @@ messages.post('/inbox/read', async (c) => {
 
 // ── Progress reports for parents ────────────────────────────────────────────
 
-const PARENT_SYSTEM = `You write a short, warm progress note for a parent about their child's learning at an online school in Zimbabwe.
+const PARENT_SYSTEM = `You write a short, warm progress note for a parent about their child's learning at an online school.
 Use only the facts given in <learner_data>. Never invent marks, dates or activities. Plain words a busy parent understands; no jargon, no percentages that aren't in the data.
 Be honest but kind: name real strengths first, then one or two things to work on.
 Return JSON: {"summary": "2-3 sentences", "strengths": ["up to 3 short items"], "nextSteps": ["up to 3 short items, each something the learner will do"], "homeTip": "one sentence: something easy a parent can do at home this week"}.

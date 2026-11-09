@@ -25,7 +25,7 @@ export default function About() {
           <p className="eyebrow !text-gold">About the Academy</p>
           <h1 className="mt-3 max-w-[18ch] text-4xl font-extrabold md:text-5xl">A school for builders, made in Zimbabwe</h1>
           <p className="lede mt-6 max-w-2xl text-white/85">
-            Global AI Academy exists so that any learner in Zimbabwe — in Harare or Hwange, on a laptop or a phone — can learn to code, build AI and ship real software. We teach by doing: every lesson has code you can run in the browser, and an AI coach that helps without giving the answer away.
+            Global AI Academy exists so that any learner, anywhere — in Harare or Hwange, Lagos or London, on a laptop or a phone — can learn to code, build AI and ship real software. We teach by doing: every lesson has code you can run in the browser, and an AI coach that helps without giving the answer away.
           </p>
         </div>
         <div className="chevron-band" aria-hidden="true" />

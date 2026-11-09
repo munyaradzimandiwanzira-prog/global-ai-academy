@@ -9,7 +9,7 @@ import { ChallengeBlock } from '@/features/lesson/blocks';
 import { PageLoader, TrackMark } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
-/** ISO-8601 week number, so everyone in Zimbabwe gets the same challenge each Monday. */
+/** ISO-8601 week number, so everyone gets the same challenge each week. */
 export function isoWeek(d = new Date()): { year: number; week: number } {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const day = date.getUTCDay() || 7;

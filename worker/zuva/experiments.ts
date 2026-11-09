@@ -1,6 +1,6 @@
 /**
  * Hands-on experiments Zuva can suggest. Every one was chosen to be cheap, made from things a
- * family or school in Zimbabwe can find, and safe for children with the stated level of adult help.
+ * family or school can find in most places, and safe for children with the stated level of adult help.
  * The planner sub-agent adapts these; it must not invent experiments outside this safety envelope.
  *
  * Safety levels: easy = a child can do it alone; helper = an adult nearby; adult = an adult does one step.
