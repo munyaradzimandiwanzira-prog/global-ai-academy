@@ -92,6 +92,8 @@ function UserMenu() {
             {user.role !== 'student' && <Link to="/teach" className={item}><GraduationCap className="h-4 w-4" /> Teaching</Link>}
             {user.role === 'admin' && <Link to="/admin" className={item}><Shield className="h-4 w-4" /> Administration</Link>}
             <Link to="/tests" className={item}><MaterialIcon name="quiz" className="text-[16px]" /> Tests and homework</Link>
+            <Link to="/my-courses" className={item}><MaterialIcon name="menu_book" className="text-[16px]" /> Courses from teachers</Link>
+            <Link to="/inbox" className={item}><MaterialIcon name="campaign" className="text-[16px]" /> Messages</Link>
             {user.role === 'student' && <Link to="/teachers" className={item}><GraduationCap className="h-4 w-4" /> Teach with us</Link>}
             <Link to="/classes" className={item}><BookOpenCheck className="h-4 w-4" /> Classes</Link>
             <Link to="/projects" className={item}><FolderCode className="h-4 w-4" /> My projects</Link>

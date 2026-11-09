@@ -108,10 +108,10 @@ ok((await kid('GET', '/api/teach/insights')).s === 403, 'learners cannot read cl
 
 // ── Teacher requests from the teachers page ─────────────────────────────
 r = await signup(applicant, 'Farai Applicant', `farai${id}@example.com`);
-ok((await applicant('GET', '/api/account/teacher-request')).j.status === 'none', 'a new learner has no request');
-ok((await applicant('POST', '/api/account/teacher-request', {})).j.status === 'pending', 'a signed-in learner can ask to teach');
-ok((await applicant('POST', '/api/account/teacher-request', {})).j.status === 'pending', 'asking again does not duplicate');
-ok((await teacher('GET', '/api/account/teacher-request')).j.status === 'approved', 'teachers show as approved');
+ok((await applicant('GET', '/api/me/teacher-request')).j.status === 'none', 'a new learner has no request');
+ok((await applicant('POST', '/api/me/teacher-request', {})).j.status === 'pending', 'a signed-in learner can ask to teach');
+ok((await applicant('POST', '/api/me/teacher-request', {})).j.status === 'pending', 'asking again does not duplicate');
+ok((await teacher('GET', '/api/me/teacher-request')).j.status === 'approved', 'teachers show as approved');
 
 // ── Cleanup of drafts ───────────────────────────────────────────────────
 r = await teacher('POST', '/api/tests', { title: 'Scratch', kind: 'homework', questions: [] });

@@ -174,3 +174,12 @@ See **[DEPLOY.md](DEPLOY.md)**.
 - **Starter tour** (`src/pages/teacher/Tour.tsx`): a narrated spotlight tour that opens on a teacher's first visit, with a "Take the tour" button to replay it.
 - **For teachers** page (`/teachers`), `/signup?teacher=1`, and `POST /api/account/teacher-request` for signed-in learners. Admins approve requests as before.
 - Tests: `node tests/e2e-tests.mjs` (38 checks).
+
+## Teacher courses, messages and parents
+
+- **Course builder** (`/teach/courses`, API `/api/courses`, `shared/courses.ts`, migration `0011_messages_courses.sql`): course → units → lessons. Lessons have Markdown notes, an optional YouTube/Vimeo video (shown through youtube-nocookie / Vimeo dnt players), and a quick check (multiple choice, number, short answer) that marks itself. Zuva can draft a lesson and its check (`POST /api/courses/draft-lesson`). Share with whole classes (later members get it too) or chosen learners; learners see published courses at `/my-courses`. Best check score is kept; teacher previews don't create progress.
+- **Messages** (`/teach/messages`, API `/api/messages`): announcements to a class or chosen learners, in-app + email, optionally emailed to parents. Whole-class messages are also mirrored onto the classroom wall (`announcements`). Learners read them at `/inbox`.
+- **Parents and guardians** (`guardians`): added by the learner (Settings → Parents and guardians) or a teacher (student page); the learner is notified when a teacher adds one. Every parent email has a one-click unsubscribe (`/api/messages/unsubscribe/:token`, CSRF-exempt by token). Parent email volume is capped at 120 per teacher per day.
+- **Parent progress reports**: from a student's page, preview a report written by Zuva from learning facts only (activity, marks, course progress), add a note, email it or copy a link (`/parents/report/:token`, expires after 60 days).
+- **Choosing learners**: tests, announcements and courses can target chosen learners, not just whole classes (`LearnerPicker`).
+- Tests: `node tests/e2e-courses-messages.mjs` (63 checks).

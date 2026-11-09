@@ -2,10 +2,7 @@ import { createRouter, body, requireUser, type Ctx } from '../app';
 import { deleteAccountSchema, mfaCodeSchema, mfaDisableSchema, mfaSetupSchema } from '@shared/schemas';
 import type { AccountSession, MfaStatus } from '@shared/api-types';
 import { audit, nowIso, toPublicUser, type UserRow } from '../lib/db';
-import { verifyPassword, sha256Hex, newId } from '../lib/crypto';
-import { tellAdminsAboutTeacherRequest } from '../lib/teaching';
-import { appBase } from '../lib/urls';
-import { z } from 'zod';
+import { verifyPassword, sha256Hex } from '../lib/crypto';
 import { destroyAllSessions, destroySession } from '../lib/session';
 import { badRequest, conflict, forbidden, notFound, unavailable } from '../lib/errors';
 import { hit } from '../lib/ratelimit';
@@ -31,28 +28,6 @@ async function requirePassword(c: Ctx, user: UserRow, password: string) {
   await hit(c.env.DB, `reauth:${user.id}`, 8, 900, 'Too many attempts. Wait 15 minutes and try again.');
   if (!(await verifyPassword(password, user.password_hash))) throw badRequest('Your password is not correct.', { password: 'Incorrect password' });
 }
-
-// ── Teaching ───────────────────────────────────────────────────────────────
-
-/** A signed-in learner asking to teach. An admin approves it before the teacher portal opens. */
-account.get('/teacher-request', async (c) => {
-  const user = requireUser(c);
-  const row = await c.env.DB.prepare('SELECT status, created_at FROM teacher_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').bind(user.id).first<{ status: string; created_at: string }>();
-  return c.json({ status: user.role === 'teacher' || user.role === 'admin' ? 'approved' : row?.status ?? 'none', requestedAt: row?.created_at ?? null });
-});
-
-account.post('/teacher-request', async (c) => {
-  const user = requireUser(c);
-  const { message } = await body(c, z.object({ message: z.string().trim().max(1000).default('') }));
-  if (user.role === 'teacher' || user.role === 'admin') throw conflict('You can already teach.');
-  await hit(c.env.DB, `teacher-request:${user.id}`, 3, 86_400, 'You’ve asked already today. We’ll be in touch.');
-  const pending = await c.env.DB.prepare("SELECT id FROM teacher_requests WHERE user_id = ? AND status = 'pending'").bind(user.id).first();
-  if (pending) return c.json({ status: 'pending' });
-  await c.env.DB.prepare('INSERT INTO teacher_requests (id, user_id, message) VALUES (?, ?, ?)').bind(newId(), user.id, message || 'Requested from the teachers page').run();
-  await audit(c.env.DB, user.id, 'teacher.request', user.id);
-  c.executionCtx.waitUntil(tellAdminsAboutTeacherRequest(c.env, appBase(c.req.url, c.env.APP_URL), user.name, user.email).catch((e) => console.error('[teacher-request:email]', e)));
-  return c.json({ status: 'pending' }, 201);
-});
 
 // ── Two-step login ─────────────────────────────────────────────────────────
 
@@ -185,6 +160,13 @@ account.get('/export', async (c) => {
     q('SELECT skill, mastery, attempts, correct, avg_ms, last_at FROM maths_skills WHERE user_id = ?'),
     q('SELECT unit_id, done, stars, completed_at FROM maths_progress WHERE user_id = ?'),
   ]);
+  const by = (sql: string) => c.env.DB.prepare(sql).bind(user.id).all().then((r) => r.results);
+  const [testAttempts, guardians, announcements, courseProgress] = await Promise.all([
+    by('SELECT t.title, a.status, a.answers, a.score, a.max_score, a.late, a.teacher_comment, a.started_at, a.submitted_at FROM test_attempts a JOIN teacher_tests t ON t.id = a.test_id WHERE a.student_id = ?'),
+    by('SELECT name, email, relation, unsubscribed_at, created_at FROM guardians WHERE student_id = ?'),
+    by('SELECT a.title, a.body, a.created_at, t.read_at FROM teacher_message_targets t JOIN teacher_messages a ON a.id = t.message_id WHERE t.student_id = ?'),
+    by('SELECT c.title AS course, l.title AS lesson, p.score, p.max_score, p.answers, p.done_at FROM teacher_lesson_progress p JOIN teacher_lessons l ON l.id = p.lesson_id JOIN teacher_courses c ON c.id = p.course_id WHERE p.student_id = ?'),
+  ]);
   const [progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests, zuvaProfile, zuvaMemories, zuvaChats] = await Promise.all([
     q('SELECT track_id, lesson_slug, status, completed_at, updated_at FROM progress WHERE user_id = ?'),
     q('SELECT kind, ref_id, track_id, passed, score, attempts, last_code, updated_at FROM activity WHERE user_id = ?'),
@@ -216,6 +198,8 @@ account.get('/export', async (c) => {
     },
     progress, activity, xp, goals, projects, capstones, submissions, certificates, exams, classes, messages, payments, teacherRequests,
     zuva: { profile: zuvaProfile[0] ?? null, memories: zuvaMemories, conversations: zuvaChats },
+    teacherWork: { tests: testAttempts, courseLessons: courseProgress, announcements },
+    parentContacts: guardians,
   };
   await audit(c.env.DB, user.id, 'account.exported', user.id);
   return new Response(JSON.stringify(data, null, 2), {
@@ -256,6 +240,9 @@ account.post('/delete', async (c) => {
     db.prepare('DELETE FROM esl_teacher_notes WHERE student_id = ?').bind(id),
     db.prepare('DELETE FROM test_attempts WHERE student_id = ?').bind(id),
     db.prepare('DELETE FROM teacher_test_targets WHERE student_id = ?').bind(id),
+    ...['guardians', 'teacher_message_targets', 'teacher_lesson_progress', 'teacher_course_learners', 'parent_reports'].map((t) => db.prepare(`DELETE FROM ${t} WHERE student_id = ?`).bind(id)),
+    // What they made as a teacher goes too (classes were already archived or handed over).
+    ...['teacher_courses', 'teacher_messages', 'parent_reports'].map((t) => db.prepare(`DELETE FROM ${t} WHERE teacher_id = ?`).bind(id)),
     db.prepare('DELETE FROM contact_messages WHERE email = ?').bind(user.email),
     db.prepare(
       `UPDATE users SET email = ?, name = 'Deleted account', password_hash = '!', city = NULL, school = NULL, bio = NULL,

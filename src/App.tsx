@@ -44,6 +44,15 @@ const TeachTests = lazy(() => import('@/pages/teacher/TeachTests'));
 const TeachTest = lazy(() => import('@/pages/teacher/TeachTest'));
 const TeachGradebook = lazy(() => import('@/pages/teacher/TeachGradebook'));
 const Teachers = lazy(() => import('@/pages/Teachers'));
+const TeachCourses = lazy(() => import('@/pages/teacher/TeachCourses'));
+const TeachCourse = lazy(() => import('@/pages/teacher/TeachCourse'));
+const TeachMessages = lazy(() => import('@/pages/teacher/TeachMessages'));
+const MyCourses = lazy(() => import('@/pages/student/MyCourses'));
+const MyCourse = lazy(() => import('@/pages/student/MyCourse'));
+const CourseLesson = lazy(() => import('@/pages/student/CourseLesson'));
+const Inbox = lazy(() => import('@/pages/student/Inbox'));
+const ParentReport = lazy(() => import('@/pages/ParentReport'));
+const Unsubscribe = lazy(() => import('@/pages/ParentReport').then((m) => ({ default: m.Unsubscribe })));
 const MyTests = lazy(() => import('@/pages/student/MyTests'));
 const TakeTest = lazy(() => import('@/pages/student/TakeTest'));
 const AdminHome = lazy(() => import('@/pages/admin/AdminHome'));
@@ -143,6 +152,8 @@ export default function App() {
           <Route path="careers/:careerId" element={<CareerDetail />} />
           <Route path="pricing" element={<Pricing />} />
           <Route path="teachers" element={<Teachers />} />
+          <Route path="parents/report/:token" element={<ParentReport />} />
+          <Route path="parents/unsubscribe/:token" element={<Unsubscribe />} />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="join/:code" element={<JoinTeacher />} />
           <Route path="verify" element={<Verify />} />
@@ -164,6 +175,10 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="tests" element={<MyTests />} />
             <Route path="tests/:id" element={<TakeTest />} />
+            <Route path="inbox" element={<Inbox />} />
+            <Route path="my-courses" element={<MyCourses />} />
+            <Route path="my-courses/:id" element={<MyCourse />} />
+            <Route path="my-courses/:id/:lessonId" element={<CourseLesson />} />
             <Route path="settings" element={<Settings />} />
             <Route path="certificates" element={<Certificates />} />
             <Route path="exam/:trackId" element={<Exam />} />
@@ -186,6 +201,9 @@ export default function App() {
             <Route path="teach/tests" element={<TeachTests />} />
             <Route path="teach/tests/:id" element={<TeachTest />} />
             <Route path="teach/gradebook" element={<TeachGradebook />} />
+            <Route path="teach/courses" element={<TeachCourses />} />
+            <Route path="teach/courses/:id" element={<TeachCourse />} />
+            <Route path="teach/messages" element={<TeachMessages />} />
           </Route>
           <Route element={<RequireRole roles={['admin']} />}>
             <Route path="admin/*" element={<AdminHome />} />

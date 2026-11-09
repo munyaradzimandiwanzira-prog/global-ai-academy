@@ -23,6 +23,8 @@ export const TOUR_STEPS: { target: string; title: string; body: string }[] = [
   { target: 'invites', title: 'Bring learners in', body: 'Make an invite link or code. Learners who join with it become your students, and can be added to a class straight away.' },
   { target: 'tests', title: 'Homework, tests and exams', body: 'Build a paper or pull questions from Cambridge Maths. Multiple choice, numbers and short answers are marked instantly. Zuva suggests marks for written answers from your rubric, and you confirm them.' },
   { target: 'gradebook', title: 'Every mark, recorded', body: 'The gradebook keeps every result, learner by learner, so you can track progress over the term and download it as a spreadsheet.' },
+  { target: 'courses', title: 'Build your own courses', body: 'Turn what you teach into a course: units, lessons with notes and video, and a quick check after each lesson that marks itself. Zuva can draft any lesson for you to edit.' },
+  { target: 'messages', title: 'Talk to learners and parents', body: 'Send an announcement to a class or chosen learners, and email their parents too. From any learner’s page you can send parents a progress report.' },
   { target: 'students', title: 'Each learner, in depth', body: 'Open any student to see their lessons, English and Maths mastery, test history and activity, and ask Zuva for a progress report with next steps.' },
   { target: 'plans', title: 'Lesson plans in minutes', body: 'Pick a course and lessons, and Zuva writes a timed lesson plan you can edit and reuse.' },
   { target: 'zuva', title: 'Your teaching assistant', body: 'Ask Zuva anything about your classes: who to help first, a homework task on loops, or a reteach of a question your class found hard.' },

@@ -9,6 +9,8 @@ export interface EmailMessage {
   subject: string;
   html: string;
   text: string;
+  /** One-click unsubscribe (RFC 8058) for messages that aren't about the recipient's own account. */
+  unsubscribeUrl?: string;
 }
 
 export function emailConfigured(env: Env): boolean {
@@ -34,6 +36,7 @@ export async function sendEmail(env: Env, msg: EmailMessage): Promise<boolean> {
       subject: msg.subject,
       htmlContent: msg.html,
       textContent: msg.text,
+      ...(msg.unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${msg.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
     }),
   });
   if (!res.ok) {
@@ -45,7 +48,7 @@ export async function sendEmail(env: Env, msg: EmailMessage): Promise<boolean> {
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 
-export function actionEmail(opts: { appName: string; name: string; heading: string; intro: string; cta: string; url: string; outro: string }) {
+export function actionEmail(opts: { appName: string; name: string; heading: string; intro: string; cta: string; url: string; outro: string; unsubscribeUrl?: string }) {
   const html = `<!doctype html><html><body style="margin:0;background:#F5F0E6;font-family:Inter,Arial,sans-serif;color:#142B52">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
   <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #E2D6BC">
@@ -54,10 +57,11 @@ export function actionEmail(opts: { appName: string; name: string; heading: stri
   <tr><td style="padding:28px">
     <p style="margin:0 0 8px;font-size:15px">Mhoroi / Salibonani ${esc(opts.name)},</p>
     <h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px">${esc(opts.heading)}</h1>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.6">${esc(opts.intro)}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;white-space:pre-line">${esc(opts.intro)}</p>
     <p style="margin:0 0 24px"><a href="${esc(opts.url)}" style="display:inline-block;background:#23807F;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:8px">${esc(opts.cta)}</a></p>
     <p style="margin:0;font-size:13px;color:#5b6577;line-height:1.6">${esc(opts.outro)}<br/>If the button does not work, paste this link into your browser:<br/><span style="word-break:break-all">${esc(opts.url)}</span></p>
+    ${opts.unsubscribeUrl ? `<p style="margin:16px 0 0;font-size:12px;color:#5b6577">Don’t want these emails? <a href="${esc(opts.unsubscribeUrl)}" style="color:#23807F">Unsubscribe</a>.</p>` : ''}
   </td></tr></table></td></tr></table></body></html>`;
-  const text = `Hi ${opts.name},\n\n${opts.heading}\n\n${opts.intro}\n\n${opts.cta}: ${opts.url}\n\n${opts.outro}\n\n— ${opts.appName}`;
+  const text = `Hi ${opts.name},\n\n${opts.heading}\n\n${opts.intro}\n\n${opts.cta}: ${opts.url}\n\n${opts.outro}\n\n— ${opts.appName}${opts.unsubscribeUrl ? `\n\nUnsubscribe: ${opts.unsubscribeUrl}` : ''}`;
   return { html, text };
 }

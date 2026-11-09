@@ -110,6 +110,9 @@ export const csrfMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   if (c.req.path === '/api/payments/paynow/result') return next();
   // The MCP endpoint is public, read-only and cookie-free; it does its own Origin check (DNS-rebinding defence).
   if (c.req.path === '/api/mcp') return next();
+  // One-click unsubscribe (RFC 8058): mail providers POST here without an Origin. The unguessable
+  // token is the only authority and the action only ever stops emails.
+  if (/^\/api\/messages\/unsubscribe\/[\w-]{16,}$/.test(c.req.path)) return next();
   const self = new URL(c.req.url).origin;
   const origin = c.req.header('origin') ?? refererOrigin(c.req.header('referer'));
   const allowed = new Set([self, new URL(c.env.APP_URL).origin]);

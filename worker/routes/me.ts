@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { createRouter, body, requireUser, requirePermission } from '../app';
 import { profileSchema, progressSchema, activitySchema, goalSchema, addTeacherSchema } from '@shared/schemas';
 import type { MyAssignment, MyTeacher } from '@shared/teaching';
@@ -73,17 +74,24 @@ me.patch('/profile', async (c) => {
   return c.json({ user: toPublicUser(fresh!) });
 });
 
+/** A signed-in learner asking to teach. An admin approves it before the teacher portal opens. */
+me.get('/teacher-request', async (c) => {
+  const user = requireUser(c);
+  const row = await c.env.DB.prepare('SELECT status, created_at FROM teacher_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').bind(user.id).first<{ status: string; created_at: string }>();
+  return c.json({ status: user.role === 'teacher' || user.role === 'admin' ? 'approved' : row?.status ?? 'none', requestedAt: row?.created_at ?? null });
+});
+
 me.post('/teacher-request', async (c) => {
   const user = requireUser(c);
-  if (user.role !== 'student') throw badRequest('You already have teaching access.');
-  const { message } = await c.req.json<{ message?: string }>().catch(() => ({ message: '' }));
-  const existing = await c.env.DB.prepare("SELECT 1 FROM teacher_requests WHERE user_id = ? AND status = 'pending'").bind(user.id).first();
-  if (existing) throw conflict('Your request is already waiting for review.');
-  await c.env.DB.prepare('INSERT INTO teacher_requests (id, user_id, message) VALUES (?, ?, ?)')
-    .bind(newId(), user.id, String(message ?? '').slice(0, 1000))
-    .run();
+  const { message } = await body(c, z.object({ message: z.string().trim().max(1000).default('') }));
+  if (user.role === 'teacher' || user.role === 'admin') throw conflict('You can already teach.');
+  await hit(c.env.DB, `teacher-request:${user.id}`, 3, 86_400, 'You’ve asked already today. We’ll be in touch.');
+  const pending = await c.env.DB.prepare("SELECT id FROM teacher_requests WHERE user_id = ? AND status = 'pending'").bind(user.id).first();
+  if (pending) return c.json({ status: 'pending' });
+  await c.env.DB.prepare('INSERT INTO teacher_requests (id, user_id, message) VALUES (?, ?, ?)').bind(newId(), user.id, message || 'Requested from the teachers page').run();
+  await audit(c.env.DB, user.id, 'teacher.request', user.id);
   c.executionCtx.waitUntil(tellAdminsAboutTeacherRequest(c.env, appBase(c.req.url, c.env.APP_URL), user.name, user.email).catch((e) => console.error('[teacher-request:email]', e)));
-  return c.json({ ok: true }, 201);
+  return c.json({ status: 'pending' }, 201);
 });
 
 // ── My teachers ────────────────────────────────────────────────────────────

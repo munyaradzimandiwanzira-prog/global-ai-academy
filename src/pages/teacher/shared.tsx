@@ -2,7 +2,7 @@ import { NavLink, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, Ticket, BookOpen, Sparkles, Wallet, GraduationCap, Eye, Quiz, Table } from '@/components/icons';
+import { LayoutDashboard, Users, Ticket, BookOpen, Sparkles, Wallet, GraduationCap, Eye, Quiz, Table, MenuBook, Campaign } from '@/components/icons';
 
 /**
  * An admin can open any teacher's portal with ?teacher=<id> and sees exactly what that teacher
@@ -36,6 +36,8 @@ const NAV = [
   { to: '/teach/invites', label: 'Invites', icon: Ticket },
   { to: '/teach/tests', label: 'Tests', icon: Quiz, tour: 'tests' },
   { to: '/teach/gradebook', label: 'Gradebook', icon: Table, tour: 'gradebook' },
+  { to: '/teach/courses', label: 'Courses', icon: MenuBook, tour: 'courses' },
+  { to: '/teach/messages', label: 'Messages', icon: Campaign, tour: 'messages' },
   { to: '/teach/plans', label: 'Lesson plans', icon: BookOpen },
   { to: '/teach/zuva', label: 'Ask Zuva', icon: Sparkles },
   { to: '/teach/wallet', label: 'Wallet', icon: Wallet },

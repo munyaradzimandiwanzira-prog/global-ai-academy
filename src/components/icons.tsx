@@ -181,6 +181,9 @@ export const ICONS = {
   Zap: 'bolt',
   TrendingDown: 'trending_down',
   Bedtime: 'bedtime',
+  MenuBook: 'menu_book',
+  ArrowDownward: 'arrow_downward',
+  RadioUnchecked: 'radio_button_unchecked',
   TaskAlt: 'task_alt',
   Hourglass: 'hourglass_top',
   Download: 'download',
@@ -213,6 +216,8 @@ export const Bell = icon(ICONS.Bell);
 export const Wallet = icon(ICONS.Wallet);
 export const BarChart = icon(ICONS.BarChart);
 export const Table = icon(ICONS.Table);
+export const MenuBook = icon(ICONS.MenuBook);
+export const Campaign = icon(ICONS.Campaign);
 export const TrendingUp = icon(ICONS.TrendingUp);
 export const Ticket = icon(ICONS.Ticket);
 export const Pencil = icon(ICONS.Pencil);

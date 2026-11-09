@@ -23,7 +23,7 @@ import { badRequest, forbidden, notFound } from '../lib/errors';
 import { hit } from '../lib/ratelimit';
 import { chatJson } from '../lib/openai';
 import { asData } from '../lib/prompts';
-import { isTeacher, notify } from '../lib/teaching';
+import { isTeacher, notify, resolveAudience } from '../lib/teaching';
 
 const tests = createRouter();
 
@@ -93,19 +93,7 @@ tests.post('/:id/publish', async (c) => {
   const p = await body(c, publishSchema);
   const db = c.env.DB;
   if (!questionsOf(t).length) throw badRequest('Add at least one question first.');
-  let ids: string[] = [];
-  if (p.classroomId) {
-    const cls = await db.prepare('SELECT id FROM classrooms WHERE id = ? AND teacher_id = ?').bind(p.classroomId, t.teacher_id).first();
-    if (!cls) throw notFound('Class not found.');
-    ids = (await db.prepare('SELECT user_id FROM classroom_members WHERE classroom_id = ?').bind(p.classroomId).all<{ user_id: string }>()).results.map((r) => r.user_id);
-  }
-  if (p.studentIds.length) {
-    const mine = (await db.prepare(`SELECT student_id FROM teacher_students WHERE teacher_id = ? AND student_id IN (${p.studentIds.map(() => '?').join(',')})`).bind(t.teacher_id, ...p.studentIds).all<{ student_id: string }>()).results.map((r) => r.student_id);
-    if (mine.length !== new Set(p.studentIds).size) throw forbidden('You can only set work for your own learners.');
-    ids.push(...mine);
-  }
-  ids = [...new Set(ids)];
-  if (!ids.length) throw badRequest('That class has no learners yet.');
+  const ids = await resolveAudience(db, t.teacher_id, p.classroomId, p.studentIds);
   await db.batch([
     db.prepare('UPDATE teacher_tests SET classroom_id = COALESCE(?, classroom_id), due_at = ?, published_at = COALESCE(published_at, ?), updated_at = ? WHERE id = ?').bind(p.classroomId ?? null, p.dueAt ?? null, nowIso(), nowIso(), t.id),
     ...ids.map((sid) => db.prepare('INSERT OR IGNORE INTO teacher_test_targets (test_id, student_id) VALUES (?, ?)').bind(t.id, sid)),

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { AssignForm } from './AssignForm';
 import { EslPanel, MathsPanel } from './EslPanel';
 import { StatusChip, TeachNav, firstName, lastSeen, shortDate, useTeacherScope } from './shared';
+import { ParentsPanel } from './Parents';
 
 export default function TeachStudent() {
   const { id = '' } = useParams();
@@ -113,6 +114,8 @@ export default function TeachStudent() {
               </details>
             )}
           </section>
+
+          <ParentsPanel studentId={id} learnerName={firstName(s.name)} readOnly={readOnly} />
 
           <section className="card overflow-hidden" aria-labelledby="work">
             <h2 id="work" className="border-b border-border px-5 py-3 font-display text-lg font-semibold">Work you set</h2>

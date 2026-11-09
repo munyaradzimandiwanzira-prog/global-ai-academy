@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import type { PublicUser } from '@shared/api-types';
 import { PLANS } from '@shared/config';
 import type { Level } from '@shared/content';
+import { GuardianList } from '@/pages/teacher/Parents';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Field, Input, PageHeader, Select, Textarea } from '@/components/ui';
@@ -84,6 +85,12 @@ export default function Settings() {
               <tbody>{payments.data.payments.map((p) => <tr key={p.id} className="border-t border-border"><td className="py-2">{formatDate(p.created_at)}</td><td className="capitalize">{p.plan} · {p.period}</td><td>${(p.amount_cents / 100).toFixed(2)}</td><td className="capitalize">{p.status}</td></tr>)}</tbody>
             </table>
           ) : null}
+        </section>
+
+        <section id="parents" className="card scroll-mt-24 p-6">
+          <h2 className="font-display text-xl font-semibold">Parents and guardians</h2>
+          <p className="mb-3 mt-1 text-sm text-muted-fg">People you add get your teachers’ class announcements and progress reports by email. They can unsubscribe at any time, and you can remove them here.</p>
+          <GuardianList studentId="me" />
         </section>
 
         {user.role === 'student' && (

@@ -4,23 +4,23 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { Question, TestResults } from '@shared/tests';
 import { MATHS_UNITS } from '@shared/maths';
-import type { Classroom } from '@shared/api-types';
 import { api, errorMessage } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Dialog, Field, Input, PageHeader, PageLoader, Select, Textarea } from '@/components/ui';
 import { ArrowLeft, Check, MaterialIcon, Plus, Trash2 } from '@/components/icons';
 import { Visual } from '@/features/maths/Visual';
 import { TeachNav, shortDate } from './shared';
+import { LearnerPicker, audienceBody, audienceReady, emptyAudience, type Audience } from './LearnerPicker';
 
 type Tab = 'questions' | 'results';
-const blank = (type: Question['type'], n: number): Question =>
+export const blank = (type: Question['type'], n: number): Question =>
   type === 'mcq' ? { id: `q${n}`, type, q: '', options: ['', ''], answer: 0, marks: 1 }
     : type === 'numeric' ? { id: `q${n}`, type, q: '', answer: '', marks: 1 }
       : type === 'short' ? { id: `q${n}`, type, q: '', accept: [''], marks: 1 }
         : { id: `q${n}`, type, q: '', rubric: '', marks: 3 };
-const TYPE_LABEL = { mcq: 'Multiple choice', numeric: 'Number', short: 'Short answer', long: 'Written answer' } as const;
+export const TYPE_LABEL = { mcq: 'Multiple choice', numeric: 'Number', short: 'Short answer', long: 'Written answer' } as const;
 
-function QuestionEditor({ x, i, onChange, onRemove, locked }: { x: Question; i: number; onChange: (q: Question) => void; onRemove: () => void; locked: boolean }) {
+export function QuestionEditor({ x, i, onChange, onRemove, locked }: { x: Question; i: number; onChange: (q: Question) => void; onRemove: () => void; locked: boolean }) {
   return (
     <li className="card space-y-3 p-4">
       <div className="flex items-center justify-between gap-2">
@@ -139,13 +139,13 @@ export default function TeachTest() {
   const { id = '' } = useParams();
   const qc = useQueryClient();
   const r = useQuery({ queryKey: ['teach-test', id], queryFn: () => api.get<TestResults>(`/api/tests/${id}`) });
-  const classes = useQuery({ queryKey: ['classes'], queryFn: () => api.get<{ teaching: Classroom[] }>('/api/classrooms') });
   const [tab, setTab] = useState<Tab>('questions');
   const [qs, setQs] = useState<Question[]>([]);
   const [meta, setMeta] = useState({ title: '', instructions: '', timeLimitMin: '' as string, showAnswers: true, kind: 'test' as 'homework' | 'test' | 'exam' });
   const [publishOpen, setPublishOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [pub, setPub] = useState({ classroomId: '', dueAt: '' });
+  const [aud, setAud] = useState<Audience>(emptyAudience);
+  const [dueAt, setDueAt] = useState('');
   const [imp, setImp] = useState({ unitId: MATHS_UNITS[0]!.id, count: 8 });
   const [marking, setMarking] = useState<string | null>(null);
   useEffect(() => {
@@ -162,7 +162,7 @@ export default function TeachTest() {
     onError: (e) => toast.error(errorMessage(e)),
   });
   const publish = useMutation({
-    mutationFn: async () => { await save.mutateAsync(); return api.post<{ assigned: number }>(`/api/tests/${id}/publish`, { classroomId: pub.classroomId || null, studentIds: [], dueAt: pub.dueAt ? new Date(pub.dueAt).toISOString() : null }); },
+    mutationFn: async () => { await save.mutateAsync(); return api.post<{ assigned: number }>(`/api/tests/${id}/publish`, { ...audienceBody(aud), dueAt: dueAt ? new Date(dueAt).toISOString() : null }); },
     onSuccess: (x) => { toast.success(`Set for ${x.assigned} learners. They’ve been told.`); setPublishOpen(false); void qc.invalidateQueries({ queryKey: ['teach-test', id] }); },
     onError: (e) => toast.error(errorMessage(e)),
   });
@@ -210,9 +210,9 @@ export default function TeachTest() {
       {marking && <MarkDialog testId={id} attemptId={marking} onClose={() => setMarking(null)} />}
       <Dialog open={publishOpen} onOpenChange={setPublishOpen} title="Set this for learners" description="Learners get a notification and an email with the link.">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); publish.mutate(); }}>
-          <Field label="Class" htmlFor="pc"><Select id="pc" value={pub.classroomId} onChange={(e) => setPub({ ...pub, classroomId: e.target.value })}><option value="">Choose a class</option>{(classes.data?.teaching ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
-          <Field label="Due (optional)" htmlFor="pd"><Input id="pd" type="datetime-local" value={pub.dueAt} onChange={(e) => setPub({ ...pub, dueAt: e.target.value })} /></Field>
-          <button className="btn-primary w-full" disabled={!pub.classroomId || publish.isPending} aria-busy={publish.isPending || undefined}><MaterialIcon name="send" /> Set it</button>
+          <LearnerPicker value={aud} onChange={setAud} />
+          <Field label="Due (optional)" htmlFor="pd"><Input id="pd" type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></Field>
+          <button className="btn-primary w-full" disabled={!audienceReady(aud) || publish.isPending} aria-busy={publish.isPending || undefined}><MaterialIcon name="send" /> Set it</button>
         </form>
       </Dialog>
       <Dialog open={importOpen} onOpenChange={setImportOpen} title="Questions from Cambridge Maths" description="Fresh questions from a unit's generators: every answer is correct, so nothing needs checking except whether they suit your class.">

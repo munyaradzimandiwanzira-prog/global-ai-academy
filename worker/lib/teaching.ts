@@ -202,3 +202,26 @@ export async function walletBalance(db: D1Database, teacherId: string) {
   return { balanceCents: r?.balance ?? 0, earnedCents: r?.earned ?? 0, paidOutCents: r?.paid_out ?? 0 };
 }
 
+
+/**
+ * Who receives something a teacher sends: a class they teach, and/or learners linked to them.
+ * Throws if any chosen learner isn't theirs, so nothing is sent to a stranger.
+ */
+export async function resolveAudience(db: D1Database, teacherId: string, classroomId: string | null | undefined, studentIds: string[]): Promise<string[]> {
+  let ids: string[] = [];
+  if (classroomId) {
+    const cls = await db.prepare('SELECT id FROM classrooms WHERE id = ? AND teacher_id = ?').bind(classroomId, teacherId).first();
+    if (!cls) throw notFound('Class not found.');
+    ids = (await db.prepare('SELECT user_id FROM classroom_members WHERE classroom_id = ?').bind(classroomId).all<{ user_id: string }>()).results.map((r) => r.user_id);
+  }
+  const want = [...new Set(studentIds)];
+  for (let i = 0; i < want.length; i += 80) {
+    const part = want.slice(i, i + 80);
+    const mine = (await db.prepare(`SELECT student_id FROM teacher_students WHERE teacher_id = ? AND student_id IN (${part.map(() => '?').join(',')})`).bind(teacherId, ...part).all<{ student_id: string }>()).results.map((r) => r.student_id);
+    if (mine.length !== part.length) throw forbidden('You can only send to your own learners.');
+    ids.push(...mine);
+  }
+  ids = [...new Set(ids)];
+  if (!ids.length) throw badRequest(classroomId ? 'That class has no learners yet.' : 'Choose at least one learner.');
+  return ids;
+}

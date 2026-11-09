@@ -20,13 +20,15 @@ const FEATURES: { symbol: SymbolName; title: string; text: string }[] = [
   { symbol: 'auto_awesome', title: 'Zuva, your teaching assistant', text: 'Ask who to help first, get a timed lesson plan from any course, or turn a question your class got wrong into a 20-minute reteach.' },
   { symbol: 'timer', title: 'Timed tests and exams', text: 'Set a time limit and due date. Answers save as learners go and hand in automatically when time runs out.' },
   { symbol: 'calculate', title: 'Cambridge Maths question bank', text: 'Pull fresh questions from 36 units across Stages 1 to 6, each with a correct answer, pictures where they help, and no checking to do.' },
+  { symbol: 'menu_book', title: 'Your own courses', text: 'Write units and lessons with notes, video and a self-marking check, or let Zuva draft a lesson for you to edit. Share with a class and see who is keeping up.' },
+  { symbol: 'campaign', title: 'Parents in the loop', text: 'Email class announcements to parents as well as learners, and send each family a clear progress report written from real marks.' },
   { symbol: 'notifications', title: 'Nothing slips', text: 'See who hasn’t handed in, who has gone quiet, who is rushing through answers and who joined but never started.' },
 ];
 
 function RequestButton() {
   const qc = useQueryClient();
-  const r = useQuery({ queryKey: ['teacher-request'], queryFn: () => api.get<{ status: 'none' | 'pending' | 'approved' | 'rejected' }>('/api/account/teacher-request') });
-  const ask = useMutation({ mutationFn: () => api.post('/api/account/teacher-request', {}), onSuccess: () => { toast.success('Request sent. We’ll email you when your portal is open.'); void qc.invalidateQueries({ queryKey: ['teacher-request'] }); }, onError: (e) => toast.error(errorMessage(e)) });
+  const r = useQuery({ queryKey: ['teacher-request'], queryFn: () => api.get<{ status: 'none' | 'pending' | 'approved' | 'rejected' }>('/api/me/teacher-request') });
+  const ask = useMutation({ mutationFn: () => api.post('/api/me/teacher-request', {}), onSuccess: () => { toast.success('Request sent. We’ll email you when your portal is open.'); void qc.invalidateQueries({ queryKey: ['teacher-request'] }); }, onError: (e) => toast.error(errorMessage(e)) });
   if (r.data?.status === 'approved') return <Link to="/teach" className="btn-gold btn-lg">Open your teaching portal</Link>;
   if (r.data?.status === 'pending') return <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 font-semibold" role="status"><MaterialIcon name="hourglass_top" /> Request received. We’ll email you.</p>;
   return <button type="button" className="btn-gold btn-lg" onClick={() => ask.mutate()} disabled={ask.isPending || r.isLoading} aria-busy={ask.isPending || undefined}>Ask to teach</button>;
