@@ -20,7 +20,7 @@ const COLUMNS: { title: string; links: [string, string][] }[] = [
   },
   {
     title: 'About',
-    links: [['/about', 'About us'], ['/contact', 'Contact'], ['/privacy', 'Privacy'], ['/terms', 'Terms']],
+    links: [['/about', 'About us'], ['/contact', 'Contact'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['/credits', 'Credits']],
   },
 ];
 

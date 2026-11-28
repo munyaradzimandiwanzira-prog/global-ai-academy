@@ -125,7 +125,7 @@ The guesses are random because the weights are random. Training is the process o
 9. A **debugging** toolkit for networks that won't learn
 10. A **digit recogniser** trained in your browser
 
-> **Credit.** This track is adapted, rewritten and extended for Skuru from Phase 3 of *[AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch)* by Rohit Ghumare (MIT License). See [Credits & licenses](/credits).
+> **Credit.** This track is adapted, rewritten and extended from Phase 3 of *[AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch)* by Rohit Ghumare (MIT License). See [Credits & licenses](/credits).
 
 ```quiz
 - q: In a layer, the input has shape (32, 64) and the weights have shape (64, 16). What is the output shape?

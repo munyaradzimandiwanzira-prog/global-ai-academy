@@ -165,6 +165,7 @@ export default function App() {
           <Route path="about" element={<About />} />
           <Route path="privacy" element={<Legal kind="privacy" />} />
           <Route path="terms" element={<Legal kind="terms" />} />
+          <Route path="credits" element={<Legal kind="credits" />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="forgot-password" element={<Forgot />} />

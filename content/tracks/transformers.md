@@ -113,7 +113,7 @@ A bigram model only looks one word back. A transformer looks back over thousands
 - **[Deep Learning from Scratch](/learn/deep-learning)**: layers, softmax, cross-entropy, backpropagation and Adam
 - Comfort with NumPy arrays and matrix shapes
 
-> **Credit.** This track is adapted, rewritten and extended for Skuru from Phases 7 and 10 of *[AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch)* by Rohit Ghumare (MIT License). See [Credits & licenses](/credits).
+> **Credit.** This track is adapted, rewritten and extended from Phases 7 and 10 of *[AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch)* by Rohit Ghumare (MIT License). See [Credits & licenses](/credits).
 
 ```quiz
 - q: What does a language model predict at each step?
