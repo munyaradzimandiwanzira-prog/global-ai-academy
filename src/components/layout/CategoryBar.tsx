@@ -36,7 +36,7 @@ export function CategoryBar() {
   const current: MenuId | 'kids' | 'start' | undefined =
     path.startsWith('/cambridge') ? 'cambridge'
       : path.startsWith('/kids') ? 'kids'
-        : path.startsWith('/learn/start-here') ? 'start'
+        : path === '/start' || path.startsWith('/learn/start-here') ? 'start'
           : path.startsWith('/learn/') ? menuOfTrack(menus, path.split('/')[2] ?? '')
             : undefined;
 
@@ -80,7 +80,7 @@ export function CategoryBar() {
             <MaterialIcon name="child_care" className="text-[20px] leading-none" />
             Kids Zone
           </Link>
-          <Link to={lessonPath('start-here')} className={stone(current === 'start')} aria-current={current === 'start' ? 'page' : undefined}>
+          <Link to="/start" className={stone(current === 'start')} aria-current={current === 'start' ? 'page' : undefined}>
             <MaterialIcon name="flag" className="text-[20px] leading-none" />
             Start here
           </Link>
