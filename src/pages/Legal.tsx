@@ -65,11 +65,58 @@ Certificates confirm that you passed an online exam on the Academy. We may revok
 We may update these terms; we’ll announce significant changes on the site.
 `;
 
-export default function Legal({ kind }: { kind: 'privacy' | 'terms' }) {
+
+const CREDITS = `
+${SITE.name} builds on open educational material. We are grateful to the authors below. Where we adapt their work, we rewrite it in our own voice, port the code to run in your browser, and add our own examples, exercises and tests.
+
+## AI Engineering from Scratch
+
+Parts of these tracks are adapted, rewritten and extended from *[AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch)* by Rohit Ghumare:
+
+| Track | Adapted from |
+|---|---|
+| [Deep Learning from Scratch](/learn/deep-learning) | Phase 3: Deep Learning Core |
+| [Transformers & Tiny LLMs](/learn/transformers) | Phase 7: Transformers Deep Dive and Phase 10: LLMs from Scratch |
+| [Machine Learning](/learn/machine-learning): trees, boosting, KNN and SVMs, tuning, imbalanced data, anomaly detection | Phase 2: ML Fundamentals |
+
+Its license:
+
+> MIT License
+>
+> Copyright (c) 2026 Rohit Ghumare
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
+
+The rest of the lesson content is © ${SITE.name}.
+`;
+
+const PAGES = {
+  privacy: { title: 'Privacy policy', body: PRIVACY },
+  terms: { title: 'Terms of use', body: TERMS },
+  credits: { title: 'Credits & licenses', body: CREDITS },
+} as const;
+
+export default function Legal({ kind }: { kind: keyof typeof PAGES }) {
   return (
     <div className="container max-w-3xl py-12">
-      <h1 className="mb-6 text-4xl font-bold">{kind === 'privacy' ? 'Privacy policy' : 'Terms of use'}</h1>
-      <Markdown>{kind === 'privacy' ? PRIVACY : TERMS}</Markdown>
+      <h1 className="mb-6 text-4xl font-bold">{PAGES[kind].title}</h1>
+      <Markdown>{PAGES[kind].body}</Markdown>
     </div>
   );
 }

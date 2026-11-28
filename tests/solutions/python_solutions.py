@@ -563,3 +563,91 @@ def triage(alerts, severity, privileged):
         return decision
 ''',
 })
+
+# Deep Learning from Scratch
+SOLUTIONS.update({
+    "dl-cross-entropy": (
+        "import numpy as np\n"
+        "def cross_entropy(logits, labels):\n"
+        "    shifted = logits - logits.max(axis=1, keepdims=True)\n"
+        "    log_probs = shifted - np.log(np.exp(shifted).sum(axis=1, keepdims=True))\n"
+        "    return float(-log_probs[np.arange(len(labels)), labels].mean())"
+    ),
+    "dl-adam-step": (
+        "import numpy as np\n"
+        "def adam_step(w, g, m, v, t, lr=0.001, b1=0.9, b2=0.999, eps=1e-8):\n"
+        "    m = b1 * m + (1 - b1) * g\n"
+        "    v = b2 * v + (1 - b2) * g ** 2\n"
+        "    m_hat = m / (1 - b1 ** t)\n"
+        "    v_hat = v / (1 - b2 ** t)\n"
+        "    return w - lr * m_hat / (np.sqrt(v_hat) + eps), m, v"
+    ),
+    "dl-layer-norm": (
+        "import numpy as np\n"
+        "def layer_norm(x, gamma, beta, eps=1e-5):\n"
+        "    mean = x.mean(axis=1, keepdims=True)\n"
+        "    var = x.var(axis=1, keepdims=True)\n"
+        "    return (x - mean) / np.sqrt(var + eps) * gamma + beta"
+    ),
+})
+
+# Transformers & Tiny LLMs
+SOLUTIONS.update({
+    "tf-bpe-pair": (
+        "def most_common_pair(tokens):\n"
+        "    counts, first = {}, []\n"
+        "    for pair in zip(tokens, tokens[1:]):\n"
+        "        if pair not in counts:\n"
+        "            counts[pair] = 0\n"
+        "            first.append(pair)\n"
+        "        counts[pair] += 1\n"
+        "    if not first:\n"
+        "        return None\n"
+        "    return max(first, key=lambda p: counts[p])"
+    ),
+    "tf-attention": (
+        "import numpy as np\n"
+        "def attention(Q, K, V, causal=False):\n"
+        "    scores = Q @ K.T / np.sqrt(Q.shape[1])\n"
+        "    if causal:\n"
+        "        scores = scores + np.triu(np.full(scores.shape, -1e9), k=1)\n"
+        "    scores = scores - scores.max(axis=1, keepdims=True)\n"
+        "    w = np.exp(scores)\n"
+        "    w = w / w.sum(axis=1, keepdims=True)\n"
+        "    return w @ V"
+    ),
+    "tf-top-p": (
+        "import numpy as np\n"
+        "def top_p(probs, p):\n"
+        "    order = np.argsort(probs)[::-1]\n"
+        "    cum = np.cumsum(probs[order])\n"
+        "    n = int(np.searchsorted(cum, p - 1e-12)) + 1\n"
+        "    keep = order[:n]\n"
+        "    out = np.zeros_like(probs, dtype=float)\n"
+        "    out[keep] = probs[keep]\n"
+        "    return out / out.sum()"
+    ),
+})
+
+# Machine Learning additions
+SOLUTIONS.update({
+    "ml-gini": (
+        "from collections import Counter\n"
+        "def gini(labels):\n"
+        "    n = len(labels)\n"
+        "    if n == 0:\n"
+        "        return 0.0\n"
+        "    return 1 - sum((c / n) ** 2 for c in Counter(labels).values())"
+    ),
+    "ml-threshold": (
+        "def best_threshold(y_true, scores, cost_fn, cost_fp):\n"
+        "    best = None\n"
+        "    for t in sorted(set(scores), reverse=True):\n"
+        "        fn = sum(1 for y, s in zip(y_true, scores) if y == 1 and s < t)\n"
+        "        fp = sum(1 for y, s in zip(y_true, scores) if y == 0 and s >= t)\n"
+        "        cost = fn * cost_fn + fp * cost_fp\n"
+        "        if best is None or cost < best[0]:\n"
+        "            best = (cost, t)\n"
+        "    return best[1]"
+    ),
+})

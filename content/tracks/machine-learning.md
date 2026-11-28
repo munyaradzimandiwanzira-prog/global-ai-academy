@@ -8,8 +8,8 @@ language: python
 color: "#F7931E"
 icon: "🧮"
 order: 41
-summary: Build real models with scikit-learn — right in your browser. Regression, classification, evaluation, feature engineering, clustering, pipelines and an end-to-end crop-yield project.
-tags: [machine learning, scikit-learn, python, regression, classification, ml]
+summary: Build real models with scikit-learn — right in your browser. Regression, classification, evaluation, feature engineering, decision trees and random forests, gradient boosting, KNN and SVMs, hyperparameter tuning, imbalanced data, clustering, anomaly detection and an end-to-end crop-yield project.
+tags: [machine learning, scikit-learn, python, regression, classification, ml, random forest, xgboost, gradient boosting, svm, knn, anomaly detection, imbalanced data, hyperparameter tuning]
 ---
 
 # The Machine Learning Workflow {#workflow}
@@ -371,6 +371,521 @@ print(f"Estimated price: ${model.predict(new_house)[0]:.0f}k")
 
 > **Data leakage** is when information from the test set (or the future) sneaks into training — for example, scaling using the whole dataset before splitting. Pipelines prevent most leakage because they learn preprocessing from training data only.
 
+# Decision Trees and Random Forests {#trees}
+
+A **decision tree** predicts by asking yes/no questions, like a loan officer working through a checklist: *Is monthly income above $300? Has the customer missed more than two payments?* Each answer leads to another question until a **leaf** gives the prediction.
+
+```sketch
+title: "A small loan decision tree"
+caption: "Each split asks one question about one feature. Training picks the questions that best separate the people who repaid from those who didn't."
+cellW: 190
+cellH: 100
+nodes:
+  - id: root
+    label: "Income > $300?"
+    col: 1
+    row: 0
+    shape: diamond
+    tone: gold
+  - id: missed
+    label: "Missed > 2 payments?"
+    col: 0
+    row: 1.3
+    shape: diamond
+    tone: gold
+  - id: yes1
+    label: "Repays"
+    sub: "92% of 180"
+    col: 2
+    row: 1.3
+    shape: pill
+    tone: teal
+  - id: no
+    label: "Defaults"
+    sub: "81% of 60"
+    col: -0.5
+    row: 2.6
+    shape: pill
+    tone: rose
+  - id: yes2
+    label: "Repays"
+    sub: "70% of 90"
+    col: 0.6
+    row: 2.6
+    shape: pill
+    tone: teal
+edges:
+  - from: root
+    to: missed
+    label: "no"
+  - from: root
+    to: yes1
+    label: "yes"
+  - from: missed
+    to: no
+    label: "yes"
+  - from: missed
+    to: yes2
+    label: "no"
+```
+
+## How a tree picks its questions
+
+At each step the tree tries every feature and every threshold, and keeps the split that makes the two groups **purest**. Purity is usually measured with **Gini impurity**: the chance that two random people from the group have different labels. A group that all repaid has Gini 0; a 50/50 group has Gini 0.5.
+
+```python run title="Find the best first question"
+import numpy as np
+
+income = np.array([120, 450, 300, 800, 210, 650, 90, 520, 380, 150])   # USD per month
+missed = np.array([4, 0, 1, 0, 3, 1, 5, 0, 2, 3])                      # missed payments last year
+repaid = np.array([0, 1, 1, 1, 0, 1, 0, 1, 1, 0])
+
+def gini(labels):
+    if len(labels) == 0:
+        return 0.0
+    p = labels.mean()
+    return 1 - p ** 2 - (1 - p) ** 2
+
+def best_split(feature, labels):
+    best = (None, 1.0)
+    for t in np.unique(feature):
+        left, right = labels[feature <= t], labels[feature > t]
+        score = (len(left) * gini(left) + len(right) * gini(right)) / len(labels)   # weighted impurity
+        if score < best[1]:
+            best = (t, score)
+    return best
+
+print("impurity before splitting:", round(gini(repaid), 3))
+for name, col in [("income", income), ("missed payments", missed)]:
+    t, score = best_split(col, repaid)
+    print(f"best split on {name:16} <= {t:4}: impurity after = {score:.3f}")
+```
+
+Both features separate this tiny dataset perfectly, so either could be the first question. On real data the tree keeps splitting each group the same way until a stopping rule (maximum depth, minimum samples per leaf) says stop.
+
+## Trees in scikit-learn
+
+```python run title="A readable tree, and an overgrown one"
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text
+
+data = load_breast_cancer()
+X_tr, X_te, y_tr, y_te = train_test_split(data.data, data.target, test_size=0.3, random_state=0, stratify=data.target)
+
+small = DecisionTreeClassifier(max_depth=2, random_state=0).fit(X_tr, y_tr)
+print(export_text(small, feature_names=list(data.feature_names)))
+
+for depth in [2, 4, None]:
+    tree = DecisionTreeClassifier(max_depth=depth, random_state=0).fit(X_tr, y_tr)
+    print(f"max_depth={str(depth):4}  leaves {tree.get_n_leaves():3}  train {tree.score(X_tr, y_tr):.0%}  test {tree.score(X_te, y_te):.1%}")
+```
+
+Going deeper takes training accuracy to 100% but buys nothing on the test set: the extra leaves only memorise training examples. A single tree overfits easily, and that is its main weakness.
+
+## Random forests: many trees vote
+
+A **random forest** trains hundreds of trees, each on a random sample of the rows (drawn with replacement, called **bagging**) and each split choosing from a random subset of the features. Every tree overfits in its own way; averaging their votes cancels much of the noise.
+
+```python run title="One tree versus a forest"
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeClassifier
+
+data = load_breast_cancer()
+X, y = data.data, data.target
+for name, model in [("one tree", DecisionTreeClassifier(random_state=0)),
+                    ("random forest (200 trees)", RandomForestClassifier(n_estimators=200, random_state=0))]:
+    scores = cross_val_score(model, X, y, cv=5)
+    print(f"{name:26} accuracy {scores.mean():.1%} ± {scores.std():.1%}")
+
+forest = RandomForestClassifier(n_estimators=200, random_state=0).fit(X, y)
+top = forest.feature_importances_.argsort()[::-1][:4]
+print("\nmost useful features:")
+for i in top:
+    print(f"  {data.feature_names[i]:22} {forest.feature_importances_[i]:.3f}")
+```
+
+| Choose trees or forests when… | Choose a neural network when… |
+|---|---|
+| Data is a table of a few hundred to a few million rows | Data is images, audio or free text |
+| Features mix numbers and categories | You have a lot of data and a GPU |
+| You need to explain decisions (a single tree) | Patterns are built from raw signals |
+
+````challenge
+id: ml-gini
+title: Gini impurity
+difficulty: easy
+prompt: |
+  Write `gini(labels)` for a list of class labels (any number of classes). Gini impurity is `1 − Σ pₖ²`, where `pₖ` is the share of labels in class *k*. Return `0.0` for an empty list. Round nothing.
+starter: |
+  def gini(labels):
+      pass
+
+  print(gini(["repaid", "repaid", "default", "repaid"]))
+tests: |
+  assert gini(["a", "a", "a"]) == 0.0
+  assert abs(gini(["repaid", "repaid", "default", "repaid"]) - 0.375) < 1e-9
+  assert abs(gini([0, 1, 2]) - (1 - 3 * (1 / 3) ** 2)) < 1e-9, "It must work for more than two classes"
+  assert gini([]) == 0.0
+````
+
+```quiz
+- q: Why does an unlimited-depth decision tree score 100% on training data?
+  options: ["It is a perfect model", "It keeps splitting until it memorises every training example", "Trees can't overfit", "It uses the test data"]
+  answer: 1
+- q: What makes the trees in a random forest different from one another?
+  options: ["Each sees a random sample of rows and random subsets of features", "They use different labels", "Each is trained on the test set", "They have different loss functions"]
+  answer: 0
+```
+
+# Gradient Boosting {#boosting}
+
+A random forest builds trees **independently** and averages them. **Boosting** builds trees **one after another**, each one trying to fix the mistakes the previous trees still make. On tabular data, gradient boosting (XGBoost, LightGBM, CatBoost) wins more competitions and powers more production models than any other method.
+
+## Boosting from scratch
+
+For regression, "fixing mistakes" means fitting each new small tree to the **residuals**: how far off the current prediction is. Each tree's prediction is added in, scaled down by a **learning rate** so no single tree dominates.
+
+```python run title="Gradient boosting in a dozen lines"
+import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+rng = np.random.default_rng(0)
+rain = rng.uniform(300, 1000, 300)                                     # mm per season
+yield_t = 0.5 + 3 * np.sin((rain - 300) / 300) + rng.normal(0, 0.3, 300)   # a curved relationship
+X = rain.reshape(-1, 1)
+
+prediction = np.full_like(yield_t, yield_t.mean())                      # start from the average
+lr, trees = 0.3, []
+for step in range(1, 31):
+    residual = yield_t - prediction                                     # what is still wrong
+    tree = DecisionTreeRegressor(max_depth=2).fit(X, residual)          # a small tree learns it
+    prediction += lr * tree.predict(X)
+    trees.append(tree)
+    if step in (1, 3, 10, 30):
+        print(f"after {step:2} trees: average error {np.abs(yield_t - prediction).mean():.3f} t/ha")
+```
+
+Each tree is weak (just two levels of questions), but 30 of them added together fit a curve no single small tree could. The name **gradient** boosting comes from the fact that residuals are the gradient of squared error; other losses (like log-loss for classification) plug into the same loop.
+
+## Boosting in practice
+
+```python run title="Forest versus boosting versus a linear model"
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+X, y = load_breast_cancer(return_X_y=True)
+models = {
+    "logistic regression": make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)),
+    "random forest": RandomForestClassifier(n_estimators=200, random_state=0),
+    "gradient boosting": HistGradientBoostingClassifier(learning_rate=0.1, max_iter=200, random_state=0),
+}
+for name, model in models.items():
+    scores = cross_val_score(model, X, y, cv=5)
+    print(f"{name:20} {scores.mean():.1%} ± {scores.std():.1%}")
+```
+
+On this small, clean dataset all three are close, and a well-scaled linear model holds its own. Always compare against a simple baseline. Boosting's lead grows on larger, messier tables with non-linear interactions.
+
+| Setting | What it does | Typical start |
+|---|---|---|
+| `learning_rate` | How much each tree adds | 0.05–0.1 |
+| `n_estimators` / `max_iter` | How many trees | 100–1,000 with early stopping |
+| `max_depth` / `max_leaf_nodes` | How complex each tree is | Depth 3–8 |
+| Early stopping | Stop when validation score stops improving | Always on for large data |
+
+A smaller learning rate with more trees almost always generalises better, at the cost of training time.
+
+| Library | Known for |
+|---|---|
+| **XGBoost** | The library that made boosting famous; very configurable |
+| **LightGBM** | Very fast on large data; grows trees leaf by leaf |
+| **CatBoost** | Handles text categories (district, crop type) without manual encoding |
+| **HistGradientBoosting** (scikit-learn) | LightGBM-style speed, built in, runs in this browser |
+
+```quiz
+- q: How does boosting differ from a random forest?
+  options: ["Boosting trains trees one after another, each fixing earlier mistakes", "Boosting uses only one tree", "Boosting can't do regression", "Boosting trains trees on the test set"]
+  answer: 0
+- q: In gradient boosting for regression, what does each new tree learn?
+  options: ["The original targets", "The residuals the current model still gets wrong", "Random noise", "The feature names"]
+  answer: 1
+```
+
+# k-Nearest Neighbours and Support Vector Machines {#knn-svm}
+
+Two classic methods that think about **distance and geometry** rather than questions or equations.
+
+## k-nearest neighbours
+
+**KNN** stores the training data and, for a new point, looks at the *k* closest examples and takes a vote (or an average, for regression). There is no training step at all.
+
+Because it works on distances, **feature scale matters**. If one feature is in thousands (income) and another in single digits (household size), the big one drowns out the small one. Always scale first.
+
+```python run title="KNN with and without scaling"
+from sklearn.datasets import load_wine
+from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+X, y = load_wine(return_X_y=True)          # 13 chemical measurements on very different scales
+print("feature ranges, smallest to largest:", round(X.max(axis=0).min(), 2), "...", round(X.max(axis=0).max(), 1))
+
+for k in [1, 5, 15]:
+    raw = cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean()
+    scaled = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean()
+    print(f"k = {k:2}: unscaled {raw:.1%}   scaled {scaled:.1%}")
+```
+
+Small *k* follows the data closely and is noisy; large *k* is smoother. Choose it with cross-validation.
+
+## The curse of dimensionality
+
+In many dimensions, every point is almost equally far from every other point, so "nearest" stops meaning much. This is why KNN struggles on raw, high-dimensional data, and why search systems first compress data into good **embeddings**.
+
+```python run title="Nearest and farthest become alike"
+import numpy as np
+rng = np.random.default_rng(0)
+for dims in [2, 10, 100, 1000]:
+    points = rng.random((500, dims))
+    d = np.linalg.norm(points - points[0], axis=1)[1:]
+    print(f"{dims:5} dimensions: nearest / farthest distance = {d.min() / d.max():.2f}")
+```
+
+## Support vector machines
+
+An **SVM** draws the boundary between classes with the **widest possible margin**. Only the points closest to the boundary, the **support vectors**, decide where it goes. The setting `C` trades margin width against training mistakes: small `C` gives a wide, forgiving margin; large `C` tries to classify every training point correctly.
+
+The **kernel trick** lets an SVM draw curved boundaries by comparing points with a similarity function, such as the RBF (radial) kernel, as if the data had been mapped into many more dimensions, without ever computing that mapping.
+
+```python run title="Linear versus RBF kernel"
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+
+X, y = make_moons(n_samples=400, noise=0.2, random_state=0)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=0)
+
+for kernel in ["linear", "rbf"]:
+    svm = SVC(kernel=kernel, C=1.0).fit(X_tr, y_tr)
+    print(f"{kernel:6} kernel: test accuracy {svm.score(X_te, y_te):.1%}, support vectors {len(svm.support_)} of {len(X_tr)}")
+```
+
+| Method | Strengths | Weaknesses |
+|---|---|---|
+| **KNN** | No training; simple; works for regression too | Slow to predict on big data; needs scaling; struggles in high dimensions |
+| **SVM** | Strong on small and medium datasets; good with many features | Slow beyond about 100,000 rows; needs scaling and tuning of `C` and kernel |
+
+```exercise
+prompt: KNN needs scaled features. Complete the pipeline so the data is standardised before the classifier sees it.
+code: |
+  model = make_pipeline(___(), KNeighborsClassifier(n_neighbors=5))
+answers: ["StandardScaler"]
+hint: It rescales each feature to mean 0 and standard deviation 1.
+```
+
+```quiz
+- q: Why must you scale features before using KNN?
+  options: ["KNN only accepts integers", "Distances are dominated by features with large numbers", "Scaling adds more neighbours", "It makes training faster"]
+  answer: 1
+- q: Which training points decide an SVM's boundary?
+  options: ["All of them equally", "The support vectors closest to the boundary", "Only the outliers", "The first k points"]
+  answer: 1
+```
+
+# Hyperparameter Tuning {#tuning}
+
+**Parameters** are learned from data (a tree's split thresholds, a network's weights). **Hyperparameters** are settings you choose before training: the number of trees, the depth, the learning rate. Tuning means searching for good hyperparameters without fooling yourself.
+
+## The rule that matters most
+
+Tune on **validation** data, never on the test set. If you try 100 settings and keep the one with the best test score, that score is now optimistic: you've fitted the test set by selection. Use cross-validation on the training data to choose, then report the test score **once**, at the end.
+
+```sketch
+title: "Honest tuning"
+caption: "Cross-validation inside the training data picks the settings; the test set is opened once, for the final score."
+cellW: 190
+nodes:
+  - id: all
+    label: "All data"
+    col: 0
+    row: 1
+    shape: db
+  - id: train
+    label: "Training data"
+    col: 1.2
+    row: 0.4
+    shape: db
+    tone: teal
+  - id: test
+    label: "Test set"
+    sub: "locked away"
+    col: 1.2
+    row: 1.8
+    shape: db
+    tone: rose
+  - id: cv
+    label: "Search + cross-validation"
+    sub: "try many settings"
+    col: 2.5
+    row: 0.4
+    shape: round
+    tone: gold
+  - id: final
+    label: "Final score"
+    sub: "reported once"
+    col: 2.5
+    row: 1.8
+    shape: pill
+    tone: grape
+edges:
+  - from: all
+    to: train
+  - from: all
+    to: test
+  - from: train
+    to: cv
+  - from: cv
+    to: final
+    label: "best model"
+  - from: test
+    to: final
+```
+
+## Grid search versus random search
+
+**Grid search** tries every combination from lists you give. **Random search** samples combinations at random. With the same budget, random search usually finds settings as good or better, because only a few hyperparameters really matter and random search tries more distinct values of each.
+
+```python run title="Grid search versus random search"
+import time
+from scipy.stats import loguniform, randint
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, train_test_split
+
+X, y = load_breast_cancer(return_X_y=True)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.25, random_state=0, stratify=y)
+model = HistGradientBoostingClassifier(max_iter=60, random_state=0)
+
+grid = {"learning_rate": [0.05, 0.2], "max_depth": [2, 4, 8]}                 # 6 combinations
+space = {"learning_rate": loguniform(0.01, 0.5), "max_depth": randint(2, 10)}
+
+for name, search in [("grid", GridSearchCV(model, grid, cv=3)),
+                     ("random", RandomizedSearchCV(model, space, n_iter=6, cv=3, random_state=0))]:
+    t = time.time()
+    search.fit(X_tr, y_tr)
+    params = {k: round(float(v), 3) if k == "learning_rate" else int(v) for k, v in search.best_params_.items()}
+    print(f"{name:6} search: best CV accuracy {search.best_score_:.1%} with {params} ({time.time() - t:.1f}s)")
+
+print(f"\nfinal test accuracy of the random-search model: {search.score(X_te, y_te):.1%}")
+```
+
+## A practical strategy
+
+1. Start with library defaults and a simple baseline. Record the score.
+2. Tune the one or two hyperparameters that matter most (for boosting: learning rate and number of trees; for forests: depth and features per split).
+3. Use random search over wide ranges, then a narrower search around the best region.
+4. For expensive models, use **Bayesian optimisation** (for example the Optuna library), which picks the next setting to try based on the results so far.
+5. Report the test score once. If you go back and tune again after seeing it, you need a new test set.
+
+```quiz
+- q: Which is a hyperparameter rather than a learned parameter?
+  options: ["A tree's split threshold", "A network's weight", "The number of trees in a forest", "A linear model's coefficient"]
+  answer: 2
+- q: Why is choosing settings by their test-set score a mistake?
+  options: ["It's slower", "The test score becomes optimistic because you selected for it", "Test sets can't be scored", "It always picks the smallest model"]
+  answer: 1
+```
+
+# Imbalanced Data {#imbalanced}
+
+In many real problems the interesting class is rare: fraud is maybe 1 in 500 mobile-money transactions; a disease may affect 2% of patients; most loan applicants repay. A model can be **99% accurate and useless**.
+
+```python run title="The accuracy trap"
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import accuracy_score, recall_score
+from sklearn.model_selection import train_test_split
+
+X, y = make_classification(n_samples=5000, n_features=10, n_informative=5, weights=[0.98], flip_y=0, class_sep=1.0, random_state=0)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=0, stratify=y)
+print(f"fraud rate: {y.mean():.1%}")
+
+lazy = DummyClassifier(strategy="most_frequent").fit(X_tr, y_tr)        # always says "not fraud"
+pred = lazy.predict(X_te)
+print(f"always 'not fraud': accuracy {accuracy_score(y_te, pred):.1%}, frauds caught {recall_score(y_te, pred):.0%}")
+```
+
+For rare classes, look at **precision** (of the alarms, how many were real?) and **recall** (of the real cases, how many did we catch?), or the **precision-recall curve**. Review them with the [confusion matrix](/learn/machine-learning/evaluation).
+
+## Three fixes
+
+| Fix | How | Notes |
+|---|---|---|
+| **Class weights** | Make mistakes on the rare class cost more during training | `class_weight="balanced"` in scikit-learn; usually the first thing to try |
+| **Threshold tuning** | Flag a case when its probability is above 0.2, not 0.5 | Free, after training; choose using real costs |
+| **Resampling** | Duplicate or synthesise rare examples (SMOTE), or drop common ones | Only resample the **training** set, never the test set |
+
+```python run title="Class weights and a better threshold"
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score
+from sklearn.model_selection import train_test_split
+
+X, y = make_classification(n_samples=5000, n_features=10, n_informative=5, weights=[0.98], flip_y=0, class_sep=1.0, random_state=0)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=0, stratify=y)
+
+def report(name, pred):
+    print(f"{name:34} precision {precision_score(y_te, pred, zero_division=0):5.1%}   recall {recall_score(y_te, pred):5.1%}   alarms {pred.sum():4}")
+
+plain = LogisticRegression(max_iter=1000).fit(X_tr, y_tr)
+report("plain model, threshold 0.5", plain.predict(X_te))
+weighted = LogisticRegression(max_iter=1000, class_weight="balanced").fit(X_tr, y_tr)
+report("class_weight='balanced'", weighted.predict(X_te))
+report("plain model, threshold 0.2", (plain.predict_proba(X_te)[:, 1] >= 0.2).astype(int))
+```
+
+The plain model is precise but misses half the fraud. Class weights catch almost all of it, at the price of many more false alarms. A lower threshold sits in between. There is no free lunch: catching more fraud means more false alarms. The right balance depends on **costs**. If a missed fraud costs $200 and checking a false alarm costs $2, you should accept many false alarms.
+
+````challenge
+id: ml-threshold
+title: Choose the cheapest threshold
+difficulty: medium
+prompt: |
+  Write `best_threshold(y_true, scores, cost_fn, cost_fp)`. A case is flagged when `score >= threshold`. Try every distinct value in `scores` as the threshold, and compute the total cost: `cost_fn` for each missed positive plus `cost_fp` for each false alarm. Return the threshold with the **lowest** cost; if several tie, return the **highest** of them.
+starter: |
+  def best_threshold(y_true, scores, cost_fn, cost_fp):
+      pass
+
+  y = [0, 0, 1, 0, 1, 0, 0, 1]
+  s = [0.1, 0.3, 0.35, 0.4, 0.6, 0.65, 0.2, 0.9]
+  print(best_threshold(y, s, cost_fn=200, cost_fp=2))
+tests: |
+  y = [0, 0, 1, 0, 1, 0, 0, 1]
+  s = [0.1, 0.3, 0.35, 0.4, 0.6, 0.65, 0.2, 0.9]
+  assert best_threshold(y, s, cost_fn=200, cost_fp=2) == 0.35, "Missing fraud is expensive: flag down to 0.35"
+  assert best_threshold(y, s, cost_fn=1, cost_fp=100) == 0.9, "False alarms are expensive: only flag the surest case"
+  assert best_threshold([1, 1, 0], [0.9, 0.8, 0.1], 10, 10) == 0.8
+````
+
+```quiz
+- q: Only 1% of transactions are fraud. A model says "not fraud" every time. What is its accuracy?
+  options: ["1%", "50%", "About 99%", "0%"]
+  answer: 2
+- q: When should you resample to balance classes?
+  options: ["On the whole dataset before splitting", "On the training set only", "On the test set only", "Never"]
+  answer: 1
+```
+
 # Unsupervised Learning: Clustering {#clustering}
 
 **Clustering** finds groups without labels — useful for customer segments, grouping farms by soil type, or spotting unusual behaviour.
@@ -446,6 +961,82 @@ for k in range(3):
 ```
 
 Other unsupervised tools: **PCA** (reduce many columns to a few), **anomaly detection** (Isolation Forest) for fraud.
+
+# Anomaly Detection {#anomaly}
+
+**Anomaly detection** finds the cases that don't fit: a mobile-money account suddenly sending 40 transfers at 3 a.m., a sensor reading on a solar pump that jumps, a pharmacy order ten times bigger than usual. Usually you have few or no labelled examples of anomalies, so the methods learn what **normal** looks like and flag whatever is far from it.
+
+| Type | Example |
+|---|---|
+| **Point** | One transaction of $9,000 from an account that usually sends $20 |
+| **Contextual** | 35 °C is normal in October in Kariba, strange in July in Nyanga |
+| **Collective** | Fifty small transfers to new numbers within an hour, each normal on its own |
+
+## Simple statistical rules
+
+For a single number, a **z-score** (how many standard deviations from the mean) or the **IQR rule** (beyond 1.5 × the interquartile range) is often enough. You practised z-scores in [Statistics for AI](/learn/statistics). They break down when several features interact: an amount can be normal and a time can be normal, while that amount at that time for that account is not.
+
+## Isolation Forest and Local Outlier Factor
+
+- **Isolation Forest** builds random trees that split on random features at random thresholds. Anomalies are few and different, so they get isolated in very few splits. A short average path means "probably anomalous".
+- **Local Outlier Factor** (LOF) compares how crowded each point's neighbourhood is with its neighbours' neighbourhoods. A point in a much emptier area than its neighbours is an outlier, even if it sits between two dense clusters.
+
+```python run title="Find the suspicious transactions"
+import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import StandardScaler
+
+rng = np.random.default_rng(0)
+n = 1000
+amount = rng.lognormal(3, 0.6, n)                       # most transfers are $10–$60
+hour = np.clip(rng.normal(13, 3.5, n), 0, 23)           # mostly during the day
+per_hour = rng.poisson(1.5, n)                          # transfers from the same account this hour
+X = np.column_stack([amount, hour, per_hour])
+
+fraud = np.array([[850, 3, 1], [40, 2, 35], [1200, 23, 8], [25, 4, 40], [600, 1, 12]])   # planted cases
+X = np.vstack([X, fraud])
+is_fraud = np.r_[np.zeros(n), np.ones(len(fraud))]
+Xs = StandardScaler().fit_transform(X)
+
+iso = IsolationForest(n_estimators=200, contamination=0.01, random_state=0).fit(Xs)
+iso_score = -iso.score_samples(Xs)                      # higher = more anomalous
+lof = LocalOutlierFactor(n_neighbors=20)
+lof.fit(Xs)
+lof_score = -lof.negative_outlier_factor_
+
+for name, score in [("Isolation Forest", iso_score), ("LOF", lof_score)]:
+    top10 = np.argsort(score)[::-1][:10]
+    print(f"{name:17} found {int(is_fraud[top10].sum())} of 5 planted frauds in its top 10 alerts")
+
+print("\nIsolation Forest's top 5 alerts (amount $, hour, transfers this hour):")
+for i in np.argsort(iso_score)[::-1][:5]:
+    print(f"  {X[i, 0]:7.0f}  {X[i, 1]:4.0f}h  {X[i, 2]:3.0f}   {'planted fraud' if is_fraud[i] else 'normal data'}")
+```
+
+## Evaluating without labels
+
+With no labels, you can't compute accuracy. In practice teams:
+
+1. Rank cases by anomaly score and have a person review the **top few** each day.
+2. Record their verdicts. Over time those become labels, and you can measure **precision at k**: of the top *k* alerts, how many were real.
+3. Once you have enough labelled fraud, add a supervised model (gradient boosting with class weights) and keep the anomaly detector for **new** kinds of attack it hasn't seen.
+
+| Method | Good for | Watch out for |
+|---|---|---|
+| z-score / IQR | One feature at a time | Misses combinations |
+| **Isolation Forest** | Many features, large data; fast | Struggles with anomalies hidden inside dense clusters |
+| **LOF** | Clusters of different density | Slower; sensitive to the neighbour count |
+| Autoencoder (a neural network) | Images, sensor streams, very high dimensions | Needs more data and tuning |
+
+```quiz
+- q: Why does Isolation Forest flag anomalies?
+  options: ["They have the largest values", "They are isolated by fewer random splits than normal points", "They appear most often", "They have labels"]
+  answer: 1
+- q: Fifty transfers to new numbers in an hour, each small and normal on its own, is which kind of anomaly?
+  options: ["Point", "Contextual", "Collective", "Not an anomaly"]
+  answer: 2
+```
 
 # Visualising Models {#visualising}
 
@@ -538,5 +1129,17 @@ tests: |
   answer: 0
 - q: "What does R\u00b2 of 0 mean?"
   options: ["Perfect predictions", "No better than predicting the mean", "Negative errors", "100% accuracy"]
+  answer: 1
+- q: "What makes a random forest stronger than a single decision tree?"
+  options: ["Many trees trained on different random samples vote, cancelling individual overfitting", "It uses deeper trees", "It needs no data", "It ignores features"]
+  answer: 0
+- q: "In gradient boosting, what does each new tree fit?"
+  options: ["The original labels", "The errors the current model still makes", "Random noise", "The test set"]
+  answer: 1
+- q: "Why must features be scaled before k-nearest neighbours?"
+  options: ["Distances are dominated by features with large values", "KNN can't read decimals", "It doubles the neighbours", "Scaling labels the data"]
+  answer: 0
+- q: "Only 1% of cases are fraud. Which number best shows whether a model catches fraud?"
+  options: ["Accuracy", "Recall on the fraud class", "Training time", "Number of features"]
   answer: 1
 ```
