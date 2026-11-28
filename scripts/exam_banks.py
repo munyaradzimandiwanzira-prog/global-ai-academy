@@ -154,6 +154,18 @@ BANKS = {
         ("Which is an example of unsupervised learning?", ["Grouping customers by behaviour without labels", "Predicting house prices from labelled sales", "Spam filtering with labelled emails", "A chess engine"], 0, ""),
         ("What should you do before trusting an LLM's factual answer?", ["Nothing", "Check it against reliable sources", "Ask it to be confident", "Increase temperature"], 1, ""),
     ],
+    "deep-learning": [
+        ("Why does every hidden layer need a non-linear activation?", ["To make training faster", "Without one, stacked layers collapse into a single linear layer", "To reduce memory", "So the output adds to 1"], 1, "A product of matrices is still one matrix."),
+        ("Which activation is the usual choice inside transformers?", ["Sigmoid", "Step", "GELU", "Softmax"], 2, ""),
+        ("A classifier's loss is stuck at log(10) on a 10-class problem. What does that suggest?", ["It is predicting the same probability for every class", "It has overfitted", "The learning rate is perfect", "The model is too big"], 0, "log(classes) is the loss of a uniform guess."),
+        ("What does the log-sum-exp trick protect against?", ["Overfitting", "Overflow when exponentiating large scores", "Dead ReLUs", "Slow data loading"], 1, ""),
+        ("What does Adam add on top of momentum?", ["Per-weight step sizes from a running average of squared gradients", "A bigger batch", "Dropout", "A learning-rate warmup"], 0, ""),
+        ("How does AdamW differ from Adam with an L2 penalty?", ["It has no learning rate", "It applies weight decay directly to the weights", "It ignores the gradient", "It only works on CPUs"], 1, ""),
+        ("Which normalisation works per example and is used in Llama-style LLMs?", ["Batch norm", "RMSNorm", "Dropout", "Min-max scaling"], 1, ""),
+        ("Which weight initialisation suits deep ReLU networks?", ["All zeros", "He: std sqrt(2 / n_in)", "Std 1.0", "Xavier for the output only"], 1, ""),
+        ("Why use learning-rate warmup for transformers?", ["Early gradients are noisy, so starting small avoids a damaging first update", "It saves memory", "It removes the need for a test set", "It replaces the optimiser"], 0, ""),
+        ("What is the first test to run on a new network?", ["Train for a week", "Overfit one small batch", "Add more layers", "Remove the activation functions"], 1, "If it can't memorise 8 examples, the code has a bug."),
+    ],
     "machine-learning": [
         ("Which task predicts a number?", ["Classification", "Regression", "Clustering", "Tokenisation"], 1, ""),
         ("What does cross-validation do?", ["Trains and tests on several different splits", "Deletes bad data", "Speeds up training", "Encrypts the model"], 0, ""),

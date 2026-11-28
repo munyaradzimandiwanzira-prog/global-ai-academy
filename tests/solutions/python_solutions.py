@@ -563,3 +563,30 @@ def triage(alerts, severity, privileged):
         return decision
 ''',
 })
+
+# Deep Learning from Scratch
+SOLUTIONS.update({
+    "dl-cross-entropy": (
+        "import numpy as np\n"
+        "def cross_entropy(logits, labels):\n"
+        "    shifted = logits - logits.max(axis=1, keepdims=True)\n"
+        "    log_probs = shifted - np.log(np.exp(shifted).sum(axis=1, keepdims=True))\n"
+        "    return float(-log_probs[np.arange(len(labels)), labels].mean())"
+    ),
+    "dl-adam-step": (
+        "import numpy as np\n"
+        "def adam_step(w, g, m, v, t, lr=0.001, b1=0.9, b2=0.999, eps=1e-8):\n"
+        "    m = b1 * m + (1 - b1) * g\n"
+        "    v = b2 * v + (1 - b2) * g ** 2\n"
+        "    m_hat = m / (1 - b1 ** t)\n"
+        "    v_hat = v / (1 - b2 ** t)\n"
+        "    return w - lr * m_hat / (np.sqrt(v_hat) + eps), m, v"
+    ),
+    "dl-layer-norm": (
+        "import numpy as np\n"
+        "def layer_norm(x, gamma, beta, eps=1e-5):\n"
+        "    mean = x.mean(axis=1, keepdims=True)\n"
+        "    var = x.var(axis=1, keepdims=True)\n"
+        "    return (x - mean) / np.sqrt(var + eps) * gamma + beta"
+    ),
+})
