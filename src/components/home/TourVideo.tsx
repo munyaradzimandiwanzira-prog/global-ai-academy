@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Play } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
-/** Chapter start times (seconds) in /videos/tour-v1.mp4. Re-check them whenever the video is re-filmed. */
+/** Chapter start times (seconds) in /videos/tour-v2.mp4. Re-check them whenever the video is re-filmed. */
 const CHAPTERS = [
   { t: 4, label: 'Run Python in a lesson', sub: 'Edit the code, press Run, check your understanding' },
   { t: 34, label: 'Play in the Kids Zone', sub: 'Launch Lab: aim, miss, adjust, score' },
@@ -12,8 +12,9 @@ const CHAPTERS = [
 const stamp = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 /**
- * The landing-page tour: a short silent screen recording with captions burnt in, so it works
- * muted on a phone. Nothing downloads until the visitor presses play (preload="none", ~2 MB).
+ * The landing-page tour: a short screen recording with a narrator explaining each step, and
+ * captions burnt in so it still makes sense with the sound off. Nothing downloads until the
+ * visitor presses play (preload="none", ~3 MB).
  */
 export function TourVideo() {
   const ref = useRef<HTMLVideoElement>(null);
@@ -53,17 +54,16 @@ export function TourVideo() {
               className="block aspect-video w-full"
               controls
               playsInline
-              muted
               preload="none"
-              poster="/videos/tour-v1-poster.webp"
+              poster="/videos/tour-v2-poster.webp"
               aria-label="Tour of Global AI Academy: running Python in a lesson, playing Launch Lab in the Kids Zone, and asking Zuva for help"
               aria-describedby="tour-description"
             >
-              <source src="/videos/tour-v1.mp4" type="video/mp4" />
+              <source src="/videos/tour-v2.mp4" type="video/mp4" />
             </video>
           </div>
           <figcaption className="mt-3 text-sm text-fg/70">
-            1 min 24 s · no sound, captions on screen
+            1 min 24 s · narrated, with captions on screen
             <details className="mt-2">
               <summary className="cursor-pointer font-medium text-teal-600 underline-offset-4 hover:underline">What the video shows</summary>
               <div id="tour-description" className="mt-2 space-y-2 text-fg/80">
