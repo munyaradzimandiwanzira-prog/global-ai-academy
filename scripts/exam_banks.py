@@ -185,6 +185,10 @@ BANKS = {
         ("Which encoder turns categories like 'suburb' into numbers?", ["StandardScaler", "OneHotEncoder", "SimpleImputer", "KMeans"], 1, ""),
         ("Which model is a strong default for tabular data?", ["Random forest / gradient boosting", "A spreadsheet", "Linear regression only", "A CNN"], 0, ""),
         ("What does R² of 0 mean?", ["Perfect predictions", "No better than predicting the mean", "Negative errors", "100% accuracy"], 1, ""),
+        ("What makes a random forest stronger than a single decision tree?", ["Many trees trained on different random samples vote, cancelling individual overfitting", "It uses deeper trees", "It needs no data", "It ignores features"], 0, ""),
+        ("In gradient boosting, what does each new tree fit?", ["The original labels", "The errors the current model still makes", "Random noise", "The test set"], 1, ""),
+        ("Why must features be scaled before k-nearest neighbours?", ["Distances are dominated by features with large values", "KNN can't read decimals", "It doubles the neighbours", "Scaling labels the data"], 0, ""),
+        ("Only 1% of cases are fraud. Which number best shows whether a model catches fraud?", ["Accuracy", "Recall on the fraud class", "Training time", "Number of features"], 1, ""),
     ],
     "prompt-engineering": [
         ("Which element makes the model copy a pattern most reliably?", ["A longer role", "A few examples (few-shot)", "Capital letters", "A higher temperature"], 1, ""),

@@ -628,3 +628,26 @@ SOLUTIONS.update({
         "    return out / out.sum()"
     ),
 })
+
+# Machine Learning additions
+SOLUTIONS.update({
+    "ml-gini": (
+        "from collections import Counter\n"
+        "def gini(labels):\n"
+        "    n = len(labels)\n"
+        "    if n == 0:\n"
+        "        return 0.0\n"
+        "    return 1 - sum((c / n) ** 2 for c in Counter(labels).values())"
+    ),
+    "ml-threshold": (
+        "def best_threshold(y_true, scores, cost_fn, cost_fp):\n"
+        "    best = None\n"
+        "    for t in sorted(set(scores), reverse=True):\n"
+        "        fn = sum(1 for y, s in zip(y_true, scores) if y == 1 and s < t)\n"
+        "        fp = sum(1 for y, s in zip(y_true, scores) if y == 0 and s >= t)\n"
+        "        cost = fn * cost_fn + fp * cost_fp\n"
+        "        if best is None or cost < best[0]:\n"
+        "            best = (cost, t)\n"
+        "    return best[1]"
+    ),
+})
