@@ -166,6 +166,18 @@ BANKS = {
         ("Why use learning-rate warmup for transformers?", ["Early gradients are noisy, so starting small avoids a damaging first update", "It saves memory", "It removes the need for a test set", "It replaces the optimiser"], 0, ""),
         ("What is the first test to run on a new network?", ["Train for a week", "Overfit one small batch", "Add more layers", "Remove the activation functions"], 1, "If it can't memorise 8 examples, the code has a bug."),
     ],
+    "transformers": [
+        ("What does a GPT-style model predict at each step?", ["The whole answer", "The next token", "A summary", "The previous token"], 1, ""),
+        ("Why do modern LLMs use subword tokenizers like BPE?", ["They avoid both very long character sequences and unknown words", "They are the only way to store text", "They remove punctuation", "They translate text"], 0, ""),
+        ("In attention, what are queries compared with?", ["Values", "Keys", "Gradients", "Positions only"], 1, ""),
+        ("Why are attention scores divided by the square root of the head dimension?", ["To keep scores near size 1 so softmax doesn't saturate", "To save memory", "To make the mask work", "To reduce the vocabulary"], 0, ""),
+        ("What does the causal mask stop?", ["Positions attending to later positions", "Tokens attending to themselves", "Gradients flowing", "The model using GPUs"], 0, ""),
+        ("Which positional method rotates queries and keys so scores depend only on distance?", ["Learned positions", "ALiBi", "RoPE", "Sinusoidal"], 2, ""),
+        ("Which model family is best suited to producing embeddings for search?", ["Encoder (BERT-style)", "Decoder (GPT-style)", "Diffusion", "None"], 0, ""),
+        ("In SFT, why are the user's tokens excluded from the loss?", ["So the model learns to answer, not to imitate users", "To save memory", "They can't be tokenized", "To speed up sampling"], 0, ""),
+        ("What does the KV cache trade?", ["Memory for speed: stored keys and values avoid recomputation", "Accuracy for vocabulary size", "Training data for parameters", "Speed for safety"], 0, ""),
+        ("A mixture-of-experts model has 47B parameters but uses about 13B per token because...", ["A router sends each token to only a few experts", "Most weights are zero", "It is quantised", "It skips attention"], 0, ""),
+    ],
     "machine-learning": [
         ("Which task predicts a number?", ["Classification", "Regression", "Clustering", "Tokenisation"], 1, ""),
         ("What does cross-validation do?", ["Trains and tests on several different splits", "Deletes bad data", "Speeds up training", "Encrypts the model"], 0, ""),
