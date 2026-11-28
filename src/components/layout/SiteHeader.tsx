@@ -2,59 +2,45 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Moon, Sun, ChevronDown, LayoutDashboard, LogOut, Settings, GraduationCap, Shield, Award, BookOpenCheck, FolderCode, Rocket, MaterialIcon } from '@/components/icons';
 import { Logo } from '@/components/ui/Logo';
-import { Avatar, TrackMark } from '@/components/ui';
+import { Avatar } from '@/components/ui';
 import { SearchDialog } from './SearchDialog';
 import { CategoryBar } from './CategoryBar';
 import { NotificationBell } from './NotificationBell';
 import { useAuth } from '@/lib/auth';
-import { tracksByCategory, lessonPath } from '@/lib/catalog';
-import { CATEGORY_LABELS } from '@shared/content';
 import { ROLE_HOME } from '@shared/rbac';
 import { PLANS } from '@shared/config';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
 
-const PRACTICE_LINKS: [string, string][] = [
-  ['/start', 'Where to start'],
-  ['/reference', 'References'],
-  ['/exercises', 'Exercises'],
-  ['/quiz', 'Quizzes'],
-  ['/challenges', 'Code challenges'],
-  ['/lab', 'Graph Lab: work placements'],
-  ['/compiler/python', 'Online editors'],
-  ['/projects', 'My projects'],
-  ['/certificates', 'Get certified'],
+/** Practice tools, with a line each so a newcomer knows what they are before clicking. */
+const PRACTICE_LINKS: [string, string, string][] = [
+  ['/start', 'Where to start', 'Four questions, then the right first track for you'],
+  ['/exercises', 'Exercises', 'Fill in the blanks for every chapter'],
+  ['/quiz', 'Quizzes', 'Check what you remember, track by track'],
+  ['/challenges', 'Code challenges', 'Real tests run on your code, plus a weekly challenge'],
+  ['/reference', 'References', 'Look up any function, tag or command'],
+  ['/compiler/python', 'Online editors', 'Write and run code with nothing to install'],
+  ['/lab', 'Graph Lab', 'Work placements: tickets from a real-looking company'],
+  ['/certificates', 'Get certified', 'Pass an exam and share your certificate'],
 ];
 
-
-function TutorialsMenu({ onClose }: { onClose: () => void }) {
-  const groups = tracksByCategory();
+/**
+ * The header's one dropdown. Tracks live in the learning menu underneath, so this lists the ways
+ * to practise and prove skills instead of repeating every track.
+ */
+function PracticeMenu({ onClose }: { onClose: () => void }) {
   return (
     <div className="absolute inset-x-0 top-full z-40 border-b border-border bg-card shadow-float">
-      <div className="container grid max-h-[70vh] gap-x-8 gap-y-6 overflow-y-auto py-8 sm:grid-cols-2 lg:grid-cols-4">
-        {groups.map((g) => (
-          <div key={g.category}>
-            <h3 className="mb-2 font-display text-base font-semibold text-gold-700 dark:text-gold">{CATEGORY_LABELS[g.category]}</h3>
-            <ul className="space-y-0.5">
-              {g.tracks.map((t) => (
-                <li key={t.id}>
-                  <Link to={lessonPath(t.id)} onClick={onClose} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted">
-                    <TrackMark short={t.short} color={t.color} size={22} /> {t.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+      <ul className="container grid gap-x-6 gap-y-1 py-6 sm:grid-cols-2 lg:grid-cols-4">
+        {PRACTICE_LINKS.map(([to, label, blurb]) => (
+          <li key={to}>
+            <Link to={to} onClick={onClose} className="group block rounded-lg px-3 py-2.5 hover:bg-muted">
+              <span className="block font-semibold group-hover:text-teal-600 dark:group-hover:text-teal-400">{label}</span>
+              <span className="block text-[13px] text-muted-fg">{blurb}</span>
+            </Link>
+          </li>
         ))}
-        <div>
-          <h3 className="mb-2 font-display text-base font-semibold text-gold-700 dark:text-gold">Practise and prove it</h3>
-          <ul className="space-y-0.5 text-sm">
-            {PRACTICE_LINKS.map(([to, label]) => (
-              <li key={to}><Link to={to} onClick={onClose} className="block rounded-md px-2 py-1.5 hover:bg-muted">{label}</Link></li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      </ul>
     </div>
   );
 }
@@ -136,16 +122,12 @@ export function SiteHeader() {
           <Link to="/" aria-label="Global AI Academy home" className="mr-2 shrink-0"><Logo className="hidden sm:flex" /><Logo compact className="sm:hidden" /></Link>
           <nav className="hidden items-center lg:flex" aria-label="Main">
             <button onClick={() => setMenu((m) => !m)} className={cn('flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted', menu && 'bg-muted')} aria-expanded={menu}>
-              Tutorials <ChevronDown className={cn('h-4 w-4 transition-transform', menu && 'rotate-180')} />
+              Practise <ChevronDown className={cn('h-4 w-4 transition-transform', menu && 'rotate-180')} />
             </button>
-            <NavLink to="/reference" className={navLink}>References</NavLink>
-            <NavLink to="/exercises" className={(a) => cn(navLink(a), "hidden 2xl:block")}>Exercises</NavLink>
-            <NavLink to="/lab" className={navLink}>Graph Lab</NavLink>
-            <NavLink to="/playground" className={(a) => cn(navLink(a), "hidden xl:block")}>Playground</NavLink>
+            <NavLink to="/playground" className={navLink}>Playground</NavLink>
             <NavLink to="/careers" className={navLink}>Careers</NavLink>
-            <NavLink to="/kids" className={navLink}>Kids Zone</NavLink>
             <NavLink to="/pricing" className={navLink}>Plans</NavLink>
-            <NavLink to="/teachers" className={(a) => cn(navLink(a), "hidden xl:block")}>For teachers</NavLink>
+            <NavLink to="/teachers" className={navLink}>For teachers</NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-1.5">
             <button onClick={() => setSearchOpen(true)} className="flex h-11 items-center gap-2 rounded-full bg-granite-100 px-3 text-sm text-fg/70 transition-colors hover:bg-granite-200 dark:bg-night-700 2xl:w-52 2xl:px-4" aria-label="Search (Ctrl+K)">
@@ -172,11 +154,11 @@ export function SiteHeader() {
             </button>
           </div>
         </div>
-        {menu && <TutorialsMenu onClose={() => setMenu(false)} />}
+        {menu && <PracticeMenu onClose={() => setMenu(false)} />}
         {mobile && (
           <nav className="border-t border-border bg-card lg:hidden" aria-label="Mobile">
             <div className="container grid gap-1 py-3 text-sm">
-              {[['/tutorials', 'All tutorials'], ['/reference', 'References'], ['/exercises', 'Exercises'], ['/quiz', 'Quizzes'], ['/challenges', 'Code challenges'], ['/lab', 'Graph Lab'], ['/playground', 'Playground'], ['/careers', 'Career paths'], ['/kids', 'Kids Zone'], ['/pricing', 'Plans'], ['/teachers', 'For teachers'], ['/leaderboard', 'Leaderboard'], ['/contact', 'Contact']].map(([to, label]) => (
+              {[['/', 'Home'], ['/start', 'Where to start'], ['/tutorials', 'All tracks'], ['/reference', 'References'], ['/exercises', 'Exercises'], ['/quiz', 'Quizzes'], ['/challenges', 'Code challenges'], ['/lab', 'Graph Lab'], ['/playground', 'Playground'], ['/careers', 'Career paths'], ['/kids', 'Kids Zone'], ['/pricing', 'Plans'], ['/teachers', 'For teachers'], ['/leaderboard', 'Leaderboard'], ['/contact', 'Contact']].map(([to, label]) => (
                 <Link key={to} to={to!} className="rounded-md px-3 py-2.5 hover:bg-muted">{label}</Link>
               ))}
               {!user && <Link to="/login" className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted">Sign in</Link>}
